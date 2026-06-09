@@ -229,52 +229,13 @@ export const LandingPage: React.FC = () => {
     }
   };
 
-  // Typewriter/Progress effect states for mockups
-  const [vttText, setVttText] = useState('Listening...');
-  const [t9nText, setT9nText] = useState({ en: 'Hello friend', ta: 'வணக்கம் நண்பா' });
-  const [audioProgress, setAudioProgress] = useState(45);
-
   useEffect(() => {
-    // 1. Voice to Text Simulation
-    const vttPhases = [
-      'Listening...',
-      'Detected speech...',
-      'Transcribing: "Welcome to MCC AI platform..."',
-      'Completed in 240ms.'
-    ];
-    let vttIdx = 0;
-    const vttTimer = setInterval(() => {
-      vttIdx = (vttIdx + 1) % vttPhases.length;
-      setVttText(vttPhases[vttIdx]);
-    }, 2800);
-
-    // 2. Translation Swap Simulation
-    const translations = [
-      { en: 'Hello friend', ta: 'வணக்கம் நண்பா' },
-      { en: 'Thank you', ta: 'நன்றி' },
-      { en: 'Welcome back', ta: 'நல்வரவு' },
-      { en: 'Good morning', ta: 'காலை வணக்கம்' }
-    ];
-    let t9nIdx = 0;
-    const t9nTimer = setInterval(() => {
-      t9nIdx = (t9nIdx + 1) % translations.length;
-      setT9nText(translations[t9nIdx]);
-    }, 3500);
-
-    // 3. Audio Progress simulation
-    const audioTimer = setInterval(() => {
-      setAudioProgress((prev) => (prev >= 100 ? 0 : prev + 1));
-    }, 90);
-
-    // 4. Testimonials Auto Loop
+    // Testimonials Auto Loop
     const testimonialTimer = setInterval(() => {
       setActiveTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
     }, 5500);
 
     return () => {
-      clearInterval(vttTimer);
-      clearInterval(t9nTimer);
-      clearInterval(audioTimer);
       clearInterval(testimonialTimer);
     };
   }, []);
@@ -371,92 +332,12 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right 3D Visualizer block with absolutely floating cards */}
+          {/* Right 3D Visualizer block */}
           <div className="lg:col-span-5 flex justify-center items-center relative min-h-[460px] xl:min-h-[500px]">
             
             {/* 3D Neural Sphere */}
             <div className="relative z-10 w-full max-w-[420px] aspect-square flex items-center justify-center">
               <HeroNeuralSphere />
-            </div>
-
-            {/* ── FLOATING LIVE CARDS (visible on lg+) ── */}
-            <div className="absolute inset-0 z-20 hidden lg:block select-none pointer-events-none">
-              
-              {/* Floating Card 1: Voice-to-Text */}
-              <FloatingHeroCard
-                title="Voice Recognition"
-                tagline="Active Audio Input"
-                icon={<Mic size={14} />}
-                glowColor="rgba(59, 130, 246, 0.18)"
-                className="absolute top-[8%] left-[-15%] w-60 transform animate-float"
-              >
-                <div className="flex items-center gap-2 mb-2 bg-slate-100/60 dark:bg-black/30 px-2 py-1.5 rounded-lg border border-[#DDE5F0] dark:border-white/5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-                  <span className="text-[10px] font-bold text-slate-800 dark:text-slate-300 truncate">{vttText}</span>
-                </div>
-                <div className="flex gap-0.5 items-end justify-start h-4 mt-1">
-                  {[3, 8, 4, 9, 6, 2, 7, 5, 3].map((val, i) => (
-                    <motion.span 
-                      key={i} 
-                      className="w-1 bg-cyan-600 dark:bg-cyan-400 rounded-full"
-                      animate={{ height: [`${val * 10}%`, `${val * 3}%`, `${val * 10}%`] }}
-                      transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.08 }}
-                    />
-                  ))}
-                </div>
-              </FloatingHeroCard>
-
-              {/* Floating Card 2: Text-to-Speech */}
-              <FloatingHeroCard
-                title="Text to Speech"
-                tagline="Voice Synthesizer"
-                icon={<Volume2 size={14} />}
-                glowColor="rgba(168, 85, 247, 0.18)"
-                className="absolute bottom-[8%] left-[-10%] w-56 transform animate-float-delayed"
-              >
-                <div className="flex gap-1.5 mb-2">
-                  <span className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30 text-[8px] font-bold">Voice Preset 1</span>
-                  <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 border border-[#DDE5F0] dark:border-white/5 text-[8px] font-bold">Preset 2</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Activity size={10} className="text-purple-600 dark:text-purple-400 animate-pulse" />
-                  <span className="text-[9px] text-slate-700 dark:text-slate-300 font-semibold">Synthesizing audio output stream...</span>
-                </div>
-              </FloatingHeroCard>
-
-              {/* Floating Card 3: Translation */}
-              <FloatingHeroCard
-                title="AI Translation"
-                tagline="Neural Language Swap"
-                icon={<Languages size={14} />}
-                glowColor="rgba(16, 185, 129, 0.18)"
-                className="absolute top-[5%] right-[-15%] w-56 transform animate-float-slow"
-              >
-                <div className="flex items-center justify-between text-[9px] bg-slate-50 dark:bg-black/20 p-2 rounded-xl border border-[#DDE5F0] dark:border-white/5 gap-2">
-                  <div className="font-extrabold text-slate-800 dark:text-slate-300">{t9nText.en}</div>
-                  <ArrowRight size={10} className="text-emerald-600 dark:text-emerald-500" />
-                  <div className="font-extrabold text-emerald-600 dark:text-emerald-400">{t9nText.ta}</div>
-                </div>
-              </FloatingHeroCard>
-
-              {/* Floating Card 4: Audio Processing */}
-              <FloatingHeroCard
-                title="Audio Transcription"
-                tagline="Upload Timeline"
-                icon={<FileAudio size={14} />}
-                glowColor="rgba(245, 158, 11, 0.18)"
-                className="absolute bottom-[5%] right-[-12%] w-60 transform animate-float-delayed-slow"
-              >
-                <div className="text-[9px] text-slate-700 dark:text-slate-300 mb-1 flex justify-between font-bold">
-                  <span>Uploading Lecture.wav</span>
-                  <span>{audioProgress}%</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden border border-[#DDE5F0] dark:border-white/5 mb-1.5">
-                  <div className="h-full bg-amber-500 rounded-full" style={{ width: `${audioProgress}%` }} />
-                </div>
-                <span className="text-[8px] text-amber-600 dark:text-amber-500 font-bold block text-right">Server processing active</span>
-              </FloatingHeroCard>
-
             </div>
           </div>
 
@@ -1191,41 +1072,4 @@ export const LandingPage: React.FC = () => {
   );
 };
 
-// ── SUB-COMPONENT: FLOATING CARD FOR HERO ──
-interface FloatingHeroCardProps {
-  title: string;
-  tagline: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  className: string;
-  glowColor: string;
-}
 
-const FloatingHeroCard: React.FC<FloatingHeroCardProps> = ({
-  title,
-  tagline,
-  icon,
-  children,
-  className,
-  glowColor
-}) => {
-  return (
-    <ThreeDInteractiveCard
-      glowColor={glowColor}
-      className={`p-4 shadow-2xl ${className}`}
-    >
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 rounded-lg bg-blue-500/10 dark:bg-white/5 text-blue-700 dark:text-cyan-400 group-hover:scale-105 transition-transform duration-200">
-          {icon}
-        </div>
-        <div>
-          <h4 className="text-[11px] font-extrabold text-slate-900 dark:text-white tracking-wide leading-none">{title}</h4>
-          <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-0.5 block">{tagline}</span>
-        </div>
-      </div>
-      <div className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
-        {children}
-      </div>
-    </ThreeDInteractiveCard>
-  );
-};
