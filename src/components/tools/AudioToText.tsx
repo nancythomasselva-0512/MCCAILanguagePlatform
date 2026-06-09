@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Download, Edit3, Check, Copy, RefreshCw,
-  Clock, AlertCircle, CheckCircle2, FileAudio, X, Cpu, ChevronDown
+  Clock, AlertCircle, CheckCircle2, FileAudio, X, Cpu, ChevronDown, Trash2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { getTranscriber, decodeAudioFile } from '../../utils/transcribeHelper';
@@ -59,8 +59,10 @@ export const AudioToText: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('auto');
   const [modelSize, setModelSize] = useState('base');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [viewMode, setViewMode] = useState<'segmented' | 'paragraph'>('segmented');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const xhrRef = useRef<XMLHttpRequest | null>(null);
 
   const checkBackend = async () => {
     setBackendStatus('checking');
@@ -104,12 +106,14 @@ export const AudioToText: React.FC = () => {
         formData.append('language', selectedLanguage);
 
         const xhr = new XMLHttpRequest();
+        xhrRef.current = xhr;
         const responseData = await new Promise<any>((resolve, reject) => {
           xhr.open('POST', 'http://127.0.0.1:8000/api/transcribe', true);
           xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) setUploadProgress(Math.round((event.loaded / event.total) * 100));
           };
           xhr.onload = () => {
+            xhrRef.current = null;
             if (xhr.status === 200) {
               try { resolve(JSON.parse(xhr.responseText)); }
               catch { reject(new Error('Invalid server response.')); }
@@ -118,7 +122,10 @@ export const AudioToText: React.FC = () => {
               catch { reject(new Error(`Server error ${xhr.status}`)); }
             }
           };
-          xhr.onerror = () => reject(new Error('Connection error. Ensure the Python server is running.'));
+          xhr.onerror = () => {
+            xhrRef.current = null;
+            reject(new Error('Connection error. Ensure the Python server is running.'));
+          };
           xhr.send(formData);
         });
 
@@ -140,6 +147,7 @@ export const AudioToText: React.FC = () => {
           throw new Error('No segments returned from server.');
         }
       } catch (err: any) {
+        xhrRef.current = null;
         setErrorMsg(err.message || 'Server transcription failed.');
         setProcessState('error');
       }
@@ -214,16 +222,21 @@ export const AudioToText: React.FC = () => {
     setSegments(prev => prev.map((s, idx) => idx === i ? { ...s, highlighted: !s.highlighted } : s));
   };
 
-  const fullTranscript = segments.map(s => `[${s.timestamp}] ${s.text}`).join('\n\n');
+  const getFormattedText = () => {
+    if (viewMode === 'paragraph') {
+      return segments.map(s => s.text).join(' ');
+    }
+    return segments.map(s => `[${s.timestamp}] ${s.text}`).join('\n\n');
+  };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(fullTranscript);
+    navigator.clipboard.writeText(getFormattedText());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleDownload = () => {
-    const blob = new Blob([fullTranscript], { type: 'text/plain' });
+    const blob = new Blob([getFormattedText()], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -233,6 +246,10 @@ export const AudioToText: React.FC = () => {
   };
 
   const reset = () => {
+    if (xhrRef.current) {
+      xhrRef.current.abort();
+      xhrRef.current = null;
+    }
     setProcessState('idle');
     setSegments([]);
     setFileName('');
@@ -258,7 +275,7 @@ export const AudioToText: React.FC = () => {
             className="alert alert-error">
             <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
             <span className="flex-1">{errorMsg}</span>
-            <button onClick={() => setErrorMsg('')} className="flex-shrink-0 opacity-60 hover:opacity-100"><X size={14} /></button>
+            <button onClick={() => { setErrorMsg(''); setProcessState('idle'); }} className="flex-shrink-0 opacity-60 hover:opacity-100"><X size={14} /></button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -369,19 +386,23 @@ export const AudioToText: React.FC = () => {
         </div>
       )}
 
-      {/* Progress State */}
+      {/* Progress & Error States */}
       <AnimatePresence>
-        {(['decoding', 'downloading', 'processing'] as ProcessState[]).includes(processState) && (
+        {(['decoding', 'downloading', 'processing', 'error'] as ProcessState[]).includes(processState) && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="app-card rounded-2xl p-6">
             <div className="flex items-center gap-4 mb-5">
               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl"
-                style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
-                <FileAudio size={20} />
+                style={
+                  processState === 'error'
+                    ? { background: 'rgba(239, 68, 68, 0.1)', color: 'rgb(239, 68, 68)' }
+                    : { background: 'var(--accent-subtle)', color: 'var(--accent)' }
+                }>
+                {processState === 'error' ? <AlertCircle size={20} /> : <FileAudio size={20} />}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{fileName}</p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="truncate text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{fileName || 'Audio File'}</p>
+                <p className="text-xs" style={processState === 'error' ? { color: 'rgb(239, 68, 68)' } : { color: 'var(--text-muted)' }}>
                   {processState === 'decoding' && 'Decoding audio and resampling to 16kHz…'}
                   {processState === 'downloading' && (
                     backendStatus === 'connected'
@@ -389,8 +410,18 @@ export const AudioToText: React.FC = () => {
                       : `Downloading AI model files… (${modelProgress}%)`
                   )}
                   {processState === 'processing' && 'Running speech recognition…'}
+                  {processState === 'error' && (errorMsg || 'An error occurred during transcription.')}
                 </p>
               </div>
+
+              {/* Delete / Cancel button */}
+              <button
+                onClick={reset}
+                className="flex-shrink-0 p-2.5 rounded-xl border border-transparent hover:border-red-500/20 text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
+                title={processState === 'error' ? 'Clear error' : 'Cancel upload & delete'}
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
 
             {processState === 'downloading' && (
@@ -424,11 +455,13 @@ export const AudioToText: React.FC = () => {
             )}
 
             {/* Skeleton shimmer */}
-            <div className="space-y-2 mt-4">
-              {[90, 70, 80, 55].map((w, i) => (
-                <div key={i} className="shimmer h-3 rounded-full" style={{ width: `${w}%` }} />
-              ))}
-            </div>
+            {processState !== 'error' && (
+              <div className="space-y-2 mt-4">
+                {[90, 70, 80, 55].map((w, i) => (
+                  <div key={i} className="shimmer h-3 rounded-full" style={{ width: `${w}%` }} />
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -440,8 +473,8 @@ export const AudioToText: React.FC = () => {
             className="space-y-4">
             {/* Toolbar — Responsive wrapping and centering */}
             <div className="app-card rounded-2xl p-4 sm:px-5 sm:py-3.5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-                <CheckCircle2 size={14} className="text-emerald-500" />
+              <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm">
+                <CheckCircle2 size={14} className="text-emerald-500 animate-pulse" />
                 <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{fileName}</span>
                 <span className="badge badge-success">
                   {backendStatus === 'connected' ? 'Faster-Whisper' : 'Local Whisper'}
@@ -449,6 +482,30 @@ export const AudioToText: React.FC = () => {
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                   {segments.length} segments · {segments.reduce((a, s) => a + s.text.split(' ').length, 0)} words
                 </span>
+
+                {/* View Mode Toggle */}
+                <div className="flex rounded-lg bg-[var(--bg-subtle)] p-0.5 border border-[var(--border-base)] ml-1">
+                  <button
+                    onClick={() => setViewMode('segmented')}
+                    className={`rounded-md px-2.5 py-1 text-[10px] font-extrabold transition-all duration-200 cursor-pointer ${
+                      viewMode === 'segmented'
+                        ? 'bg-white dark:bg-slate-800 text-[var(--text-primary)] shadow-sm'
+                        : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    Segments
+                  </button>
+                  <button
+                    onClick={() => setViewMode('paragraph')}
+                    className={`rounded-md px-2.5 py-1 text-[10px] font-extrabold transition-all duration-200 cursor-pointer ${
+                      viewMode === 'paragraph'
+                        ? 'bg-white dark:bg-slate-800 text-[var(--text-primary)] shadow-sm'
+                        : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    Paragraph
+                  </button>
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:justify-end">
                 <button onClick={reset} className="btn-ghost flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs">
@@ -466,87 +523,132 @@ export const AudioToText: React.FC = () => {
               </div>
             </div>
 
-            {/* Segment list */}
-            <div className="app-card rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border-base)' }}>
-              {segments.map((seg, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                  className="group flex flex-col sm:flex-row gap-3 p-4 transition-colors"
-                  style={{
-                    background: seg.highlighted
-                      ? 'color-mix(in srgb, #f59e0b 6%, var(--bg-card))'
-                      : i % 2 === 1 ? 'var(--bg-subtle)' : 'var(--bg-card)',
-                    borderBottom: i < segments.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                  }}
-                >
-                  {/* Timestamp */}
-                  <div className="flex-shrink-0 pt-0.5">
-                    <span className="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 font-mono text-[11px] font-bold"
-                      style={{
-                        background: 'var(--bg-elevated)',
-                        border: '1px solid var(--border-base)',
-                        color: 'var(--text-muted)',
-                      }}>
-                      <Clock size={9} /> {seg.timestamp}
+            {viewMode === 'paragraph' ? (
+              <div 
+                className="app-card rounded-2xl p-6 text-sm font-semibold leading-relaxed text-left whitespace-pre-wrap select-text" 
+                style={{ border: '1px solid var(--border-base)', color: 'var(--text-primary)' }}
+              >
+                {segments.map((seg, idx) => (
+                  editingIndex === idx ? (
+                    <span key={idx} className="inline-flex gap-1.5 items-center align-middle mx-1 my-0.5">
+                      <textarea
+                        autoFocus
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="rounded-lg px-2.5 py-1 text-sm focus:outline-none w-64 md:w-80 h-10 border border-[var(--accent)] resize-none"
+                        style={{
+                          background: 'var(--bg-subtle)',
+                          color: 'var(--text-primary)',
+                        }}
+                        onKeyDown={(e) => { 
+                          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(); }
+                          if (e.key === 'Escape') setEditingIndex(null);
+                        }}
+                        onBlur={saveEdit}
+                      />
+                      <button onClick={saveEdit}
+                        className="rounded-lg p-1.5 text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 transition-colors">
+                        <Check size={13} />
+                      </button>
                     </span>
-                  </div>
+                  ) : (
+                    <span 
+                      key={idx}
+                      className="inline transition-all duration-200 cursor-pointer hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 px-1 py-0.5 rounded"
+                      onClick={() => startEdit(idx)}
+                      title="Click to edit segment"
+                    >
+                      {seg.text}{' '}
+                    </span>
+                  )
+                ))}
+              </div>
+            ) : (
+              /* Segment list */
+              <div className="app-card rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border-base)' }}>
+                {segments.map((seg, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="group flex flex-col sm:flex-row gap-3 p-4 transition-colors"
+                    style={{
+                      background: seg.highlighted
+                        ? 'color-mix(in srgb, #f59e0b 6%, var(--bg-card))'
+                        : i % 2 === 1 ? 'var(--bg-subtle)' : 'var(--bg-card)',
+                      borderBottom: i < segments.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                    }}
+                  >
+                    {/* Timestamp */}
+                    <div className="flex-shrink-0 pt-0.5">
+                      <span className="inline-flex items-center gap-1 rounded-lg px-2 py-0.5 font-mono text-[11px] font-bold"
+                        style={{
+                          background: 'var(--bg-elevated)',
+                          border: '1px solid var(--border-base)',
+                          color: 'var(--text-muted)',
+                        }}>
+                        <Clock size={9} /> {seg.timestamp}
+                      </span>
+                    </div>
 
-                  {/* Text / Edit */}
-                  <div className="flex-1 min-w-0">
-                    {editingIndex === i ? (
-                      <div className="flex gap-2">
-                        <textarea
-                          autoFocus
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          rows={3}
-                          className="flex-1 resize-none rounded-xl px-3 py-2 text-sm focus:outline-none"
-                          style={{
-                            background: 'var(--bg-subtle)',
-                            border: '1px solid var(--accent)',
-                            color: 'var(--text-primary)',
-                          }}
-                          onKeyDown={(e) => { if (e.key === 'Enter' && e.ctrlKey) saveEdit(); }}
-                        />
-                        <button onClick={saveEdit}
-                          className="flex-shrink-0 rounded-xl px-3 py-2 text-xs font-bold text-white"
-                          style={{ background: '#10b981' }}>
-                          <Check size={14} />
-                        </button>
-                      </div>
-                    ) : (
-                      <p className="cursor-text text-sm font-medium leading-relaxed"
-                        style={{ color: 'var(--text-primary)' }}
-                        onClick={() => startEdit(i)}>
-                        {seg.text}
-                      </p>
-                    )}
-                  </div>
+                    {/* Text / Edit */}
+                    <div className="flex-1 min-w-0">
+                      {editingIndex === i ? (
+                        <div className="flex gap-2">
+                          <textarea
+                            autoFocus
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            rows={3}
+                            className="flex-1 resize-none rounded-xl px-3 py-2 text-sm focus:outline-none"
+                            style={{
+                              background: 'var(--bg-subtle)',
+                              border: '1px solid var(--accent)',
+                              color: 'var(--text-primary)',
+                            }}
+                            onKeyDown={(e) => { 
+                              if (e.key === 'Enter' && e.ctrlKey) saveEdit(); 
+                              if (e.key === 'Escape') setEditingIndex(null);
+                            }}
+                          />
+                          <button onClick={saveEdit}
+                            className="flex-shrink-0 rounded-xl px-3 py-2 text-xs font-bold text-white"
+                            style={{ background: '#10b981' }}>
+                            <Check size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="cursor-text text-sm font-medium leading-relaxed"
+                          style={{ color: 'var(--text-primary)' }}
+                          onClick={() => startEdit(i)}>
+                          {seg.text}
+                        </p>
+                      )}
+                    </div>
 
-                  {/* Actions — Visible on touch devices, hover-triggered on desktop */}
-                  <div className="flex flex-row sm:flex-col gap-1.5 justify-end sm:justify-start opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
-                    <button onClick={() => toggleHighlight(i)}
-                      className="rounded-lg p-1.5 text-xs font-bold transition-colors"
-                      style={seg.highlighted ? {
-                        background: 'color-mix(in srgb, #f59e0b 15%, var(--bg-subtle))',
-                        color: '#f59e0b',
-                      } : {
-                        color: 'var(--text-muted)',
-                      }}>
-                      ★
-                    </button>
-                    <button onClick={() => startEdit(i)}
-                      className="rounded-lg p-1.5 transition-colors"
-                      style={{ color: 'var(--text-muted)' }}>
-                      <Edit3 size={12} />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                    {/* Actions — Visible on touch devices, hover-triggered on desktop */}
+                    <div className="flex flex-row sm:flex-col gap-1.5 justify-end sm:justify-start opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
+                      <button onClick={() => toggleHighlight(i)}
+                        className="rounded-lg p-1.5 text-xs font-bold transition-colors"
+                        style={seg.highlighted ? {
+                          background: 'color-mix(in srgb, #f59e0b 15%, var(--bg-subtle))',
+                          color: '#f59e0b',
+                        } : {
+                          color: 'var(--text-muted)',
+                        }}>
+                        ★
+                      </button>
+                      <button onClick={() => startEdit(i)}
+                        className="rounded-lg p-1.5 transition-colors"
+                        style={{ color: 'var(--text-muted)' }}>
+                        <Edit3 size={12} />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

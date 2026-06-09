@@ -45,7 +45,7 @@ const getLanguageName = (code: string): string => {
 };
 
 export const VoiceToText: React.FC = () => {
-  const { addHistoryItem, detectedLang, setDetectedLang } = useApp();
+  const { addHistoryItem, setDetectedLang } = useApp();
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
   const [segments, setSegments] = useState<TranscriptionSegment[]>([]);
   const [liveTranscript, setLiveTranscript] = useState('');
@@ -54,19 +54,90 @@ export const VoiceToText: React.FC = () => {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en-US');
+  const [isInsecureOrigin, setIsInsecureOrigin] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recognitionRef = useRef<any>(null);
   const isManuallyStoppedRef = useRef(false);
   const liveTranscriptRef = useRef('');
 
-  useEffect(() => () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (recognitionRef.current) recognitionRef.current.stop();
+  useEffect(() => {
+    // Check if loaded on a secure origin (SpeechRecognition is disabled on HTTP except localhost)
+    const isSecure = window.location.protocol === 'https:' || 
+                     window.location.hostname === 'localhost' || 
+                     window.location.hostname === '127.0.0.1';
+    setIsInsecureOrigin(!isSecure);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
+    };
   }, []);
 
   const formatTime = (s: number) =>
     `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+  const triggerDemoMode = () => {
+    setErrorMsg('');
+    setRecordingState('recording');
+    setLiveTranscript('');
+    liveTranscriptRef.current = '';
+    setRecordSeconds(0);
+    
+    const samplePhrases = {
+      'en-US': 'Hello! Welcome to the MCC AI language workstation. This is an English voice transcription test.',
+      'ta-IN': 'வணக்கம்! எமசிசி ஏஐ மொழி பணிநிலையத்திற்கு உங்களை வரவேற்கிறோம். இது தமிழ் குரல்வழி உரை மாற்ற சோதனை ஆகும்.',
+      'hi-IN': 'नमस्ते! एमसीसी एआई भाषा वर्कस्टेशन में आपका स्वागत है। यह हिंदी वॉयस ट्रांसक्रिप्शन परीक्षण है।',
+      'es-ES': '¡Hola! Bienvenido a la estación de trabajo de lenguaje MCC AI. Esta es una prueba de transcripción de voz en español.',
+      'fr-FR': 'Bonjour! Bienvenue dans le poste de travail linguistique de MCC AI. Ceci est un test de transcription vocale en français.',
+      'de-DE': 'Hallo! Willkommen an der MCC AI Sprach-Workstation. Dies ist ein Test für die deutsche Sprachtranskription.',
+    };
+
+    const textToSimulate = samplePhrases[selectedLanguage as keyof typeof samplePhrases] || samplePhrases['en-US'];
+    const words = textToSimulate.split(' ');
+    
+    if (timerRef.current) clearInterval(timerRef.current);
+    isManuallyStoppedRef.current = true; // prevent native onend from triggering
+    
+    let secondsElapsed = 0;
+    const timer = setInterval(() => {
+      secondsElapsed++;
+      setRecordSeconds(secondsElapsed);
+    }, 1000);
+    timerRef.current = timer;
+
+    let currentWordIdx = 0;
+    let textAccumulator = '';
+    const simulateInterval = setInterval(() => {
+      if (currentWordIdx < words.length) {
+        textAccumulator += words[currentWordIdx] + ' ';
+        setLiveTranscript(textAccumulator.trim());
+        liveTranscriptRef.current = textAccumulator.trim();
+        currentWordIdx++;
+      } else {
+        clearInterval(simulateInterval);
+        clearInterval(timer);
+        setRecordingState('done');
+        setDetectedLang(selectedLanguage);
+        const finalTranscript = liveTranscriptRef.current.trim();
+        if (finalTranscript) {
+          const langName = getLanguageName(selectedLanguage);
+          setSegments(s => [...s, {
+            id: Date.now().toString(),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            day: new Date().toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' }),
+            language: langName,
+            text: finalTranscript
+          }]);
+          addHistoryItem('voice-to-text', 'Voice Recording (Demo)', `${finalTranscript.split(' ').filter(Boolean).length} words`);
+        }
+        setLiveTranscript('');
+        liveTranscriptRef.current = '';
+      }
+    }, 150);
+  };
 
   const startRecording = async () => {
     isManuallyStoppedRef.current = false;
@@ -78,7 +149,7 @@ export const VoiceToText: React.FC = () => {
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setErrorMsg('Your browser does not support Speech Recognition. Please use Chrome, Edge, or Safari.');
+      setErrorMsg('Your browser does not support native speech recognition. Please use Chrome, Edge, or Safari.');
       setRecordingState('error');
       return;
     }
@@ -106,18 +177,27 @@ export const VoiceToText: React.FC = () => {
       };
 
       recognition.onerror = (event: any) => {
-        if (event.error !== 'no-speech' && event.error !== 'aborted') {
-          setErrorMsg(`Recognition error: ${event.error}`);
+        if (event.error !== 'aborted') {
+          let msg = `Voice recognition error: ${event.error}`;
+          if (event.error === 'not-allowed') {
+            msg = 'Microphone permission blocked. Please click the Lock/Microphone icon in your browser address bar and enable microphone access.';
+          } else if (event.error === 'no-speech') {
+            msg = 'No speech detected. Please check your microphone connection, speak closer to the mic, and try again.';
+          } else if (event.error === 'network') {
+            msg = 'Network connection error. Browser-native speech recognition requires an internet connection.';
+          }
+          setErrorMsg(msg);
           setRecordingState('error');
-          stopRecording();
+          stopRecording(true);
         }
       };
 
       recognition.onend = () => {
         if (!isManuallyStoppedRef.current) {
-          setRecordingState('done');
           const finalTranscript = liveTranscriptRef.current.trim();
           if (finalTranscript) {
+            setRecordingState('done');
+            setDetectedLang(selectedLanguage);
             const langName = getLanguageName(selectedLanguage);
             setSegments(s => [...s, {
               id: Date.now().toString(),
@@ -127,6 +207,9 @@ export const VoiceToText: React.FC = () => {
               text: finalTranscript
             }]);
             addHistoryItem('voice-to-text', 'Voice Recording', `${finalTranscript.split(' ').filter(Boolean).length} words`);
+          } else {
+            setRecordingState('error');
+            setErrorMsg('No speech detected. Please check if your microphone is active and try again.');
           }
           setLiveTranscript('');
           liveTranscriptRef.current = '';
@@ -136,21 +219,22 @@ export const VoiceToText: React.FC = () => {
 
       recognition.start();
     } catch (err: any) {
-      setErrorMsg('Failed to initialize speech recognition.');
+      setErrorMsg('Failed to initialize speech recognition. Check microphone hardware.');
       setRecordingState('error');
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = (isError = false) => {
     isManuallyStoppedRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch (e) {}
     }
-    setRecordingState('done');
-    setDetectedLang(selectedLanguage);
+    
     const finalTranscript = liveTranscriptRef.current.trim();
-    if (finalTranscript) {
+    if (finalTranscript && !isError) {
+      setRecordingState('done');
+      setDetectedLang(selectedLanguage);
       const langName = getLanguageName(selectedLanguage);
       setSegments(s => [...s, {
         id: Date.now().toString(),
@@ -160,12 +244,13 @@ export const VoiceToText: React.FC = () => {
         text: finalTranscript
       }]);
       addHistoryItem('voice-to-text', 'Voice Recording', `${finalTranscript.split(' ').filter(Boolean).length} words`);
+    } else if (!isError) {
+      setRecordingState('error');
+      setErrorMsg('No speech detected. Please check if your microphone is active and try again.');
     }
     setLiveTranscript('');
     liveTranscriptRef.current = '';
   };
-
-
 
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
@@ -195,6 +280,26 @@ export const VoiceToText: React.FC = () => {
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
+      {/* Insecure Origin Alert */}
+      {isInsecureOrigin && (
+        <div className="alert alert-warning text-xs flex items-start gap-2.5 rounded-2xl p-4 border" style={{
+          background: 'color-mix(in srgb, #f59e0b 8%, var(--bg-card))',
+          borderColor: 'color-mix(in srgb, #f59e0b 20%, transparent)',
+          color: '#d97706'
+        }}>
+          <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
+          <div className="flex-1 text-left">
+            <span className="font-bold">Security Constraint:</span> Voice recognition requires an HTTPS connection or localhost. Because this site is loaded over insecure HTTP, the browser's microphone API is blocked.
+            <button 
+              onClick={triggerDemoMode}
+              className="ml-2 underline font-extrabold cursor-pointer hover:opacity-80 text-[#d97706]"
+            >
+              Click here to Try Demo Mode (Simulate transcription)
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Error Banner */}
       <AnimatePresence>
         {errorMsg && (
@@ -205,7 +310,15 @@ export const VoiceToText: React.FC = () => {
             className="alert alert-error"
           >
             <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
-            <span className="flex-1">{errorMsg}</span>
+            <div className="flex-1 text-left flex flex-wrap items-center gap-x-2">
+              <span>{errorMsg}</span>
+              <button 
+                onClick={triggerDemoMode}
+                className="underline font-extrabold cursor-pointer text-red-100 hover:text-white"
+              >
+                Or Try Demo Mode
+              </button>
+            </div>
             <button onClick={() => setErrorMsg('')} className="flex-shrink-0 opacity-60 hover:opacity-100">
               <X size={14} />
             </button>
@@ -248,7 +361,7 @@ export const VoiceToText: React.FC = () => {
           )}
           <button
             id="vtt-record-btn"
-            onClick={recordingState === 'recording' ? stopRecording : startRecording}
+            onClick={recordingState === 'recording' ? () => stopRecording(false) : startRecording}
             disabled={recordingState === 'processing'}
             className={`relative z-10 flex h-20 w-20 items-center justify-center rounded-full transition-all duration-300 ${
               recordingState === 'recording'

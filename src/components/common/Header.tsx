@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sun, Moon, Menu, X, ArrowRight } from 'lucide-react';
+import { Sun, Moon, Menu, X, ArrowRight, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Header: React.FC = () => {
@@ -35,29 +35,32 @@ export const Header: React.FC = () => {
 
   return (
     <header
-      className="sticky top-0 z-50 w-full"
+      className="sticky top-0 z-50 w-full transition-all duration-300 backdrop-blur-md"
       style={{
-        background: 'var(--bg-card)',
+        background: theme === 'dark' ? 'rgba(3, 7, 18, 0.75)' : 'rgba(255, 255, 255, 0.8)',
         borderBottom: '1px solid var(--border-base)',
-        boxShadow: 'var(--shadow-sm)',
+        boxShadow: theme === 'dark' 
+          ? '0 4px 24px -1px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.03)'
+          : '0 4px 20px -1px rgba(0, 0, 0, 0.04)',
       }}
     >
-      <div className="w-full flex h-16 md:h-24 items-center justify-between px-4 sm:px-6">
+      <div className="w-full flex h-16 md:h-20 items-center justify-between px-4 sm:px-6 max-w-7xl mx-auto">
 
         <div
-          className="flex cursor-pointer items-center gap-2 md:gap-3.5"
+          className="flex cursor-pointer items-center gap-2 md:gap-3"
           onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
         >
           <img
             src="/logo.png"
             alt="MCC AI Transcription Logo"
-            className="h-[52px] w-[52px] min-w-[52px] md:h-[84px] md:w-[84px] md:min-w-[84px] object-cover rounded-full shadow-lg hover:scale-105 transition-transform duration-200"
+            className="h-10 w-10 min-w-[40px] md:h-12 md:w-12 md:min-w-[48px] object-cover rounded-full shadow-md border border-white/10 hover:scale-105 transition-transform duration-200"
           />
           <div className="flex flex-col justify-center select-none">
-            <span className="font-display text-base md:text-lg font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
-              MCC <span className="text-[var(--accent)] font-bold">AI</span>
+            <span className="font-display text-base md:text-lg font-black tracking-tight leading-none text-slate-900 dark:text-white flex items-center gap-1">
+              MCC <span className="bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent font-extrabold">AI</span>
+              <Sparkles size={11} className="text-cyan-600 dark:text-cyan-400 animate-pulse hidden md:inline" />
             </span>
-            <span className="text-[8px] md:text-[10px] font-bold tracking-[0.15em] uppercase mt-0.5 md:mt-1.5" style={{ color: 'var(--text-muted)' }}>
+            <span className="text-[7px] md:text-[9px] font-bold tracking-[0.18em] uppercase mt-0.5" style={{ color: 'var(--text-secondary)' }}>
               Language Platform
             </span>
           </div>
@@ -70,8 +73,7 @@ export const Header: React.FC = () => {
               <button
                 key={item.id}
                 onClick={() => navigateToSection(item.id)}
-                className="relative text-sm font-medium transition-all duration-300 hover:text-[var(--accent)] py-1.5 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-[var(--accent)] after:transition-all after:duration-300 after:ease-out"
-                style={{ color: 'var(--text-secondary)' }}
+                className="relative text-sm font-bold transition-all duration-200 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white py-1.5 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-blue-600 dark:after:bg-cyan-500 after:transition-all after:duration-200 after:ease-out"
               >
                 {item.label}
               </button>
@@ -81,9 +83,9 @@ export const Header: React.FC = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:opacity-80"
+              className="flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
               style={{
-                background: 'var(--bg-subtle)',
+                background: theme === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(15, 23, 42, 0.05)',
                 border: '1px solid var(--border-base)',
                 color: 'var(--text-secondary)',
               }}
@@ -94,19 +96,20 @@ export const Header: React.FC = () => {
 
             <button
               onClick={() => handleLaunchWorkspace()}
-              className={`group flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200`}
+              className={`group flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer`}
               style={viewMode === 'workspace' ? {
-                background: 'var(--bg-subtle)',
+                background: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.08)',
                 color: 'var(--text-primary)',
                 border: '1px solid var(--border-base)',
               } : {
-                background: 'var(--accent)',
+                background: 'linear-gradient(135deg, #1e40af, #0891b2)',
                 color: '#ffffff',
                 border: '1px solid transparent',
+                boxShadow: '0 0 15px rgba(6, 182, 212, 0.15)',
               }}
             >
               {viewMode === 'workspace' && (
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               )}
               <span>{viewMode === 'workspace' ? 'Workspace Active' : 'Launch Platform'}</span>
               {viewMode !== 'workspace' && (
@@ -120,9 +123,9 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-2 md:hidden">
           <button
             onClick={toggleTheme}
-            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-lg transition-all"
             style={{
-              background: 'var(--bg-subtle)',
+              background: theme === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(15, 23, 42, 0.05)',
               border: '1px solid var(--border-base)',
               color: 'var(--text-secondary)',
             }}
@@ -132,9 +135,9 @@ export const Header: React.FC = () => {
           </button>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-lg transition-all"
             style={{
-              background: 'var(--bg-subtle)',
+              background: theme === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(15, 23, 42, 0.05)',
               color: 'var(--text-secondary)',
             }}
           >
@@ -151,17 +154,17 @@ export const Header: React.FC = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             style={{
-              background: 'var(--bg-card)',
+              background: theme === 'dark' ? 'rgba(10, 15, 30, 0.95)' : 'rgba(255, 255, 255, 0.98)',
               borderTop: '1px solid var(--border-base)',
             }}
-            className="md:hidden overflow-hidden"
+            className="md:hidden overflow-hidden backdrop-blur-lg"
           >
             <div className="space-y-1 px-4 py-5">
               {menuItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => navigateToSection(item.id)}
-                  className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors hover:opacity-80"
+                  className="block w-full rounded-lg px-3 py-2.5 text-left text-sm font-bold transition-colors hover:bg-slate-100 dark:hover:bg-white/5"
                   style={{
                     color: 'var(--text-secondary)',
                   }}
@@ -169,11 +172,11 @@ export const Header: React.FC = () => {
                   {item.label}
                 </button>
               ))}
-              <div className="pt-3 mt-3" style={{ borderTop: '1px solid var(--border-base)' }}>
+              <div className="pt-3 mt-3 animate-fade-in" style={{ borderTop: '1px solid var(--border-base)' }}>
                 <button
                   onClick={() => handleLaunchWorkspace()}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
-                  style={{ background: 'var(--accent)' }}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white cursor-pointer"
+                  style={{ background: 'linear-gradient(135deg, #1e40af, #0891b2)' }}
                 >
                   <span>Launch Workspace</span>
                   <ArrowRight size={14} />
