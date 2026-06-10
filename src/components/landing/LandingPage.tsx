@@ -344,15 +344,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ── SECTION SEPARATOR LIGHT TRAILS ── */}
-      <div className="relative h-12 w-full flex items-center justify-center pointer-events-none overflow-hidden">
-        <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-gradient-to-b from-[#DDE5F0] via-blue-500 to-[#DDE5F0] dark:from-white/5 dark:via-purple-500 dark:to-white/5 opacity-50" />
-        <motion.div 
-          className="absolute h-2 w-2 rounded-full bg-blue-500 dark:bg-purple-400 shadow-[0_0_10px_rgba(59,130,246,0.8)]"
-          animate={{ y: [-20, 20] }}
-          transition={{ repeat: Infinity, duration: 2.5, ease: 'linear' }}
-        />
-      </div>
+
 
       {/* ── STATISTICS SECTION ────────────────────────────────────────────────────── */}
       <section className="relative py-8 px-4">
@@ -401,10 +393,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ── SECTION SEPARATOR LIGHT TRAILS ── */}
-      <div className="relative h-12 w-full flex items-center justify-center pointer-events-none overflow-hidden">
-        <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-gradient-to-b from-[#DDE5F0] via-cyan-500 to-[#DDE5F0] dark:from-white/5 dark:via-cyan-500 dark:to-white/5 opacity-50" />
-      </div>
+
 
       {/* ── TOOLS SECTION (PREMIUM PRODUCT SHOWCASES) ───────────────────────── */}
       <section id="ai-language-tools" className="relative py-10 px-4">
@@ -554,10 +543,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ── SECTION SEPARATOR LIGHT TRAILS ── */}
-      <div className="relative h-12 w-full flex items-center justify-center pointer-events-none overflow-hidden">
-        <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-gradient-to-b from-[#DDE5F0] via-purple-500 to-[#DDE5F0] dark:from-white/5 dark:via-purple-500 dark:to-white/5 opacity-50" />
-      </div>
+
 
       {/* ── HOW IT WORKS (INTERACTIVE PROCESS ROW) ─────────────────────────── */}
       <section id="workflow" className="py-10 px-4 relative overflow-hidden">
@@ -608,10 +594,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ── SECTION SEPARATOR LIGHT TRAILS ── */}
-      <div className="relative h-12 w-full flex items-center justify-center pointer-events-none overflow-hidden">
-        <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-gradient-to-b from-[#DDE5F0] via-cyan-500 to-[#DDE5F0] dark:from-white/5 dark:via-cyan-500 dark:to-white/5 opacity-50" />
-      </div>
+
 
       {/* ── WHY MCC AI (STRIPE-STYLE GRID) ──────────────────────────────────── */}
       <section id="features" className="py-10 px-4 relative">
@@ -656,10 +639,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ── SECTION SEPARATOR LIGHT TRAILS ── */}
-      <div className="relative h-12 w-full flex items-center justify-center pointer-events-none overflow-hidden">
-        <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-gradient-to-b from-[#DDE5F0] via-blue-500 to-[#DDE5F0] dark:from-white/5 dark:via-blue-500 dark:to-white/5 opacity-50" />
-      </div>
+
 
       {/* ── SUPPORTED LANGUAGES INTERACTIVE MAP ─────────────────────────────── */}
       <section id="languages" className="py-10 px-4 relative overflow-hidden">
@@ -753,10 +733,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ── SECTION SEPARATOR LIGHT TRAILS ── */}
-      <div className="relative h-12 w-full flex items-center justify-center pointer-events-none overflow-hidden">
-        <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-gradient-to-b from-[#DDE5F0] via-cyan-500 to-[#DDE5F0] dark:from-white/5 dark:via-cyan-500 dark:to-white/5 opacity-50" />
-      </div>
+
 
       {/* ── TESTIMONIALS CAROUSEL ───────────────────────────────────────────── */}
       <section id="testimonials" className="py-10 px-4 relative">
@@ -823,10 +800,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ── SECTION SEPARATOR LIGHT TRAILS ── */}
-      <div className="relative h-12 w-full flex items-center justify-center pointer-events-none overflow-hidden">
-        <div className="absolute top-0 bottom-0 left-1/2 w-[1.5px] bg-gradient-to-b from-[#DDE5F0] via-purple-500 to-[#DDE5F0] dark:from-white/5 dark:via-purple-500 dark:to-white/5 opacity-50" />
-      </div>
+
 
       {/* ── VIDEO DEMO SECTION ──────────────────────────────────────────────── */}
       <section className="py-20 sm:py-28 px-4 relative overflow-hidden bg-slate-50/50 dark:bg-[#070d1e]/20 border-y border-slate-200 dark:border-white/5">
