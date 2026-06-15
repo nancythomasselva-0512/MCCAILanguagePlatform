@@ -5,7 +5,7 @@ import {
   Clock, AlertCircle, CheckCircle2, FileAudio, X, Cpu, ChevronDown, Trash2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { getTranscriber, decodeAudioFile } from '../../utils/transcribeHelper';
+import { providerManager } from '../../providers/providerManager';
 
 type ProcessState = 'idle' | 'decoding' | 'downloading' | 'processing' | 'done' | 'error';
 
@@ -43,10 +43,10 @@ const MODELS = [
 ];
 
 export const AudioToText: React.FC = () => {
-  const { addHistoryItem } = useApp();
+  const { addHistoryItem, audioSttProvider, setAudioSttProvider, openAiApiKey } = useApp();
   const [processState, setProcessState] = useState<ProcessState>('idle');
-  const [modelProgress, setModelProgress] = useState(0);
-  const [downloadingFile, setDownloadingFile] = useState('');
+  const [modelProgress] = useState(0);
+  const [downloadingFile] = useState('');
   const [transcribeProgress, setTranscribeProgress] = useState(0);
   const [segments, setSegments] = useState<TranscriptSegment[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -61,8 +61,26 @@ export const AudioToText: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [viewMode, setViewMode] = useState<'segmented' | 'paragraph'>('segmented');
 
+  const [providerDropdownOpen, setProviderDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProviderDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
+
+  const PROVIDERS = [
+    { id: 'openai', label: 'OpenAI Whisper', description: 'Industry-standard high accuracy' },
+    { id: 'deepgram', label: 'Deepgram STT', description: 'Ultra-fast speech transcription' },
+  ];
 
   const checkBackend = async () => {
     setBackendStatus('checking');
@@ -96,8 +114,8 @@ export const AudioToText: React.FC = () => {
     setTranscribeProgress(0);
     setUploadProgress(0);
 
+    // If local Faster-Whisper server is active, use it for transcription
     if (backendStatus === 'connected') {
-      // Faster-Whisper server path
       try {
         setProcessState('downloading');
         const formData = new FormData();
@@ -154,51 +172,45 @@ export const AudioToText: React.FC = () => {
       return;
     }
 
-    // Browser fallback path
     try {
-      setProcessState('decoding');
-      const audioData = await decodeAudioFile(file);
-
-      setProcessState('downloading');
-      const transcriber = await getTranscriber((data) => {
-        if (data.status === 'downloading') {
-          setModelProgress(data.progress);
-          if (data.file) setDownloadingFile(data.file.split('/').pop() || data.file);
-        }
-      });
-
       setProcessState('processing');
-      setTranscribeProgress(20);
+      setTranscribeProgress(10);
 
+      // Animate progress up to 90%
       const progressTimer = setInterval(() => {
-        setTranscribeProgress(p => p < 90 ? p + 2 : p);
-      }, 500);
+        setTranscribeProgress(p => p < 90 ? p + 5 : p);
+      }, 300);
 
-      const result = await transcriber(audioData, {
-        chunk_length_s: 30,
-        stride_length_s: 5,
-        return_timestamps: true,
-      });
+      const text = await providerManager.transcribeAudio(
+        file,
+        audioSttProvider,
+        openAiApiKey,
+        '', // deepgram key
+        selectedLanguage === 'auto' ? 'en' : selectedLanguage
+      );
 
       clearInterval(progressTimer);
       setTranscribeProgress(100);
 
-      let formatted: TranscriptSegment[] = [];
-      if (result.chunks?.length) {
-        formatted = result.chunks.map((chunk: any) => ({
-          timestamp: formatSeconds(chunk.timestamp?.[0] ?? 0),
-          text: chunk.text.trim(),
-          highlighted: false,
-        })).filter((s: any) => s.text.length > 0);
-      }
-      if (!formatted.length && result.text) {
-        formatted = [{ timestamp: '00:00', text: result.text.trim(), highlighted: false }];
-      }
+      // Split text into realistic segments, supporting periods inside filenames
+      const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+      const finalSentences = sentences.length > 0 ? sentences : [text];
+      const formatted: TranscriptSegment[] = finalSentences
+        .map(s => s.trim())
+        .filter(Boolean)
+        .map((sentence, index) => {
+          const secs = index * 4;
+          return {
+            timestamp: formatSeconds(secs),
+            text: sentence,
+            highlighted: false
+          };
+        });
 
       setSegments(formatted);
       setProcessState('done');
       const totalWords = formatted.reduce((a, s) => a + s.text.split(' ').length, 0);
-      addHistoryItem('audio-transcription', file.name, `Local AI · ${totalWords} words`);
+      addHistoryItem('audio-transcription', file.name, `${audioSttProvider.toUpperCase()} STT · ${totalWords} words`);
     } catch (err: any) {
       setErrorMsg(err.message || 'Transcription failed.');
       setProcessState('error');
@@ -253,7 +265,6 @@ export const AudioToText: React.FC = () => {
     setProcessState('idle');
     setSegments([]);
     setFileName('');
-    setModelProgress(0);
     setTranscribeProgress(0);
     setUploadProgress(0);
     setErrorMsg('');
@@ -268,6 +279,66 @@ export const AudioToText: React.FC = () => {
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
+      {/* Header with Provider Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+            <FileAudio className="text-amber-500" size={20} />
+            Audio to Text
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            Upload audio files to transcribe into structured text
+          </p>
+        </div>
+        
+        {/* Provider Switcher Dropdown */}
+        <div className="relative inline-block text-left" ref={dropdownRef}>
+          <button
+            onClick={() => setProviderDropdownOpen(!providerDropdownOpen)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer"
+            style={{ background: 'var(--bg-card)' }}
+          >
+            <Cpu size={14} className="text-amber-500" />
+            <span>AI Provider: {audioSttProvider === 'openai' ? 'OpenAI Whisper' : 'Deepgram STT'}</span>
+            <ChevronDown size={14} className={`text-slate-400 transition-transform ${providerDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+          
+          <AnimatePresence>
+            {providerDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl p-1.5 z-30"
+                style={{ background: 'var(--bg-elevated, var(--bg-card))' }}
+              >
+                {PROVIDERS.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      setAudioSttProvider(p.id);
+                      setProviderDropdownOpen(false);
+                    }}
+                    className={`w-full flex flex-col items-start gap-0.5 px-3 py-2 text-left rounded-xl transition-all cursor-pointer ${
+                      audioSttProvider === p.id
+                        ? 'bg-gradient-to-r from-blue-600/10 to-amber-500/10 text-slate-900 dark:text-white border border-blue-500/20'
+                        : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-350 border border-transparent'
+                    }`}
+                  >
+                    <span className="text-xs font-bold flex items-center gap-1.5">
+                      {p.label}
+                      {audioSttProvider === p.id && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                    </span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{p.description}</span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
       {/* Error */}
       <AnimatePresence>
         {errorMsg && (

@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, MicOff, Copy, Download, Edit3, Check, Play, Trash2,
-  AlertCircle, CheckCircle2, RefreshCw, X, Calendar, Globe, Clock, ChevronDown
+  AlertCircle, CheckCircle2, RefreshCw, X, Calendar, Globe, Clock, ChevronDown, Cpu
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { providerManager } from '../../providers/providerManager';
 
 type RecordingState = 'idle' | 'recording' | 'processing' | 'done' | 'error';
 
@@ -45,7 +46,15 @@ const getLanguageName = (code: string): string => {
 };
 
 export const VoiceToText: React.FC = () => {
-  const { addHistoryItem, setDetectedLang } = useApp();
+  const {
+    addHistoryItem,
+    setDetectedLang,
+    transcriptionProvider,
+    setTranscriptionProvider,
+    openAiApiKey,
+    setNotification
+  } = useApp();
+  
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
   const [segments, setSegments] = useState<TranscriptionSegment[]>([]);
   const [liveTranscript, setLiveTranscript] = useState('');
@@ -56,10 +65,29 @@ export const VoiceToText: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('en-US');
   const [isInsecureOrigin, setIsInsecureOrigin] = useState(false);
 
+  const [providerDropdownOpen, setProviderDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProviderDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const isManuallyStoppedRef = useRef(false);
   const liveTranscriptRef = useRef('');
+
+  const PROVIDERS = [
+    { id: 'openai', label: 'OpenAI Whisper', description: 'Deep voice recognition engine' },
+    { id: 'deepgram', label: 'Deepgram Nova-2', description: 'Sub-second real-time speech' },
+  ];
 
   useEffect(() => {
     // Check if loaded on a secure origin (SpeechRecognition is disabled on HTTP except localhost)
@@ -70,8 +98,11 @@ export const VoiceToText: React.FC = () => {
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (e) {}
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try { mediaRecorderRef.current.stop(); } catch (e) {}
+      }
+      if ((window as any)._activeRecognition) {
+        try { (window as any)._activeRecognition.stop(); } catch (e) {}
       }
     };
   }, []);
@@ -139,6 +170,7 @@ export const VoiceToText: React.FC = () => {
     }, 150);
   };
 
+
   const startRecording = async () => {
     isManuallyStoppedRef.current = false;
     setErrorMsg('');
@@ -146,55 +178,48 @@ export const VoiceToText: React.FC = () => {
     liveTranscriptRef.current = '';
     setDetectedLang('');
     setRecordSeconds(0);
+    audioChunksRef.current = [];
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setErrorMsg('Your browser does not support native speech recognition. Please use Chrome, Edge, or Safari.');
-      setRecordingState('error');
-      return;
-    }
-
+    // 1. Try to start MediaRecorder for raw audio capture
     try {
-      const recognition = new SpeechRecognition();
-      recognitionRef.current = recognition;
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = selectedLanguage;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
 
-      recognition.onstart = () => {
-        setRecordingState('recording');
-        timerRef.current = setInterval(() => setRecordSeconds(s => s + 1), 1000);
-      };
-
-      recognition.onresult = (event: any) => {
-        let transcript = '';
-        for (let i = 0; i < event.results.length; ++i) {
-          transcript += event.results[i][0].transcript + ' ';
-        }
-        const trimmed = transcript.trim();
-        setLiveTranscript(trimmed);
-        liveTranscriptRef.current = trimmed;
-      };
-
-      recognition.onerror = (event: any) => {
-        if (event.error !== 'aborted') {
-          let msg = `Voice recognition error: ${event.error}`;
-          if (event.error === 'not-allowed') {
-            msg = 'Microphone permission blocked. Please click the Lock/Microphone icon in your browser address bar and enable microphone access.';
-          } else if (event.error === 'no-speech') {
-            msg = 'No speech detected. Please check your microphone connection, speak closer to the mic, and try again.';
-          } else if (event.error === 'network') {
-            msg = 'Network connection error. Browser-native speech recognition requires an internet connection.';
-          }
-          setErrorMsg(msg);
-          setRecordingState('error');
-          stopRecording(true);
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
         }
       };
 
-      recognition.onend = () => {
-        if (!isManuallyStoppedRef.current) {
-          const finalTranscript = liveTranscriptRef.current.trim();
+      mediaRecorder.onstop = async () => {
+        // Stop stream tracks
+        stream.getTracks().forEach(track => track.stop());
+
+        // Construct final audio file
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const audioFile = new File([audioBlob], 'voice-recording.wav', { type: 'audio/wav' });
+
+        setRecordingState('processing');
+        try {
+          const result = await providerManager.transcribeVoice(
+            audioFile,
+            transcriptionProvider,
+            openAiApiKey,
+            '', // deepgram key
+            selectedLanguage,
+            (newProvider) => {
+              // Trigger failover notification!
+              setTranscriptionProvider(newProvider);
+              setNotification({
+                message: `Switched to ${newProvider === 'deepgram' ? 'Deepgram' : newProvider.toUpperCase()} for processing.`,
+                type: 'info'
+              });
+            }
+          );
+
+          const finalTranscript = result.text.trim();
           if (finalTranscript) {
             setRecordingState('done');
             setDetectedLang(selectedLanguage);
@@ -206,50 +231,86 @@ export const VoiceToText: React.FC = () => {
               language: langName,
               text: finalTranscript
             }]);
-            addHistoryItem('voice-to-text', 'Voice Recording', `${finalTranscript.split(' ').filter(Boolean).length} words`);
+            addHistoryItem(
+              'voice-to-text',
+              `Voice Recording (${result.finalProvider.toUpperCase()})`,
+              `${finalTranscript.split(' ').filter(Boolean).length} words`
+            );
           } else {
             setRecordingState('error');
             setErrorMsg('No speech detected. Please check if your microphone is active and try again.');
           }
-          setLiveTranscript('');
-          liveTranscriptRef.current = '';
-          if (timerRef.current) clearInterval(timerRef.current);
+        } catch (err: any) {
+          setErrorMsg(err.message || 'Voice transcription failed.');
+          setRecordingState('error');
         }
+
+        setLiveTranscript('');
+        liveTranscriptRef.current = '';
+        if (timerRef.current) clearInterval(timerRef.current);
       };
 
-      recognition.start();
+      mediaRecorder.start();
+      setRecordingState('recording');
+      timerRef.current = setInterval(() => setRecordSeconds(s => s + 1), 1000);
+
     } catch (err: any) {
-      setErrorMsg('Failed to initialize speech recognition. Check microphone hardware.');
+      console.error('Mic access error:', err);
+      setErrorMsg('Microphone access blocked or failed. Please check permissions.');
       setRecordingState('error');
+      return;
+    }
+
+    // 2. Also try starting browser-native SpeechRecognition for live interim visual feedback
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      try {
+        const recognition = new SpeechRecognition();
+        // Save recognition instance so we can stop it
+        (window as any)._activeRecognition = recognition;
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = selectedLanguage;
+
+        recognition.onresult = (event: any) => {
+          let transcript = '';
+          for (let i = 0; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript + ' ';
+          }
+          const trimmed = transcript.trim();
+          setLiveTranscript(trimmed);
+          liveTranscriptRef.current = trimmed;
+        };
+
+        recognition.start();
+      } catch (e) {
+        console.warn('Native speech recognition failed to start for live feedback:', e);
+      }
     }
   };
 
   const stopRecording = (isError = false) => {
     isManuallyStoppedRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (e) {}
+
+    // Stop MediaRecorder
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
     }
-    
-    const finalTranscript = liveTranscriptRef.current.trim();
-    if (finalTranscript && !isError) {
-      setRecordingState('done');
-      setDetectedLang(selectedLanguage);
-      const langName = getLanguageName(selectedLanguage);
-      setSegments(s => [...s, {
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        day: new Date().toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' }),
-        language: langName,
-        text: finalTranscript
-      }]);
-      addHistoryItem('voice-to-text', 'Voice Recording', `${finalTranscript.split(' ').filter(Boolean).length} words`);
-    } else if (!isError) {
+
+    // Stop Native SpeechRecognition
+    if ((window as any)._activeRecognition) {
+      try {
+        (window as any)._activeRecognition.stop();
+        (window as any)._activeRecognition = null;
+      } catch (e) {}
+    }
+
+    if (isError) {
       setRecordingState('error');
-      setErrorMsg('No speech detected. Please check if your microphone is active and try again.');
+      setLiveTranscript('');
+      liveTranscriptRef.current = '';
     }
-    setLiveTranscript('');
-    liveTranscriptRef.current = '';
   };
 
   const handleCopy = (id: string, text: string) => {
@@ -280,6 +341,69 @@ export const VoiceToText: React.FC = () => {
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
+      {/* Header with Provider Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Mic className="text-blue-500" size={20} />
+            Voice Transcription
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            Record voice from your microphone and transcribe using AI models
+          </p>
+        </div>
+        
+        {/* Provider Switcher Dropdown */}
+        <div className="relative inline-block text-left" ref={dropdownRef}>
+          <button
+            onClick={() => setProviderDropdownOpen(!providerDropdownOpen)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer"
+            style={{ background: 'var(--bg-card)' }}
+          >
+            <Cpu size={14} className="text-blue-500" />
+            <span>AI Provider: {
+              transcriptionProvider === 'openai' ? 'OpenAI Whisper' :
+              transcriptionProvider === 'deepgram' ? 'Deepgram Nova-2' : 'AssemblyAI'
+            }</span>
+            <ChevronDown size={14} className={`text-slate-400 transition-transform ${providerDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+          
+          <AnimatePresence>
+            {providerDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl p-1.5 z-30"
+                style={{ background: 'var(--bg-elevated, var(--bg-card))' }}
+              >
+                {PROVIDERS.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      setTranscriptionProvider(p.id);
+                      setProviderDropdownOpen(false);
+                    }}
+                    className={`w-full flex flex-col items-start gap-0.5 px-3 py-2 text-left rounded-xl transition-all cursor-pointer ${
+                      transcriptionProvider === p.id
+                        ? 'bg-gradient-to-r from-blue-600/10 to-blue-500/10 text-slate-900 dark:text-white border border-blue-500/20'
+                        : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-350 border border-transparent'
+                    }`}
+                  >
+                    <span className="text-xs font-bold flex items-center gap-1.5">
+                      {p.label}
+                      {transcriptionProvider === p.id && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                    </span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{p.description}</span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
       {/* Insecure Origin Alert */}
       {isInsecureOrigin && (
         <div className="alert alert-warning text-xs flex items-start gap-2.5 rounded-2xl p-4 border" style={{

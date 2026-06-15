@@ -11,6 +11,13 @@ export interface HistoryItem {
   details: string;
 }
 
+export interface UserProfile {
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  createdAt: string;
+}
+
 interface AppContextProps {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
@@ -26,6 +33,29 @@ interface AppContextProps {
   setOpenAiApiKey: (key: string) => void;
   detectedLang: string;
   setDetectedLang: (lang: string) => void;
+  
+  // Provider states
+  ttsProvider: string;
+  setTtsProvider: (provider: string) => void;
+  audioSttProvider: string;
+  setAudioSttProvider: (provider: string) => void;
+  transcriptionProvider: string;
+  setTranscriptionProvider: (provider: string) => void;
+  translationProvider: string;
+  setTranslationProvider: (provider: string) => void;
+
+  // Notification toast
+  notification: { message: string; type: 'success' | 'info' | 'warning' | 'error' } | null;
+  setNotification: (notif: { message: string; type: 'success' | 'info' | 'warning' | 'error' } | null) => void;
+  
+  // Auth state
+  user: UserProfile | null;
+  login: (name: string, email: string) => void;
+  logout: () => void;
+  isAuthModalOpen: boolean;
+  setIsAuthModalOpen: (open: boolean) => void;
+  authModalMode: 'login' | 'signup';
+  setAuthModalMode: (mode: 'login' | 'signup') => void;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -44,6 +74,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('mcc-ai-history');
     return saved ? JSON.parse(saved) : [];
   });
+
+  // Provider states
+  const [ttsProvider, setTtsProviderState] = useState<string>(() => {
+    return localStorage.getItem('mcc-ai-tts-provider') || 'openai';
+  });
+  const [audioSttProvider, setAudioSttProviderState] = useState<string>(() => {
+    return localStorage.getItem('mcc-ai-audiostt-provider') || 'openai';
+  });
+  const [transcriptionProvider, setTranscriptionProviderState] = useState<string>(() => {
+    return localStorage.getItem('mcc-ai-transcription-provider') || 'openai';
+  });
+  const [translationProvider, setTranslationProviderState] = useState<string>(() => {
+    return localStorage.getItem('mcc-ai-translation-provider') || 'openai';
+  });
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' | 'warning' | 'error' } | null>(null);
+
+  const setTtsProvider = (provider: string) => {
+    setTtsProviderState(provider);
+    localStorage.setItem('mcc-ai-tts-provider', provider);
+  };
+  const setAudioSttProvider = (provider: string) => {
+    setAudioSttProviderState(provider);
+    localStorage.setItem('mcc-ai-audiostt-provider', provider);
+  };
+  const setTranscriptionProvider = (provider: string) => {
+    setTranscriptionProviderState(provider);
+    localStorage.setItem('mcc-ai-transcription-provider', provider);
+  };
+  const setTranslationProvider = (provider: string) => {
+    setTranslationProviderState(provider);
+    localStorage.setItem('mcc-ai-translation-provider', provider);
+  };
+
+  // Auth States
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    const savedUser = localStorage.getItem('mcc-ai-user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
 
   useEffect(() => {
     localStorage.setItem('mcc-ai-theme', theme);
@@ -97,6 +167,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setHistory((prev) => prev.filter((item) => item.id !== id));
   };
 
+  // Auth Handlers
+  const login = (name: string, email: string) => {
+    const profile: UserProfile = {
+      name,
+      email,
+      createdAt: new Date().toISOString(),
+      avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`
+    };
+    setUser(profile);
+    localStorage.setItem('mcc-ai-user', JSON.stringify(profile));
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('mcc-ai-user');
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -114,6 +201,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setOpenAiApiKey,
         detectedLang,
         setDetectedLang,
+        ttsProvider,
+        setTtsProvider,
+        audioSttProvider,
+        setAudioSttProvider,
+        transcriptionProvider,
+        setTranscriptionProvider,
+        translationProvider,
+        setTranslationProvider,
+        notification,
+        setNotification,
+        user,
+        login,
+        logout,
+        isAuthModalOpen,
+        setIsAuthModalOpen,
+        authModalMode,
+        setAuthModalMode,
       }}
     >
       {children}
@@ -128,3 +232,4 @@ export const useApp = () => {
   }
   return context;
 };
+

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, Volume2, Languages, FileAudio,
-  History, Trash2, ChevronRight, Clock, X, Settings, ShieldCheck, Key, Menu
+  History, Trash2, Clock, X, Settings, ShieldCheck, Key, Menu, ArrowLeft, LogOut
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { ActiveTabType } from '../../context/AppContext';
@@ -10,18 +10,40 @@ import { VoiceToText } from '../tools/VoiceToText';
 import { TextToVoice } from '../tools/TextToVoice';
 import { TextTranslation } from '../tools/TextTranslation';
 import { AudioToText } from '../tools/AudioToText';
+import { Header } from '../common/Header';
+import { SidebarMenuNode } from './SidebarMenuNode';
+import type { SidebarMenuItem } from './SidebarMenuNode';
 
-const TABS: {
-  id: ActiveTabType;
-  label: string;
-  shortLabel: string;
-  icon: React.ReactNode;
-  activeColor: string;
-}[] = [
-  { id: 'voice-to-text',     label: 'Transcription',  shortLabel: 'Record',      icon: <Mic size={16} />,      activeColor: '#3b82f6' },
-  { id: 'text-to-speech',    label: 'Text to Voice',  shortLabel: 'Voice',       icon: <Volume2 size={16} />,  activeColor: '#8b5cf6' },
-  { id: 'translation',       label: 'Translation',    shortLabel: 'Translate',   icon: <Languages size={16} />,activeColor: '#10b981' },
-  { id: 'audio-transcription',label: 'Audio to Text', shortLabel: 'Audio',       icon: <FileAudio size={16} />,activeColor: '#f59e0b' },
+const SIDEBAR_CONFIG: SidebarMenuItem[] = [
+  {
+    id: 'speech-tools',
+    label: 'Speech Tools',
+    icon: 'Volume2',
+    children: [
+      { id: 'text-to-speech', label: 'Text to Voice', action: 'tab', tabId: 'text-to-speech' },
+      { id: 'audio-transcription', label: 'Audio to Text', action: 'tab', tabId: 'audio-transcription' }
+    ]
+  },
+  {
+    id: 'voice-to-text',
+    label: 'Transcription',
+    icon: 'Mic',
+    action: 'tab',
+    tabId: 'voice-to-text'
+  },
+  {
+    id: 'translation',
+    label: 'Translation',
+    icon: 'Languages',
+    action: 'tab',
+    tabId: 'translation'
+  },
+  {
+    id: 'settings-menu-item',
+    label: 'Settings',
+    icon: 'Settings',
+    action: 'settings'
+  }
 ];
 
 const TYPE_LABELS: Record<ActiveTabType, string> = {
@@ -39,11 +61,56 @@ const TYPE_COLORS: Record<ActiveTabType, string> = {
 };
 
 export const WorkspacePage: React.FC = () => {
-  const { activeTab, setActiveTab, history, clearHistory, deleteHistoryItem, openAiApiKey, setOpenAiApiKey, detectedLang } = useApp();
+  const { 
+    activeTab, 
+    history, 
+    clearHistory, 
+    deleteHistoryItem, 
+    openAiApiKey, 
+    setOpenAiApiKey, 
+    setViewMode,
+    logout,
+    notification,
+    setNotification
+  } = useApp();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile sidebar
   const [tempKey, setTempKey] = useState(openAiApiKey);
+
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
+    const saved = localStorage.getItem('mcc-ai-sidebar-expanded');
+    return saved ? JSON.parse(saved) : { 'speech-tools': true };
+  });
+
+  const toggleExpanded = (nodeId: string) => {
+    setExpanded((prev) => {
+      const next = { ...prev, [nodeId]: !prev[nodeId] };
+      localStorage.setItem('mcc-ai-sidebar-expanded', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  React.useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification, setNotification]);
+
+  const handleSaveSettings = () => {
+    setOpenAiApiKey(tempKey);
+    setSettingsOpen(false);
+  };
+
+  const currentTab = {
+    'voice-to-text': { label: 'Transcription', icon: <Mic size={16} />, activeColor: '#3b82f6' },
+    'text-to-speech': { label: 'Text to Voice', icon: <Volume2 size={16} />, activeColor: '#8b5cf6' },
+    'translation': { label: 'Translation', icon: <Languages size={16} />, activeColor: '#10b981' },
+    'audio-transcription': { label: 'Audio to Text', icon: <FileAudio size={16} />, activeColor: '#f59e0b' },
+  }[activeTab] || { label: 'Tools', icon: <Volume2 size={16} />, activeColor: '#8b5cf6' };
 
   const ActiveTool = {
     'voice-to-text': VoiceToText,
@@ -52,15 +119,10 @@ export const WorkspacePage: React.FC = () => {
     'audio-transcription': AudioToText,
   }[activeTab];
 
-  const handleSaveSettings = () => {
-    setOpenAiApiKey(tempKey);
-    setSettingsOpen(false);
-  };
 
-  const currentTab = TABS.find(t => t.id === activeTab)!;
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)] sm:min-h-[calc(100vh-96px)] flex-col" style={{ background: 'var(--bg-base)' }}>
+    <div className="flex h-screen w-screen overflow-hidden flex-col sm:flex-row" style={{ background: 'var(--bg-base)' }}>
 
       {/* ── Settings Modal ── */}
       <AnimatePresence>
@@ -220,60 +282,27 @@ export const WorkspacePage: React.FC = () => {
 
               {/* Sidebar Nav */}
               <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
-                {TABS.map((tab) => {
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <motion.button
-                      key={tab.id}
-                      onClick={() => { setActiveTab(tab.id); setSidebarOpen(false); }}
-                      className="nav-item relative overflow-hidden"
-                      whileTap={{ scale: 0.97 }}
-                      style={{
-                        color: isActive ? 'var(--sidebar-panel-text-active)' : 'var(--sidebar-panel-text)',
-                      }}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="mobileActiveTabBg"
-                          className="absolute inset-0 rounded-xl"
-                          style={{
-                            background: 'var(--sidebar-panel-active-bg)',
-                            zIndex: 0,
-                          }}
-                          transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                        />
-                      )}
-                      <span className="nav-icon relative z-10" style={isActive ? {
-                        background: 'transparent',
-                        color: 'var(--sidebar-panel-text-active)',
-                      } : { color: 'inherit' }}>
-                        {tab.icon}
-                      </span>
-                      <span className="flex-1 text-left relative z-10">{tab.label}</span>
-                      {isActive && <ChevronRight size={12} className="relative z-10" style={{ color: 'var(--sidebar-panel-text-active)', opacity: 0.7 }} />}
-                    </motion.button>
-                  );
-                })}
+                {SIDEBAR_CONFIG.map((item) => (
+                  <SidebarMenuNode
+                    key={item.id}
+                    node={item}
+                    expanded={expanded}
+                    toggleExpanded={toggleExpanded}
+                    onSettingsOpen={() => setSettingsOpen(true)}
+                    onSidebarClose={() => setSidebarOpen(false)}
+                  />
+                ))}
 
                 <div className="my-2" style={{ height: '1px', background: 'rgba(255,255,255,0.1)' }} />
 
                 <motion.button
                   onClick={() => { setHistoryOpen(true); setSidebarOpen(false); }}
-                  className="nav-item"
+                  className="nav-item text-xs font-semibold"
                   whileTap={{ scale: 0.97 }}
                   style={{ color: 'var(--sidebar-panel-text)' }}
                 >
-                  <span className="nav-icon" style={{ color: 'inherit' }}><History size={16} /></span>
+                  <span className="nav-icon" style={{ color: 'inherit' }}><History size={15} /></span>
                   <span>History</span>
-                </motion.button>
-                <motion.button
-                  onClick={() => { setSettingsOpen(true); setSidebarOpen(false); }}
-                  className="nav-item"
-                  whileTap={{ scale: 0.97 }}
-                  style={{ color: 'var(--sidebar-panel-text)' }}
-                >
-                  <span className="nav-icon" style={{ color: 'inherit' }}><Settings size={16} /></span>
-                  <span>Settings</span>
                 </motion.button>
               </nav>
 
@@ -302,105 +331,103 @@ export const WorkspacePage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* ── Main layout wrapper ── */}
-      <div className="flex w-full flex-1 gap-0">
-
-        {/* ── Desktop Sidebar ── */}
-        <aside
-          className="hidden w-64 flex-shrink-0 sm:flex sm:flex-col justify-between p-6 rounded-none"
-          style={{
-            background: 'var(--sidebar-panel-bg)',
-            borderRight: '1px solid var(--sidebar-panel-border)',
-          }}
-        >
-          <nav className="space-y-1.5" aria-label="Tool navigation">
-            {TABS.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <motion.button
-                  key={tab.id}
-                  id={`workspace-tab-${tab.id}`}
-                  onClick={() => setActiveTab(tab.id)}
-                  className="nav-item relative overflow-hidden"
-                  whileTap={{ scale: 0.97 }}
-                  style={{
-                    color: isActive ? 'var(--sidebar-panel-text-active)' : 'var(--sidebar-panel-text)',
-                  }}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="desktopActiveTabBg"
-                      className="absolute inset-0 rounded-xl"
-                      style={{
-                        background: 'var(--sidebar-panel-active-bg)',
-                        zIndex: 0,
-                      }}
-                      transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                    />
-                  )}
-                  <span className="nav-icon relative z-10" style={isActive ? {
-                    background: 'transparent',
-                    color: 'var(--sidebar-panel-text-active)',
-                  } : { color: 'inherit' }}>
-                    {tab.icon}
-                  </span>
-                  <span className="flex-1 text-left relative z-10">{tab.label}</span>
-                  {isActive && <ChevronRight size={12} className="relative z-10" style={{ color: 'var(--sidebar-panel-text-active)', opacity: 0.7 }} />}
-                </motion.button>
-              );
-            })}
-
-            <div className="my-2" style={{ height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-
-            <motion.button
-              onClick={() => setHistoryOpen(true)}
-              className="nav-item"
-              whileTap={{ scale: 0.97 }}
-              style={{ color: 'var(--sidebar-panel-text)' }}
+      {/* Left Panel: Desktop Sidebar */}
+      <aside
+        className="hidden w-64 flex-shrink-0 sm:flex sm:flex-col justify-between p-6 rounded-none relative z-10"
+        style={{
+          background: 'linear-gradient(180deg, #0d1224 0%, #070913 100%)',
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+        }}
+      >
+        <div className="flex flex-col flex-1">
+          {/* Sidebar Header: Back Button + Logo */}
+          <div className="flex items-center gap-2.5 mb-6 select-none">
+            <button
+              onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all cursor-pointer hover:scale-105 active:scale-95 flex-shrink-0"
+              title="Back to Home"
             >
-              <span className="nav-icon" style={{ color: 'inherit' }}><History size={16} /></span>
-              <span>History</span>
-            </motion.button>
-            <motion.button
-              onClick={() => setSettingsOpen(true)}
-              className="nav-item"
-              whileTap={{ scale: 0.97 }}
-              style={{ color: 'var(--sidebar-panel-text)' }}
-            >
-              <span className="nav-icon" style={{ color: 'inherit' }}><Settings size={16} /></span>
-              <span>Settings</span>
-            </motion.button>
-          </nav>
-
-          <div className="pt-4 space-y-4">
-            {detectedLang && (
-              <div className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[10px] font-semibold bg-white/10 text-white border border-white/10">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Detected: {detectedLang}
-              </div>
-            )}
-
-            {/* System Details box mimicking Storage Details in Drive */}
-            <div className="rounded-xl p-3.5 space-y-2.5 bg-white/5 border border-white/10">
-              <div className="flex items-center gap-2 text-white/95">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-white/10 text-xs">
-                  ⚙️
+              <ArrowLeft size={14} />
+            </button>
+            <div className="flex items-center gap-2 overflow-hidden">
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="h-8 w-8 rounded-full border border-white/20 object-cover flex-shrink-0"
+              />
+              <div className="flex flex-col justify-center min-w-0">
+                <span className="font-display text-xs font-black tracking-tight leading-none text-white truncate flex items-center gap-0.5">
+                  MCC <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-extrabold">AI</span>
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider">System Details</span>
-              </div>
-              <div className="h-1 w-full bg-white/15 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-400 rounded-full" style={{ width: '85%' }} />
-              </div>
-              <div className="flex justify-between text-[9px] text-white/60">
-                <span>Model: Local AI</span>
-                <span>Active</span>
+                <span className="text-[6px] font-bold tracking-[0.15em] uppercase mt-0.5 text-slate-400 truncate">
+                  Language Platform
+                </span>
               </div>
             </div>
           </div>
-        </aside>
 
-        {/* ── Main Content ── */}
-        <main className="flex-1 min-w-0 px-4 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10">
+          {/* Sidebar Nav */}
+          <nav className="space-y-1.5" aria-label="Tool navigation">
+            {SIDEBAR_CONFIG.map((item) => (
+              <SidebarMenuNode
+                key={item.id}
+                node={item}
+                expanded={expanded}
+                toggleExpanded={toggleExpanded}
+                onSettingsOpen={() => setSettingsOpen(true)}
+              />
+            ))}
+
+            <div className="my-2" style={{ height: '1px', background: 'rgba(255,255,255,0.08)' }} />
+
+            <motion.button
+              onClick={() => setHistoryOpen(true)}
+              className="nav-item relative text-xs font-semibold"
+              whileTap={{ scale: 0.97 }}
+              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+            >
+              <span className="nav-icon" style={{ color: 'inherit' }}><History size={15} /></span>
+              <span className="flex-grow text-left text-xs">History</span>
+            </motion.button>
+          </nav>
+
+          {/* Microphone Card */}
+          <div className="relative w-full p-2 mt-6 mb-4 flex items-center justify-center aspect-[4/3] group">
+            {/* Ambient blurred glow */}
+            <div className="absolute w-32 h-32 rounded-full bg-blue-500/20 dark:bg-blue-500/30 blur-2xl pointer-events-none" />
+            
+            <img 
+              src="/microphone_card_illustration.png" 
+              alt="Voice Platform"
+              className="h-full w-full object-contain relative z-10 transition-transform duration-300 group-hover:scale-105"
+              style={{ 
+                mixBlendMode: 'screen',
+                maskImage: 'radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 85%)',
+                WebkitMaskImage: 'radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 85%)'
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Logout Button */}
+        <div className="pt-4 mt-auto">
+          <button
+            onClick={() => logout()}
+            className="w-full flex items-center justify-center gap-2 rounded-xl py-2 px-4 text-xs font-bold text-white border border-white/10 hover:bg-white/5 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <LogOut size={13} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Right Panel: Header + Content */}
+      <div className="flex-grow h-full flex flex-col min-w-0 overflow-hidden bg-slate-50/20 dark:bg-slate-950/20">
+        {/* Workspace specific Header */}
+        <Header />
+
+        {/* Scrollable Main Content */}
+        <main className="flex-grow overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -514,7 +541,39 @@ export const WorkspacePage: React.FC = () => {
             </>
           )}
         </AnimatePresence>
+
+        {/* Global Toast Notification */}
+        <AnimatePresence>
+          {notification && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="fixed top-6 right-6 z-[9999] flex items-center gap-3 rounded-2xl p-4.5 shadow-2xl border backdrop-blur-md text-white font-sans text-xs max-w-sm"
+              style={{
+                background: 'rgba(15, 23, 42, 0.95)',
+                borderColor: 'rgba(255,255,255,0.1)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+              }}
+            >
+              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-white font-black text-xs">
+                !
+              </span>
+              <div className="flex-grow text-left">
+                <p className="font-bold text-[10px] uppercase tracking-wider text-amber-400 mb-0.5">System Notice</p>
+                <p className="text-slate-200 leading-relaxed font-semibold">{notification.message}</p>
+              </div>
+              <button 
+                onClick={() => setNotification(null)} 
+                className="flex-shrink-0 p-1 rounded-lg hover:bg-white/15 text-white/40 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 };
+

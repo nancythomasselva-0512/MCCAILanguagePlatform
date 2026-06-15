@@ -1,5 +1,6 @@
 import { useApp } from './context/AppContext';
 import { Header } from './components/common/Header';
+import { AuthModal } from './components/common/AuthModal';
 import { LandingPage } from './components/landing/LandingPage';
 import { WorkspacePage } from './components/workspace/WorkspacePage';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -9,7 +10,8 @@ function App() {
 
   return (
     <div className="flex min-h-screen flex-col" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
-      <Header />
+      {viewMode === 'landing' && <Header />}
+      <AuthModal />
       <AnimatePresence mode="wait">
         {viewMode === 'landing' ? (
           <motion.div
@@ -40,3 +42,4 @@ function App() {
 }
 
 export default App;
+

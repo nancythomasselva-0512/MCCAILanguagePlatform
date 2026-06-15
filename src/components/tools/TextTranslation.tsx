@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeftRight, Copy, Volume2, RefreshCw,
-  ChevronDown, AlertCircle, CheckCircle2, Loader2, X
+  ChevronDown, AlertCircle, CheckCircle2, Loader2, X, Cpu, Languages
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { providerManager } from '../../providers/providerManager';
 
 const LANGUAGES = [
   'Auto Detect', 'English', 'Tamil', 'Hindi', 'Spanish', 'French', 'German',
@@ -15,19 +16,12 @@ const LANGUAGES = [
 
 const TARGET_LANGUAGES = LANGUAGES.filter(l => l !== 'Auto Detect');
 
-const LANGUAGE_CODES: Record<string, string> = {
-  'Auto Detect': 'auto', 'English': 'en', 'Tamil': 'ta', 'Hindi': 'hi',
-  'Spanish': 'es', 'French': 'fr', 'German': 'de', 'Portuguese': 'pt',
-  'Arabic': 'ar', 'Japanese': 'ja', 'Korean': 'ko', 'Chinese (Simplified)': 'zh-CN',
-  'Russian': 'ru', 'Italian': 'it', 'Dutch': 'nl', 'Polish': 'pl',
-  'Turkish': 'tr', 'Vietnamese': 'vi', 'Thai': 'th', 'Indonesian': 'id',
-  'Bengali': 'bn', 'Urdu': 'ur', 'Swahili': 'sw',
-};
+
 
 type TranslateState = 'idle' | 'translating' | 'done' | 'error';
 
 export const TextTranslation: React.FC = () => {
-  const { addHistoryItem } = useApp();
+  const { addHistoryItem, translationProvider, setTranslationProvider, openAiApiKey } = useApp();
   const [sourceText, setSourceText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [sourceLang, setSourceLang] = useState('Auto Detect');
@@ -38,7 +32,27 @@ export const TextTranslation: React.FC = () => {
   const [copiedTgt, setCopiedTgt] = useState(false);
   const [detectedLang, setDetectedLang] = useState('');
   const [charCount, setCharCount] = useState(0);
+  
+  const [providerDropdownOpen, setProviderDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProviderDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const PROVIDERS = [
+    { id: 'openai', label: 'OpenAI Translation', description: 'Context-aware GPT-4o-mini translation' },
+    { id: 'google', label: 'Google Translate', description: 'Fast, multi-language translation' },
+    { id: 'deepl', label: 'DeepL Translate', description: 'Highly accurate, nuance-preserving' },
+  ];
 
   const translate = (text: string, target: string) => {
     if (!text.trim()) { setTranslatedText(''); setState('idle'); return; }
@@ -47,31 +61,33 @@ export const TextTranslation: React.FC = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       try {
-        const srcCode = LANGUAGE_CODES[sourceLang] || 'auto';
-        const tgtCode = LANGUAGE_CODES[target] || 'en';
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl=${srcCode}&tl=${tgtCode}&q=${encodeURIComponent(text)}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Translation request failed');
-        const json = await res.json();
-        const result = json[0].map((item: any) => item[0]).join('');
-        setTranslatedText(result);
-        let finalDetected = sourceLang;
-        if (sourceLang === 'Auto Detect' && json[2]) {
-          const code = json[2];
-          const key = Object.keys(LANGUAGE_CODES).find(k => LANGUAGE_CODES[k] === code);
-          finalDetected = key || code;
-          setDetectedLang(finalDetected);
+        const result = await providerManager.translateText(
+          text,
+          sourceLang,
+          target,
+          translationProvider,
+          openAiApiKey
+        );
+        setTranslatedText(result.text);
+        if (sourceLang === 'Auto Detect' && result.detectedLang) {
+          setDetectedLang(result.detectedLang);
         } else {
           setDetectedLang('');
         }
         setState('done');
-        addHistoryItem('translation', `${finalDetected} → ${target}`, `${text.split(' ').length} words`);
-      } catch (err) {
-        setErrorMsg('Translation failed. Please check your connection.');
+        addHistoryItem('translation', `${sourceLang === 'Auto Detect' ? (result.detectedLang || 'Detected') : sourceLang} → ${target}`, `${text.split(' ').filter(Boolean).length} words`);
+      } catch (err: any) {
+        setErrorMsg(err.message || 'Translation failed. Please check your connection.');
         setState('error');
       }
     }, 700);
   };
+
+  useEffect(() => {
+    if (sourceText.trim()) {
+      translate(sourceText, targetLang);
+    }
+  }, [translationProvider]);
 
   const handleSourceChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value.slice(0, 5000);
@@ -124,6 +140,69 @@ export const TextTranslation: React.FC = () => {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
+      {/* Header with Provider Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Languages className="text-emerald-500" size={20} />
+            Text Translation
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            Translate text across languages using advanced AI translation models
+          </p>
+        </div>
+        
+        {/* Provider Switcher Dropdown */}
+        <div className="relative inline-block text-left" ref={dropdownRef}>
+          <button
+            onClick={() => setProviderDropdownOpen(!providerDropdownOpen)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer"
+            style={{ background: 'var(--bg-card)' }}
+          >
+            <Cpu size={14} className="text-emerald-500" />
+            <span>AI Provider: {
+              translationProvider === 'openai' ? 'OpenAI Translation' :
+              translationProvider === 'google' ? 'Google Translate' : 'DeepL Translate'
+            }</span>
+            <ChevronDown size={14} className={`text-slate-400 transition-transform ${providerDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+          
+          <AnimatePresence>
+            {providerDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl p-1.5 z-30"
+                style={{ background: 'var(--bg-elevated, var(--bg-card))' }}
+              >
+                {PROVIDERS.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      setTranslationProvider(p.id);
+                      setProviderDropdownOpen(false);
+                    }}
+                    className={`w-full flex flex-col items-start gap-0.5 px-3 py-2 text-left rounded-xl transition-all cursor-pointer ${
+                      translationProvider === p.id
+                        ? 'bg-gradient-to-r from-blue-600/10 to-emerald-500/10 text-slate-900 dark:text-white border border-blue-500/20'
+                        : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-350 border border-transparent'
+                    }`}
+                  >
+                    <span className="text-xs font-bold flex items-center gap-1.5">
+                      {p.label}
+                      {translationProvider === p.id && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                    </span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{p.description}</span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
       {/* Error */}
       <AnimatePresence>
         {errorMsg && (
