@@ -1,21 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type ActiveTabType = 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription';
+export type ActiveTabType = 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription' | 'super-admin-dashboard' | 'tenant-dashboard' | 'sa-overview' | 'sa-tenants' | 'sa-users' | 'sa-plans' | 'sa-providers' | 'sa-usage' | 'sa-billing' | 'sa-ai-logs' | 'sa-audit-logs' | 'sa-health';
 export type ViewModeType = 'landing' | 'workspace';
 
 export interface HistoryItem {
   id: string;
-  type: ActiveTabType;
+  type: string;
   title: string;
   timestamp: string;
   details: string;
 }
 
 export interface UserProfile {
+  id: string;
   name: string;
   email: string;
+  role: 'super_admin' | 'tenant_admin' | 'manager' | 'user';
+  tenant_slug: string | null;
   avatarUrl?: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 interface AppContextProps {
@@ -26,7 +29,7 @@ interface AppContextProps {
   viewMode: ViewModeType;
   setViewMode: (mode: ViewModeType) => void;
   history: HistoryItem[];
-  addHistoryItem: (type: ActiveTabType, title: string, details: string) => void;
+  addHistoryItem: (type: string, title: string, details: string) => void;
   clearHistory: () => void;
   deleteHistoryItem: (id: string) => void;
   openAiApiKey: string;
@@ -50,12 +53,16 @@ interface AppContextProps {
   
   // Auth state
   user: UserProfile | null;
-  login: (name: string, email: string) => void;
+  token: string | null;
+  tenantSlug: string | null;
+  login: (name: string, email: string, role: string, token: string, refreshToken: string, tenantSlug?: string | null) => void;
   logout: () => void;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
-  authModalMode: 'login' | 'signup';
-  setAuthModalMode: (mode: 'login' | 'signup') => void;
+  authModalMode: 'login' | 'signup' | 'tenant-signup';
+  setAuthModalMode: (mode: 'login' | 'signup' | 'tenant-signup') => void;
+  globalConfig: any;
+  loadGlobalConfig: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -64,11 +71,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('mcc-ai-theme');
     if (saved === 'light' || saved === 'dark') return saved;
-    // Default to dark mode for the premium look!
     return 'dark';
   });
 
-  const [activeTab, setActiveTab] = useState<ActiveTabType>('voice-to-text');
+  const [globalConfig, setGlobalConfig] = useState<any>(null);
+
+  const loadGlobalConfig = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/platform-builder/global-config");
+      if (response.ok) {
+        const data = await response.json();
+        setGlobalConfig(data);
+        
+        // Apply theme variables dynamically to document root
+        if (data.theme) {
+          const root = document.documentElement;
+          if (data.theme.primary_color) {
+            root.style.setProperty('--accent', data.theme.primary_color);
+          }
+          if (data.theme.secondary_color) {
+            root.style.setProperty('--accent-hover', data.theme.secondary_color);
+          }
+          if (data.theme.font_family) {
+            root.style.setProperty('--font-sans', `'${data.theme.font_family}', sans-serif`);
+          }
+        }
+        
+        // Apply branding name dynamically to document title
+        if (data.branding?.platform_name) {
+          document.title = `${data.branding.platform_name} - ${data.branding.tagline || 'Language Platform'}`;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch global config", e);
+    }
+  };
+
+  useEffect(() => {
+    loadGlobalConfig();
+  }, []);
+
+  const [activeTab, setActiveTab] = useState<ActiveTabType>(() => {
+    const savedUser = localStorage.getItem('mcc-ai-user');
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.role === 'super_admin') {
+          return 'sa-overview';
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    return 'voice-to-text';
+  });
   const [viewMode, setViewMode] = useState<ViewModeType>('landing');
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     const saved = localStorage.getItem('mcc-ai-history');
@@ -112,8 +168,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const savedUser = localStorage.getItem('mcc-ai-user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
+  const [token, setTokenState] = useState<string | null>(() => {
+    return localStorage.getItem('mcc-ai-token');
+  });
+  const [tenantSlug, setTenantSlugState] = useState<string | null>(() => {
+    return localStorage.getItem('mcc-ai-tenant-slug');
+  });
+
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | 'tenant-signup'>('login');
 
   useEffect(() => {
     localStorage.setItem('mcc-ai-theme', theme);
@@ -125,8 +188,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       root.classList.remove('dark');
       root.setAttribute('data-theme', 'light');
     }
-    // Remove stale body class if any legacy code added it
-    document.body.classList.remove('dark');
   }, [theme]);
 
   const [openAiApiKey, setOpenAiApiKeyState] = useState<string>(() => {
@@ -148,7 +209,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  const addHistoryItem = (type: ActiveTabType, title: string, details: string) => {
+  const addHistoryItem = (type: string, title: string, details: string) => {
     const newItem: HistoryItem = {
       id: Math.random().toString(36).substring(2, 9),
       type,
@@ -156,7 +217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       details,
     };
-    setHistory((prev) => [newItem, ...prev].slice(0, 50)); // Cap history at 50 items
+    setHistory((prev) => [newItem, ...prev].slice(0, 50));
   };
 
   const clearHistory = () => {
@@ -168,20 +229,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Auth Handlers
-  const login = (name: string, email: string) => {
+  const login = (
+    name: string,
+    email: string,
+    role: any,
+    token: string,
+    refreshToken: string,
+    slug?: string | null
+  ) => {
     const profile: UserProfile = {
+      id: Math.random().toString(36).substring(2, 9), // placeholder id if none parsed
       name,
       email,
-      createdAt: new Date().toISOString(),
+      role,
+      tenant_slug: slug || null,
       avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`
     };
+    
     setUser(profile);
+    setTokenState(token);
+    setTenantSlugState(slug || null);
+    
     localStorage.setItem('mcc-ai-user', JSON.stringify(profile));
+    localStorage.setItem('mcc-ai-token', token);
+    localStorage.setItem('mcc-ai-refresh-token', refreshToken);
+    if (slug) {
+      localStorage.setItem('mcc-ai-tenant-slug', slug);
+    } else {
+      localStorage.removeItem('mcc-ai-tenant-slug');
+    }
+
+    setNotification({ message: `Welcome back, ${name}!`, type: 'success' });
+    
+    // Set default active tab based on role
+    if (role === 'super_admin') {
+      setActiveTab('sa-overview');
+    } else {
+      setActiveTab('voice-to-text');
+    }
+    setViewMode('workspace');
   };
 
   const logout = () => {
     setUser(null);
+    setTokenState(null);
+    setTenantSlugState(null);
     localStorage.removeItem('mcc-ai-user');
+    localStorage.removeItem('mcc-ai-token');
+    localStorage.removeItem('mcc-ai-refresh-token');
+    localStorage.removeItem('mcc-ai-tenant-slug');
+    setViewMode('landing');
+    setNotification({ message: 'Logged out successfully.', type: 'info' });
   };
 
   return (
@@ -212,12 +310,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notification,
         setNotification,
         user,
+        token,
+        tenantSlug,
         login,
         logout,
         isAuthModalOpen,
         setIsAuthModalOpen,
         authModalMode,
         setAuthModalMode,
+        globalConfig,
+        loadGlobalConfig,
       }}
     >
       {children}
@@ -232,4 +334,3 @@ export const useApp = () => {
   }
   return context;
 };
-

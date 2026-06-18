@@ -2,67 +2,67 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, Volume2, Languages, FileAudio,
-  History, Trash2, Clock, X, Settings, ShieldCheck, Key, Menu, ArrowLeft, LogOut
+  History, Trash2, Clock, X, Settings, ShieldCheck, Key, Menu, ArrowLeft, LogOut,
+  Activity, Building2, Users, Layers, Server, TrendingUp, CreditCard, Cpu, ShieldAlert, Settings2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import type { ActiveTabType } from '../../context/AppContext';
 import { VoiceToText } from '../tools/VoiceToText';
 import { TextToVoice } from '../tools/TextToVoice';
 import { TextTranslation } from '../tools/TextTranslation';
 import { AudioToText } from '../tools/AudioToText';
+import { SuperAdminDashboard } from '../admin/SuperAdminDashboard';
+import { TenantDashboard } from './TenantDashboard';
+import { TenantBilling } from './TenantBilling';
 import { Header } from '../common/Header';
 import { SidebarMenuNode } from './SidebarMenuNode';
 import type { SidebarMenuItem } from './SidebarMenuNode';
 
-const SIDEBAR_CONFIG: SidebarMenuItem[] = [
-  {
-    id: 'speech-tools',
-    label: 'Speech Tools',
-    icon: 'Volume2',
-    children: [
-      { id: 'text-to-speech', label: 'Text to Voice', action: 'tab', tabId: 'text-to-speech' },
-      { id: 'audio-transcription', label: 'Audio to Text', action: 'tab', tabId: 'audio-transcription' }
-    ]
-  },
-  {
-    id: 'voice-to-text',
-    label: 'Transcription',
-    icon: 'Mic',
-    action: 'tab',
-    tabId: 'voice-to-text'
-  },
-  {
-    id: 'translation',
-    label: 'Translation',
-    icon: 'Languages',
-    action: 'tab',
-    tabId: 'translation'
-  },
-  {
-    id: 'settings-menu-item',
-    label: 'Settings',
-    icon: 'Settings',
-    action: 'settings'
-  }
-];
-
-const TYPE_LABELS: Record<ActiveTabType, string> = {
+const TYPE_LABELS: Record<string, string> = {
   'voice-to-text': 'Voice to Text',
   'text-to-speech': 'Text to Voice',
   'translation': 'Translation',
   'audio-transcription': 'Audio to Text',
+  'super-admin-dashboard': 'Super Admin',
+  'tenant-dashboard': 'Workspace Settings',
+  'sa-overview': 'Dashboard',
+  'sa-tenants': 'Tenants',
+  'sa-users': 'Users',
+  'sa-plans': 'Plans',
+  'sa-providers': 'AI Providers',
+  'sa-usage': 'Usage Analytics',
+  'sa-billing': 'Billing',
+  'tenant-billing': 'Billing',
+  'sa-ai-logs': 'AI Logs',
+  'sa-audit-logs': 'Audit Logs',
+  'sa-health': 'System Health',
+  'sa-builder': 'Platform Builder',
 };
 
-const TYPE_COLORS: Record<ActiveTabType, string> = {
+const TYPE_COLORS: Record<string, string> = {
   'voice-to-text': '#3b82f6',
   'text-to-speech': '#8b5cf6',
   'translation': '#10b981',
   'audio-transcription': '#f59e0b',
+  'super-admin-dashboard': '#ef4444',
+  'tenant-dashboard': '#3b82f6',
+  'sa-overview': '#3b82f6',
+  'sa-tenants': '#3b82f6',
+  'sa-users': '#3b82f6',
+  'sa-plans': '#3b82f6',
+  'sa-providers': '#3b82f6',
+  'sa-usage': '#3b82f6',
+  'sa-billing': '#3b82f6',
+  'tenant-billing': '#3b82f6',
+  'sa-ai-logs': '#3b82f6',
+  'sa-audit-logs': '#3b82f6',
+  'sa-health': '#3b82f6',
+  'sa-builder': '#3b82f6',
 };
 
 export const WorkspacePage: React.FC = () => {
   const { 
     activeTab, 
+    setActiveTab,
     history, 
     clearHistory, 
     deleteHistoryItem, 
@@ -71,12 +71,82 @@ export const WorkspacePage: React.FC = () => {
     setViewMode,
     logout,
     notification,
-    setNotification
+    setNotification,
+    user,
+    globalConfig
   } = useApp();
+  
   const [historyOpen, setHistoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // mobile sidebar
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tempKey, setTempKey] = useState(openAiApiKey);
+
+  // Dynamic Sidebar configuration based on RBAC role
+  const getSidebarConfig = (): SidebarMenuItem[] => {
+    if (user?.role === 'super_admin') {
+      return [
+        { id: 'sa-overview', label: 'Dashboard', icon: 'Activity', action: 'tab', tabId: 'sa-overview' },
+        { id: 'sa-tenants', label: 'Tenants', icon: 'Building2', action: 'tab', tabId: 'sa-tenants' },
+        { id: 'sa-users', label: 'Users', icon: 'Users', action: 'tab', tabId: 'sa-users' },
+        { id: 'sa-plans', label: 'Plans', icon: 'Layers', action: 'tab', tabId: 'sa-plans' },
+        { id: 'sa-providers', label: 'AI Providers', icon: 'Server', action: 'tab', tabId: 'sa-providers' },
+        { id: 'sa-usage', label: 'Usage Analytics', icon: 'TrendingUp', action: 'tab', tabId: 'sa-usage' },
+        { id: 'sa-billing', label: 'Billing', icon: 'CreditCard', action: 'tab', tabId: 'sa-billing' },
+        { id: 'sa-ai-logs', label: 'AI Logs', icon: 'Clock', action: 'tab', tabId: 'sa-ai-logs' },
+        { id: 'sa-audit-logs', label: 'Audit Logs', icon: 'ShieldAlert', action: 'tab', tabId: 'sa-audit-logs' },
+        { id: 'sa-health', label: 'System Health', icon: 'Cpu', action: 'tab', tabId: 'sa-health' },
+        { id: 'sa-builder', label: 'Platform Builder', icon: 'Settings2', action: 'tab', tabId: 'sa-builder' }
+      ];
+    }
+
+    const items: SidebarMenuItem[] = [
+      {
+        id: 'speech-tools',
+        label: 'Speech Tools',
+        icon: 'Volume2',
+        children: [
+          { id: 'text-to-speech', label: 'Text to Voice', action: 'tab', tabId: 'text-to-speech' },
+          { id: 'audio-transcription', label: 'Audio to Text', action: 'tab', tabId: 'audio-transcription' }
+        ]
+      },
+      {
+        id: 'voice-to-text',
+        label: 'Transcription',
+        icon: 'Mic',
+        action: 'tab',
+        tabId: 'voice-to-text'
+      },
+      {
+        id: 'translation',
+        label: 'Translation',
+        icon: 'Languages',
+        action: 'tab',
+        tabId: 'translation'
+      }
+    ];
+
+    // Add Tenant settings Dashboard for Tenant Admin & Manager roles
+    if (user?.role === 'tenant_admin' || user?.role === 'manager') {
+      items.push({
+        id: 'tenant-dashboard-menu',
+        label: 'Workspace Panel',
+        icon: 'Settings',
+        action: 'tab',
+        tabId: 'tenant-dashboard'
+      });
+      items.push({
+        id: 'tenant-billing-menu',
+        label: 'Billing',
+        icon: 'CreditCard',
+        action: 'tab',
+        tabId: 'tenant-billing'
+      });
+    }
+
+    return items;
+  };
+
+  const SIDEBAR_CONFIG = getSidebarConfig();
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     const saved = localStorage.getItem('mcc-ai-sidebar-expanded');
@@ -100,26 +170,57 @@ export const WorkspacePage: React.FC = () => {
     }
   }, [notification, setNotification]);
 
+  React.useEffect(() => {
+    if (activeTab === 'super-admin-dashboard') {
+      setActiveTab('sa-overview');
+    }
+  }, [activeTab, setActiveTab]);
+
   const handleSaveSettings = () => {
     setOpenAiApiKey(tempKey);
     setSettingsOpen(false);
   };
 
-  const currentTab = {
-    'voice-to-text': { label: 'Transcription', icon: <Mic size={16} />, activeColor: '#3b82f6' },
-    'text-to-speech': { label: 'Text to Voice', icon: <Volume2 size={16} />, activeColor: '#8b5cf6' },
-    'translation': { label: 'Translation', icon: <Languages size={16} />, activeColor: '#10b981' },
-    'audio-transcription': { label: 'Audio to Text', icon: <FileAudio size={16} />, activeColor: '#f59e0b' },
-  }[activeTab] || { label: 'Tools', icon: <Volume2 size={16} />, activeColor: '#8b5cf6' };
+  const isSuperAdminTab = activeTab.startsWith('sa-');
+  const superAdminSubTab = isSuperAdminTab ? (activeTab.replace('sa-', '') as any) : 'overview';
 
-  const ActiveTool = {
-    'voice-to-text': VoiceToText,
-    'text-to-speech': TextToVoice,
-    'translation': TextTranslation,
-    'audio-transcription': AudioToText,
-  }[activeTab];
+  const getActiveTabMetadata = () => {
+    if (activeTab === 'sa-overview') return { label: 'Dashboard', icon: <Activity size={16} />, activeColor: '#3b82f6' };
+    if (activeTab === 'sa-tenants') return { label: 'Tenants', icon: <Building2 size={16} />, activeColor: '#3b82f6' };
+    if (activeTab === 'sa-users') return { label: 'Users', icon: <Users size={16} />, activeColor: '#3b82f6' };
+    if (activeTab === 'sa-plans') return { label: 'Plans', icon: <Layers size={16} />, activeColor: '#3b82f6' };
+    if (activeTab === 'sa-providers') return { label: 'AI Providers', icon: <Server size={16} />, activeColor: '#3b82f6' };
+    if (activeTab === 'sa-usage') return { label: 'Usage Analytics', icon: <TrendingUp size={16} />, activeColor: '#3b82f6' };
+    if (activeTab === 'sa-billing') return { label: 'Billing', icon: <CreditCard size={16} />, activeColor: '#3b82f6' };
+    if (activeTab === 'sa-ai-logs') return { label: 'AI Logs', icon: <Clock size={16} />, activeColor: '#3b82f6' };
+    if (activeTab === 'sa-audit-logs') return { label: 'Audit Logs', icon: <ShieldAlert size={16} />, activeColor: '#3b82f6' };
+    if (activeTab === 'sa-health') return { label: 'System Health', icon: <Cpu size={16} />, activeColor: '#3b82f6' };
+    if (activeTab === 'sa-builder') return { label: 'Platform Builder', icon: <Settings2 size={16} />, activeColor: '#3b82f6' };
 
+    return {
+      'voice-to-text': { label: 'Transcription', icon: <Mic size={16} />, activeColor: '#3b82f6' },
+      'text-to-speech': { label: 'Text to Voice', icon: <Volume2 size={16} />, activeColor: '#8b5cf6' },
+      'translation': { label: 'Translation', icon: <Languages size={16} />, activeColor: '#10b981' },
+      'audio-transcription': { label: 'Audio to Text', icon: <FileAudio size={16} />, activeColor: '#f59e0b' },
+      'super-admin-dashboard': { label: 'Super Admin', icon: <ShieldCheck size={16} />, activeColor: '#ef4444' },
+      'tenant-dashboard': { label: 'Workspace settings', icon: <Settings size={16} />, activeColor: '#3b82f6' },
+      'tenant-billing': { label: 'Billing', icon: <CreditCard size={16} />, activeColor: '#3b82f6' },
+    }[activeTab] || { label: 'Tools', icon: <Volume2 size={16} />, activeColor: '#8b5cf6' };
+  };
 
+  const currentTab = getActiveTabMetadata();
+
+  const ActiveTool = isSuperAdminTab 
+    ? () => <SuperAdminDashboard subTab={superAdminSubTab} /> 
+    : {
+        'voice-to-text': VoiceToText,
+        'text-to-speech': TextToVoice,
+        'translation': TextTranslation,
+        'audio-transcription': AudioToText,
+        'super-admin-dashboard': SuperAdminDashboard,
+        'tenant-dashboard': TenantDashboard,
+        'tenant-billing': TenantBilling,
+      }[activeTab] || VoiceToText;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden flex-col sm:flex-row" style={{ background: 'var(--bg-base)' }}>
@@ -143,7 +244,6 @@ export const WorkspacePage: React.FC = () => {
               className="relative w-full sm:max-w-md overflow-hidden rounded-t-3xl sm:rounded-2xl p-6"
               style={{ background: 'var(--bg-elevated)', zIndex: 10 }}
             >
-              {/* Mobile drag handle */}
               <div className="mx-auto mb-5 h-1 w-10 rounded-full sm:hidden" style={{ background: 'var(--border-strong)' }} />
 
               <div className="mb-5 flex items-center justify-between">
@@ -193,12 +293,11 @@ export const WorkspacePage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* ── Mobile Top Bar (replaces tab bar) ── */}
+      {/* ── Mobile Top Bar ── */}
       <div
         className="flex items-center gap-3 px-4 py-3 sm:hidden"
         style={{ borderBottom: '1px solid var(--border-base)', background: 'var(--bg-card)' }}
       >
-        {/* Hamburger / sidebar toggle */}
         <button
           onClick={() => setSidebarOpen(true)}
           className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition-colors"
@@ -208,7 +307,6 @@ export const WorkspacePage: React.FC = () => {
           <Menu size={18} />
         </button>
 
-        {/* Current tool indicator */}
         <div className="flex flex-1 items-center gap-2 min-w-0">
           <span
             className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg"
@@ -222,16 +320,17 @@ export const WorkspacePage: React.FC = () => {
           <span className="truncate text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{currentTab.label}</span>
         </div>
 
-        {/* Quick actions */}
         <div className="flex flex-shrink-0 items-center gap-2">
-          <button
-            onClick={() => setHistoryOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-            style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-base)', color: 'var(--text-secondary)' }}
-            aria-label="History"
-          >
-            <History size={16} />
-          </button>
+          {user?.role !== 'super_admin' && (
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+              style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-base)', color: 'var(--text-secondary)' }}
+              aria-label="History"
+            >
+              <History size={16} />
+            </button>
+          )}
           <button
             onClick={() => setSettingsOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
@@ -267,20 +366,15 @@ export const WorkspacePage: React.FC = () => {
                 boxShadow: 'var(--shadow-xl)'
               }}
             >
-              {/* Sidebar Header */}
               <div className="flex items-center justify-between px-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                 <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20">
-                    <span className="text-[9px] font-bold text-white">MCC</span>
-                  </div>
-                  <span className="text-sm font-bold text-white">AI Tools</span>
+                  <span className="text-sm font-bold text-white">{globalConfig?.branding?.platform_name || "MCC AI"} Workstation</span>
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1.5 hover:bg-white/10" style={{ color: '#ffffff' }}>
                   <X size={18} />
                 </button>
               </div>
 
-              {/* Sidebar Nav */}
               <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
                 {SIDEBAR_CONFIG.map((item) => (
                   <SidebarMenuNode
@@ -293,39 +387,21 @@ export const WorkspacePage: React.FC = () => {
                   />
                 ))}
 
-                <div className="my-2" style={{ height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-
-                <motion.button
-                  onClick={() => { setHistoryOpen(true); setSidebarOpen(false); }}
-                  className="nav-item text-xs font-semibold"
-                  whileTap={{ scale: 0.97 }}
-                  style={{ color: 'var(--sidebar-panel-text)' }}
-                >
-                  <span className="nav-icon" style={{ color: 'inherit' }}><History size={15} /></span>
-                  <span>History</span>
-                </motion.button>
+                {user?.role !== 'super_admin' && (
+                  <>
+                    <div className="my-2" style={{ height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                    <motion.button
+                      onClick={() => { setHistoryOpen(true); setSidebarOpen(false); }}
+                      className="nav-item text-xs font-semibold"
+                      whileTap={{ scale: 0.97 }}
+                      style={{ color: 'var(--sidebar-panel-text)' }}
+                    >
+                      <span className="nav-icon" style={{ color: 'inherit' }}><History size={15} /></span>
+                      <span>History</span>
+                    </motion.button>
+                  </>
+                )}
               </nav>
-
-              {/* Mobile Sidebar System/Storage Details */}
-              <div className="p-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-                <div className="rounded-xl p-3.5 space-y-2.5 bg-white/5 border border-white/10">
-                  <div className="flex items-center gap-2 text-white/95">
-                    <span className="flex h-5 w-5 items-center justify-center rounded bg-white/10 text-xs">
-                      ⚙️
-                    </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider">System Details</span>
-                  </div>
-                  <div className="h-1 w-full bg-white/15 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-400 rounded-full" style={{ width: '85%' }} />
-                  </div>
-                  <div className="flex justify-between text-[9px] text-white/60">
-                    <span>Model: Local AI</span>
-                    <span>Active</span>
-                  </div>
-                </div>
-              </div>
-
-
             </motion.div>
           </>
         )}
@@ -340,7 +416,6 @@ export const WorkspacePage: React.FC = () => {
         }}
       >
         <div className="flex flex-col flex-1">
-          {/* Sidebar Header: Back Button + Logo */}
           <div className="flex items-center gap-2.5 mb-6 select-none">
             <button
               onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
@@ -351,22 +426,22 @@ export const WorkspacePage: React.FC = () => {
             </button>
             <div className="flex items-center gap-2 overflow-hidden">
               <img
-                src="/logo.png"
+                src={globalConfig?.branding?.logo_url || "/logo.png"}
                 alt="Logo"
                 className="h-8 w-8 rounded-full border border-white/20 object-cover flex-shrink-0"
+                style={{ height: globalConfig?.branding?.logo_size || "32px", width: globalConfig?.branding?.logo_size || "32px" }}
               />
               <div className="flex flex-col justify-center min-w-0">
                 <span className="font-display text-xs font-black tracking-tight leading-none text-white truncate flex items-center gap-0.5">
-                  MCC <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-extrabold">AI</span>
+                  {globalConfig?.branding?.platform_name || "MCC AI"}
                 </span>
                 <span className="text-[6px] font-bold tracking-[0.15em] uppercase mt-0.5 text-slate-400 truncate">
-                  Language Platform
+                  {globalConfig?.branding?.tagline || "Language Platform"}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Sidebar Nav */}
           <nav className="space-y-1.5" aria-label="Tool navigation">
             {SIDEBAR_CONFIG.map((item) => (
               <SidebarMenuNode
@@ -378,38 +453,39 @@ export const WorkspacePage: React.FC = () => {
               />
             ))}
 
-            <div className="my-2" style={{ height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-
-            <motion.button
-              onClick={() => setHistoryOpen(true)}
-              className="nav-item relative text-xs font-semibold"
-              whileTap={{ scale: 0.97 }}
-              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-            >
-              <span className="nav-icon" style={{ color: 'inherit' }}><History size={15} /></span>
-              <span className="flex-grow text-left text-xs">History</span>
-            </motion.button>
+            {user?.role !== 'super_admin' && (
+              <>
+                <div className="my-2" style={{ height: '1px', background: 'rgba(255,255,255,0.08)' }} />
+                <motion.button
+                  onClick={() => setHistoryOpen(true)}
+                  className="nav-item relative text-xs font-semibold"
+                  whileTap={{ scale: 0.97 }}
+                  style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                >
+                  <span className="nav-icon" style={{ color: 'inherit' }}><History size={15} /></span>
+                  <span className="flex-grow text-left text-xs">History</span>
+                </motion.button>
+              </>
+            )}
           </nav>
 
-          {/* Microphone Card */}
-          <div className="relative w-full p-2 mt-6 mb-4 flex items-center justify-center aspect-[4/3] group">
-            {/* Ambient blurred glow */}
-            <div className="absolute w-32 h-32 rounded-full bg-blue-500/20 dark:bg-blue-500/30 blur-2xl pointer-events-none" />
-            
-            <img 
-              src="/microphone_card_illustration.png" 
-              alt="Voice Platform"
-              className="h-full w-full object-contain relative z-10 transition-transform duration-300 group-hover:scale-105"
-              style={{ 
-                mixBlendMode: 'screen',
-                maskImage: 'radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 85%)',
-                WebkitMaskImage: 'radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 85%)'
-              }}
-            />
-          </div>
+          {user?.role !== 'super_admin' && (
+            <div className="relative w-full p-2 mt-6 mb-4 flex items-center justify-center aspect-[4/3] group">
+              <div className="absolute w-32 h-32 rounded-full bg-blue-500/20 dark:bg-blue-500/30 blur-2xl pointer-events-none" />
+              <img 
+                src="/microphone_card_illustration.png" 
+                alt="Voice Platform"
+                className="h-full w-full object-contain relative z-10 transition-transform duration-300 group-hover:scale-105"
+                style={{ 
+                  mixBlendMode: 'screen',
+                  maskImage: 'radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 85%)',
+                  WebkitMaskImage: 'radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 85%)'
+                }}
+              />
+            </div>
+          )}
         </div>
 
-        {/* Logout Button */}
         <div className="pt-4 mt-auto">
           <button
             onClick={() => logout()}
@@ -421,12 +497,10 @@ export const WorkspacePage: React.FC = () => {
         </div>
       </aside>
 
-      {/* Right Panel: Header + Content */}
+      {/* Right Panel */}
       <div className="flex-grow h-full flex flex-col min-w-0 overflow-hidden bg-slate-50/20 dark:bg-slate-950/20">
-        {/* Workspace specific Header */}
         <Header />
 
-        {/* Scrollable Main Content */}
         <main className="flex-grow overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10">
           <AnimatePresence mode="wait">
             <motion.div
@@ -441,11 +515,10 @@ export const WorkspacePage: React.FC = () => {
           </AnimatePresence>
         </main>
 
-        {/* ── History Drawer ── */}
+        {/* History Drawer */}
         <AnimatePresence>
           {historyOpen && (
             <>
-              {/* Backdrop — always visible when open on mobile, click-away on desktop */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -467,7 +540,6 @@ export const WorkspacePage: React.FC = () => {
                   boxShadow: 'var(--shadow-xl)',
                 }}
               >
-                {/* Drawer Header */}
                 <div className="flex items-center justify-between px-4 py-3.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-base)' }}>
                   <div className="flex items-center gap-2">
                     <History size={14} style={{ color: 'var(--accent)' }} />
@@ -490,13 +562,11 @@ export const WorkspacePage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Drawer Content */}
                 <div className="flex-1 overflow-y-auto">
                   {history.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full px-4 py-10 text-center">
                       <History size={32} className="mb-3 opacity-20" style={{ color: 'var(--text-muted)' }} />
                       <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>No history yet</p>
-                      <p className="mt-1 text-xs" style={{ color: 'var(--text-disabled)' }}>Completed tasks will appear here</p>
                     </div>
                   ) : (
                     <ul>
@@ -515,7 +585,7 @@ export const WorkspacePage: React.FC = () => {
                                 border: `1px solid color-mix(in srgb, ${TYPE_COLORS[item.type]} 25%, transparent)`,
                               }}
                             >
-                              {TYPE_LABELS[item.type].split(' ')[0]}
+                              {TYPE_LABELS[item.type]?.split(' ')[0] || item.type}
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
@@ -542,7 +612,6 @@ export const WorkspacePage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Global Toast Notification */}
         <AnimatePresence>
           {notification && (
             <motion.div
@@ -576,4 +645,3 @@ export const WorkspacePage: React.FC = () => {
     </div>
   );
 };
-

@@ -1,0 +1,191 @@
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, List
+from datetime import datetime
+
+# Token Schemas
+class Token(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
+    user_id: str
+    role: str
+    tenant_slug: Optional[str] = None
+    name: str
+
+class TokenRefreshRequest(BaseModel):
+    refresh_token: str
+
+# SubscriptionPlan Schemas
+class SubscriptionPlanBase(BaseModel):
+    name: str
+    price: float
+    transcription_limit: int
+    translation_limit: int
+    tts_limit: int
+    storage_limit: int
+    active: Optional[bool] = True
+
+class SubscriptionPlanCreate(SubscriptionPlanBase):
+    pass
+
+class SubscriptionPlanUpdate(BaseModel):
+    name: Optional[str] = None
+    price: Optional[float] = None
+    transcription_limit: Optional[int] = None
+    translation_limit: Optional[int] = None
+    tts_limit: Optional[int] = None
+    storage_limit: Optional[int] = None
+    active: Optional[bool] = None
+
+class SubscriptionPlanResponse(SubscriptionPlanBase):
+    id: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# Tenant Schemas
+class TenantBase(BaseModel):
+    tenant_name: str
+    slug: str
+
+class TenantCreate(TenantBase):
+    plan_id: Optional[str] = None
+
+class TenantUpdate(BaseModel):
+    tenant_name: Optional[str] = None
+    slug: Optional[str] = None
+    status: Optional[str] = None  # active, suspended, deleted
+    plan_id: Optional[str] = None
+
+class TenantResponse(TenantBase):
+    id: str
+    status: str
+    plan_id: Optional[str]
+    created_at: datetime
+    plan: Optional[SubscriptionPlanResponse] = None
+
+    class Config:
+        from_attributes = True
+
+# User Schemas
+class UserBase(BaseModel):
+    name: str
+    email: EmailStr
+
+class UserCreate(UserBase):
+    password: str
+    tenant_slug: Optional[str] = None  # Slug when signing up for a workspace
+
+class TenantUserCreateByAdmin(UserBase):
+    password: str
+    role: str = "user"  # tenant_admin, manager, user
+
+class SuperAdminCreate(UserBase):
+    password: str
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[str] = None
+    status: Optional[str] = None
+
+class UserResponse(UserBase):
+    id: str
+    tenant_id: Optional[str]
+    role: str
+    status: str
+    last_login: Optional[datetime]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# Tenant Registration Bundle
+class TenantRegistration(BaseModel):
+    tenant_name: str
+    slug: str
+    admin_name: str
+    admin_email: EmailStr
+    admin_password: str
+    plan_id: Optional[str] = None
+
+# Usage Tracking Schemas
+class UsageResponse(BaseModel):
+    audio_minutes_used: float
+    translation_chars_used: int
+    tts_chars_used: int
+    api_calls_used: int
+    storage_bytes_used: int
+    billing_period_start: datetime
+    billing_period_end: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# Provider Config Schemas
+class ProviderConfigBase(BaseModel):
+    provider_name: str
+    is_enabled: bool = True
+    priority: int = 1
+
+class ProviderConfigCreate(ProviderConfigBase):
+    api_key: Optional[str] = None
+
+class ProviderConfigResponse(ProviderConfigBase):
+    id: str
+    tenant_id: Optional[str]
+    credentials_encrypted: Optional[str] = None
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# Business data history log response
+class TranslationResponse(BaseModel):
+    id: str
+    source_text: str
+    translated_text: str
+    source_lang: str
+    target_lang: str
+    provider: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class TranscriptionResponse(BaseModel):
+    id: str
+    file_name: str
+    file_size: int
+    duration_seconds: float
+    transcript_text: str
+    provider: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class TtsResponse(BaseModel):
+    id: str
+    text: str
+    voice_name: str
+    characters_count: int
+    file_path: Optional[str]
+    provider: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class AuditLogResponse(BaseModel):
+    id: str
+    user_id: Optional[str]
+    action: str
+    details: Optional[str]
+    ip_address: Optional[str]
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True

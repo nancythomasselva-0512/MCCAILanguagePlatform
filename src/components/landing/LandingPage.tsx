@@ -189,7 +189,7 @@ const VIDEO_CHAPTERS = [
 ];
 
 export const LandingPage: React.FC = () => {
-  const { setViewMode, setActiveTab } = useApp();
+  const { setViewMode, setActiveTab, globalConfig } = useApp();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
   // Video Showcase states
@@ -288,15 +288,14 @@ export const LandingPage: React.FC = () => {
 
               {/* Title Word Reveal Sequence */}
               <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight xs:text-5xl sm:text-6xl md:text-7xl text-slate-900 dark:text-white mb-6">
-                Redefining the{' '}
+                {globalConfig?.branding?.platform_name || 'MCC AI'} -{' '}
                 <span className="bg-gradient-to-r from-blue-600 via-cyan-500 to-purple-600 dark:from-blue-400 dark:via-cyan-400 dark:to-purple-400 bg-clip-text text-transparent font-black">
-                  Future of Language
-                </span>{' '}
-                AI
+                  {globalConfig?.branding?.tagline || 'Language AI Platform'}
+                </span>
               </h1>
 
               <p className="text-base sm:text-lg text-slate-700 dark:text-slate-200 max-w-2xl mb-8 leading-relaxed font-semibold">
-                Experience high-performance, local client-side transcription, multi-speaker voice synthesis, and real-time document translations. Complete workspace capability loaded into a premium desktop layout.
+                {globalConfig?.branding?.footer_text || 'Experience high-performance, local client-side transcription, multi-speaker voice synthesis, and real-time document translations. Complete workspace capability loaded into a premium desktop layout.'}
               </p>
             </motion.div>
 
@@ -802,213 +801,146 @@ export const LandingPage: React.FC = () => {
 
 
 
-      {/* ── VIDEO DEMO SECTION ──────────────────────────────────────────────── */}
+      {/* ── PRICING & PLAN DETAILS SECTION ───────────────────────────────────── */}
       <section className="py-20 sm:py-28 px-4 relative overflow-hidden bg-slate-50/50 dark:bg-[#070d1e]/20 border-y border-slate-200 dark:border-white/5">
         {/* Cinematic ambient background glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-blue-500/10 via-purple-500/10 to-cyan-500/10 dark:from-blue-500/15 dark:via-purple-500/20 dark:to-cyan-500/15 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="mx-auto max-w-5xl text-center relative z-10">
-          
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="space-y-4 mb-16"
-          >
+          <div className="space-y-4 mb-16">
+            <span className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-widest bg-blue-500/10 dark:bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-400 mb-4 shadow-[0_0_15px_rgba(37,99,235,0.1)]">
+              <Zap size={11} /> Pricing Plans
+            </span>
             <h2 className="font-display text-4xl sm:text-6xl font-black tracking-tight text-slate-900 dark:text-white">
-              MCC AI Platform{' '}
+              SaaS{' '}
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 dark:from-blue-400 dark:via-purple-400 dark:to-cyan-400 bg-clip-text text-transparent">
-                Live Demonstration
+                Plan Details
               </span>
             </h2>
             <p className="mx-auto max-w-2xl text-sm sm:text-base text-slate-700 dark:text-slate-300 font-bold leading-relaxed">
-              Watch speech recognition, translation, voice synthesis, and audio transcription working in real time.
+              Start with our full-featured Free Trial and upgrade as your team grows.
             </p>
+          </div>
 
-            {/* Mobile Badge Row */}
-            <div className="flex flex-wrap justify-center gap-2 lg:hidden pt-2">
-              {['Voice To Text', 'Text To Voice', 'Translation', 'Audio To Text', '100+ Languages', 'AI Powered'].map((badge) => (
-                <span key={badge} className="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-white dark:bg-[#0a1120]/80 border-slate-200 dark:border-white/10 text-slate-800 dark:text-white shadow-sm">
-                  ✓ {badge}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Video Player Wrapper with relative positioning for floating badges */}
-          <div className="relative max-w-3xl mx-auto mb-12">
-            
-            {/* Left side floating badges */}
-            <div className="absolute left-[-160px] top-6 hidden lg:flex flex-col gap-6 z-20 text-left">
-              {[
-                { label: 'Voice To Text', delay: 0 },
-                { label: 'Translation', delay: 0.4 },
-                { label: '100+ Languages', delay: 0.8 }
-              ].map((badge) => (
-                <motion.div
-                  key={badge.label}
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 3.5, repeat: Infinity, delay: badge.delay, ease: "easeInOut" }}
-                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-black border backdrop-blur-xl shadow-lg bg-white/95 dark:bg-[#0a1120]/90 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white hover:scale-105 transition-transform"
-                >
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  {badge.label}
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Right side floating badges */}
-            <div className="absolute right-[-160px] top-6 hidden lg:flex flex-col gap-6 z-20 text-left">
-              {[
-                { label: 'Text To Voice', delay: 0.2 },
-                { label: 'Audio To Text', delay: 0.6 },
-                { label: 'AI Powered', delay: 1.0 }
-              ].map((badge) => (
-                <motion.div
-                  key={badge.label}
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 3.5, repeat: Infinity, delay: badge.delay, ease: "easeInOut" }}
-                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-black border backdrop-blur-xl shadow-lg bg-white/95 dark:bg-[#0a1120]/90 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white hover:scale-105 transition-transform"
-                >
-                  <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
-                  {badge.label}
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Ambient light glow backing card */}
-            <div className={`absolute inset-0 rounded-3xl filter blur-[40px] transition-all duration-700 pointer-events-none opacity-40 dark:opacity-75 -z-10 bg-gradient-to-tr from-blue-500/20 via-purple-500/20 to-cyan-500/20 dark:from-blue-600/30 dark:via-purple-600/30 dark:to-cyan-600/30 ${isVideoPlaying ? 'scale-[1.08] blur-[55px] opacity-60 dark:opacity-95' : ''}`} />
-
-            {/* 3D Glass Video Container */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+            {/* Free Trial Card */}
             <ThreeDInteractiveCard
-              glowColor="rgba(99, 102, 241, 0.2)"
-              className="w-full rounded-[28px] overflow-hidden border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#070d1e]/85 shadow-2xl p-2 sm:p-3 transition-all duration-500"
+              glowColor="rgba(59, 130, 246, 0.15)"
+              className="p-8 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/90 border border-slate-200 dark:border-white/5 rounded-3xl shadow-xl relative"
             >
-              <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden bg-slate-950">
-                <video
-                  ref={videoRef}
-                  src="https://assets.mixkit.co/videos/preview/mixkit-plexus-connections-background-loop-34444-large.mp4"
-                  loop
-                  muted={isVideoMuted}
-                  onTimeUpdate={handleTimeUpdate}
-                  className="w-full h-full object-cover rounded-2xl"
-                  onClick={togglePlay}
-                />
+              <div className="w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-500/10 text-blue-600 dark:text-blue-400 tracking-wider">
+                    Most Popular
+                  </span>
+                  <span className="text-sm font-bold text-slate-500 dark:text-slate-400">14 Days Trial</span>
+                </div>
+                <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2">Free Trial</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mb-6">
+                  Perfect for experiencing the complete MCC AI platform workstation locally on your device.
+                </p>
+                <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-4" />
+                <ul className="space-y-4">
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 dark:text-white">14 Days Trial Period</p>
+                      <p className="text-[10px] text-slate-500">Unrestricted system access</p>
+                    </div>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 dark:text-white">Audio Processing</p>
+                      <p className="text-[10px] text-slate-500">30 minutes of translation & transcription</p>
+                    </div>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 dark:text-white">Translation Services</p>
+                      <p className="text-[10px] text-slate-500">25,000 characters processed</p>
+                    </div>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 dark:text-white">Text-to-Speech (TTS)</p>
+                      <p className="text-[10px] text-slate-500">10,000 synthesis characters</p>
+                    </div>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800 dark:text-white">Cloud Storage Allocation</p>
+                      <p className="text-[10px] text-slate-500">100 MB secure isolated storage</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div className="w-full mt-8">
+                <button
+                  onClick={() => { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="w-full py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-lg text-center block"
+                >
+                  Start 14-Day Free Trial
+                </button>
+              </div>
+            </ThreeDInteractiveCard>
 
-                {/* Big play button overlay */}
-                <AnimatePresence>
-                  {!isVideoPlaying && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] flex items-center justify-center cursor-pointer z-10 group/play"
-                      onClick={togglePlay}
-                    >
-                      <div className="relative flex items-center justify-center">
-                        <motion.div 
-                          className="absolute h-24 w-24 rounded-full border-2 border-blue-500/40"
-                          animate={{ scale: [1, 1.5, 1], opacity: [0.6, 0, 0.6] }}
-                          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-                        />
-                        <motion.div 
-                          className="absolute h-32 w-32 rounded-full border border-purple-500/20"
-                          animate={{ scale: [1, 1.8, 1], opacity: [0.4, 0, 0.4] }}
-                          transition={{ repeat: Infinity, duration: 2.5, ease: 'easeInOut' }}
-                        />
-                        <div className="h-16 w-16 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-2xl group-hover/play:scale-110 transition-transform duration-300">
-                          <Play size={22} className="fill-current text-white ml-1" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Video controls bottom bar */}
-                <div className="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/60 to-transparent flex items-center justify-between gap-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <button onClick={togglePlay} className="text-white hover:text-blue-400 font-extrabold text-xs">
-                    {isVideoPlaying ? 'PAUSE' : 'PLAY'}
-                  </button>
-                  <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden cursor-pointer relative" onClick={(e) => {
-                    if (!videoRef.current) return;
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const percent = (e.clientX - rect.left) / rect.width;
-                    videoRef.current.currentTime = percent * videoRef.current.duration;
-                  }}>
-                    <div 
-                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" 
-                      style={{ width: `${videoRef.current ? (videoRef.current.currentTime / (videoRef.current.duration || 1)) * 100 : 0}%` }}
-                    />
+            {/* Upgrade Plans Card */}
+            <ThreeDInteractiveCard
+              glowColor="rgba(168, 85, 247, 0.15)"
+              className="p-8 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/90 border border-slate-200 dark:border-white/5 rounded-3xl shadow-xl"
+            >
+              <div className="w-full">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-purple-500/10 text-purple-600 dark:text-purple-400 tracking-wider">
+                    Paid Tiers
+                  </span>
+                  <span className="text-sm font-bold text-slate-500 dark:text-slate-400">Post-Trial Options</span>
+                </div>
+                <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2">Upgrade Plans</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mb-6">
+                  After your 14-day trial concludes, select one of our premium enterprise tiers:
+                </p>
+                <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-4" />
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 flex justify-between items-center">
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Starter Plan</h4>
+                      <p className="text-[10px] text-slate-500">60 mins audio / 100k translation / 50k TTS</p>
+                    </div>
+                    <span className="text-base font-black text-blue-600 dark:text-blue-400">$19/mo</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => setIsVideoMuted(!isVideoMuted)} className="text-white hover:text-blue-400">
-                      <Volume2 size={15} />
-                    </button>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 flex justify-between items-center">
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Professional Plan</h4>
+                      <p className="text-[10px] text-slate-500">300 mins audio / 500k translation / 250k TTS</p>
+                    </div>
+                    <span className="text-base font-black text-blue-600 dark:text-blue-400">$49/mo</span>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 flex justify-between items-center">
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Enterprise Plan</h4>
+                      <p className="text-[10px] text-slate-500">1200 mins audio / 2M translation / 1M TTS</p>
+                    </div>
+                    <span className="text-base font-black text-blue-600 dark:text-blue-400">$149/mo</span>
                   </div>
                 </div>
+              </div>
+              <div className="w-full mt-8">
+                <button
+                  onClick={() => { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="w-full py-3 px-6 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-900 dark:text-white text-xs font-bold cursor-pointer transition-colors text-center block"
+                >
+                  Explore Pricing Details
+                </button>
               </div>
             </ThreeDInteractiveCard>
           </div>
-
-          {/* Timeline Chapters below the video */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-3xl mx-auto mb-16"
-          >
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white/70 dark:bg-[#070d1e]/80 border border-slate-200 dark:border-white/5 rounded-3xl p-6 shadow-xl backdrop-blur-xl">
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Clock size={16} className="text-blue-500 animate-pulse" />
-                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">Interactive Chapters</span>
-              </div>
-              <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2.5">
-                {VIDEO_CHAPTERS.map((chapter, idx) => (
-                  <button
-                    key={chapter.label}
-                    onClick={() => seekToChapter(chapter.time)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                      activeChapter === idx
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105'
-                        : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <span className="opacity-60 mr-1">{chapter.displayTime}</span> {chapter.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Animated Statistics Row below video */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto"
-          >
-            {[
-              { value: '2M+', label: 'Active Users', color: 'from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400' },
-              { value: '100+', label: 'Languages Supported', color: 'from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400' },
-              { value: '99.2%', label: 'Speech Accuracy', color: 'from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400' },
-              { value: '<1s', label: 'Response Time', color: 'from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400' }
-            ].map((stat) => (
-              <ThreeDInteractiveCard
-                key={stat.label}
-                glowColor="rgba(59, 130, 246, 0.15)"
-                className="p-5 flex flex-col justify-center items-center text-center bg-white dark:bg-[#070d1e]/90 border border-slate-200 dark:border-white/5 rounded-2xl shadow-lg"
-              >
-                <div className={`text-3xl sm:text-4xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mb-1`}>
-                  {stat.value}
-                </div>
-                <div className="text-[10px] sm:text-xs font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                  {stat.label}
-                </div>
-              </ThreeDInteractiveCard>
-            ))}
-          </motion.div>
-
         </div>
       </section>
 
@@ -1025,11 +957,11 @@ export const LandingPage: React.FC = () => {
           <Sparkles size={32} className="mx-auto mb-5 text-cyan-600 dark:text-cyan-400 animate-pulse" />
           
           <h2 className="font-display text-2xl font-black text-slate-900 dark:text-white sm:text-4xl md:text-5xl leading-tight">
-            Launch Your Local AI Workspace
+            Launch Your {globalConfig?.branding?.platform_name || 'MCC AI'} Workspace
           </h2>
           
           <p className="mx-auto mt-3.5 max-w-lg text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
-            Join developers, creators, and researchers using MCC AI. Complete document translation, audio speech synthesis, and transcripts in seconds.
+            {globalConfig?.branding?.copyright_text || 'Join developers, creators, and researchers using our platform. Complete document translation, audio speech synthesis, and transcripts in seconds.'}
           </p>
           
           <button

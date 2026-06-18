@@ -1,16 +1,179 @@
 import os
 import tempfile
 import logging
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from faster_whisper import WhisperModel
 import uvicorn
 
+# Imports for new SaaS structure
+from app.core.config import settings
+from app.core.database import engine, Base, SessionLocal
+from app.middleware.tenant_middleware import TenantMiddleware
+from app.routers import auth, super_admin, tenant_admin, tools, platform_builder, billing
+from app.models.models import SubscriptionPlan, User, BillingSettings
+from app.core.security import get_password_hash
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-logger = logging.getLogger("faster-whisper-backend")
+logger = logging.getLogger("mcc-ai-saas-backend")
 
-app = FastAPI(title="Faster-Whisper Transcription API")
+# Initialize database schemas
+try:
+    logger.info("Initializing database schemas...")
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database schemas initialized.")
+except Exception as e:
+    logger.error(f"Failed to initialize database: {e}")
+
+# Database Seeding: default plans and super admin
+def seed_database():
+    db = SessionLocal()
+    try:
+        # 1. Seed plans
+        plans_data = [
+            {"name": "Free", "price": 0.0, "transcription_limit": 15, "translation_limit": 10000, "tts_limit": 5000, "storage_limit": 50},
+            {"name": "Starter", "price": 19.0, "transcription_limit": 60, "translation_limit": 100000, "tts_limit": 50000, "storage_limit": 500},
+            {"name": "Professional", "price": 49.0, "transcription_limit": 300, "translation_limit": 500000, "tts_limit": 250000, "storage_limit": 2000},
+            {"name": "Enterprise", "price": 149.0, "transcription_limit": 1200, "translation_limit": 2000000, "tts_limit": 1000000, "storage_limit": 10000},
+        ]
+        
+        for p in plans_data:
+            existing = db.query(SubscriptionPlan).filter(SubscriptionPlan.name == p["name"]).first()
+            if not existing:
+                db_plan = SubscriptionPlan(**p)
+                db.add(db_plan)
+                logger.info(f"Seeded plan: {p['name']}")
+        db.commit()
+
+        # Seed global branding settings
+        from app.models.models import BrandingSettings, ThemeSettings, PlatformSettings, NavigationItem, FeatureFlag
+        
+        # 1. Branding Settings
+        existing_branding = db.query(BrandingSettings).filter(BrandingSettings.tenant_id == None).first()
+        if not existing_branding:
+            branding = BrandingSettings(
+                platform_name="MCC AI",
+                tagline="Language Platform",
+                footer_text="Powering Next-Gen Language AI",
+                copyright_text="© 2026 MCC AI. All rights reserved.",
+                logo_url="/logo.png"
+            )
+            db.add(branding)
+            logger.info("Seeded global branding settings.")
+            
+        # 2. Theme Settings
+        existing_theme = db.query(ThemeSettings).filter(ThemeSettings.tenant_id == None).first()
+        if not existing_theme:
+            theme = ThemeSettings(
+                mode="dark",
+                primary_color="#2563EB",
+                secondary_color="#4F46E5",
+                accent_color="#06B6D4",
+                success_color="#10B981",
+                warning_color="#F59E0B",
+                error_color="#EF4444",
+                font_family="Inter",
+                border_radius="16px"
+            )
+            db.add(theme)
+            logger.info("Seeded global theme settings.")
+            
+        # 3. Platform Settings
+        existing_platform = db.query(PlatformSettings).filter(PlatformSettings.tenant_id == None).first()
+        if not existing_platform:
+            platform = PlatformSettings(
+                invite_only=False,
+                enable_email_login=True
+            )
+            db.add(platform)
+            logger.info("Seeded global platform settings.")
+
+        # 4. Feature Flags
+        features_data = [
+            {"name": "voice-to-text", "display_name": "Voice To Text"},
+            {"name": "text-to-speech", "display_name": "Text To Speech"},
+            {"name": "translation", "display_name": "Translation"},
+            {"name": "audio-upload", "display_name": "Audio Upload"},
+        ]
+        for f in features_data:
+            existing = db.query(FeatureFlag).filter(FeatureFlag.tenant_id == None, FeatureFlag.name == f["name"]).first()
+            if not existing:
+                db_feature = FeatureFlag(**f)
+                db.add(db_feature)
+                logger.info(f"Seeded feature flag: {f['name']}")
+
+        # 5. Default Navigation Items
+        default_navs = [
+            {"label": "Home", "route": "landing", "order": 1, "is_visible": True},
+            {"label": "AI Tools", "route": "ai-language-tools", "order": 2, "is_visible": True},
+            {"label": "Pricing", "route": "pricing", "order": 3, "is_visible": True},
+            {"label": "Testimonials", "route": "testimonials", "order": 4, "is_visible": True},
+            {"label": "Contact", "route": "contact", "order": 5, "is_visible": True},
+        ]
+        for n in default_navs:
+            existing = db.query(NavigationItem).filter(NavigationItem.tenant_id == None, NavigationItem.label == n["label"]).first()
+            if not existing:
+                db_nav = NavigationItem(**n)
+                db.add(db_nav)
+                logger.info(f"Seeded default navigation: {n['label']}")
+
+        # Seed default billing settings
+        existing_billing = db.query(BillingSettings).filter(BillingSettings.tenant_id == None).first()
+        if not existing_billing:
+            billing_s = BillingSettings(
+                currency="USD",
+                gst_percentage=18.0,
+                invoice_prefix="INV",
+                invoice_footer="For any subscription questions, contact billing@mcc-ai.com.",
+                company_name="MCC AI Language Platform",
+                company_address="123 Tech Campus, Bangalore, India",
+                company_email="billing@mcc-ai.com",
+                stripe_enabled=True,
+                stripe_public_key="pk_test_51MccAiStripePubKeyFake",
+                stripe_secret_key="sk_test_51MccAiStripeSecKeyFake",
+                razorpay_enabled=True,
+                razorpay_key_id="rzp_test_mccaiFakeKeyId",
+                razorpay_key_secret="rzp_secret_mccaiFakeSecret",
+                upi_enabled=True,
+                upi_id="mccai@upi",
+                default_gateway="stripe"
+            )
+            db.add(billing_s)
+            logger.info("Seeded global billing settings.")
+
+        db.commit()
+
+        # 2. Seed default Super Admin
+        admin_email = "mrfadmin@gmail.com"
+        existing_admin = db.query(User).filter(User.email == admin_email).first()
+        if not existing_admin:
+            # Look up and rename/re-key the old seed admin if present in the database file
+            old_admin = db.query(User).filter(User.email == "admin@mcc-ai.com").first()
+            if old_admin:
+                old_admin.email = admin_email
+                old_admin.password_hash = get_password_hash("mrfadmin123")
+                db.add(old_admin)
+                logger.info(f"Updated default Super Admin to: {admin_email} / mrfadmin123")
+            else:
+                super_admin = User(
+                    name="Platform Owner",
+                    email=admin_email,
+                    password_hash=get_password_hash("mrfadmin123"),
+                    role="super_admin",
+                    status="active"
+                )
+                db.add(super_admin)
+                logger.info(f"Seeded default Super Admin: {admin_email} / mrfadmin123")
+            db.commit()
+    except Exception as e:
+        logger.error(f"Error seeding database: {e}")
+    finally:
+        db.close()
+
+seed_database()
+
+app = FastAPI(title="MCC AI Multi-Tenant SaaS Workspace Platform")
 
 # Enable CORS for frontend requests
 app.add_middleware(
@@ -21,14 +184,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global model cache to avoid reloading on every request
+# Inject multi-tenant workspace extraction middleware
+app.add_middleware(TenantMiddleware)
+
+# Bind new routers
+app.include_router(auth.router, prefix="/api")
+app.include_router(super_admin.router, prefix="/api")
+app.include_router(tenant_admin.router, prefix="/api")
+app.include_router(tools.router, prefix="/api")
+app.include_router(platform_builder.router, prefix="/api")
+app.include_router(billing.router, prefix="/api")
+
+# --- BACKWARD COMPATIBILITY: LOCAL FASTER-WHISPER RUNNER ---
 model_cache = {}
 
 def get_model(model_size: str = "base", device: str = "cpu", compute_type: str = "int8"):
     key = (model_size, device, compute_type)
     if key not in model_cache:
         logger.info(f"Loading Whisper model '{model_size}' on {device} ({compute_type})...")
-        # download and load the model
         model_cache[key] = WhisperModel(model_size, device=device, compute_type=compute_type)
         logger.info("Model loaded successfully.")
     return model_cache[key]
@@ -50,16 +223,12 @@ async def transcribe(
     if ext not in ["mp3", "wav", "m4a", "ogg", "flac", "aac", "webm", "opus"]:
         raise HTTPException(status_code=400, detail=f"Unsupported file format: {ext}")
     
-    # Save uploaded file to a temporary file
     with tempfile.NamedTemporaryFile(delete=False, suffix=f".{ext}") as temp_file:
         temp_file.write(await file.read())
         temp_path = temp_file.name
 
     try:
-        # Load model (use CPU and int8 for best speed and memory usage on standard devices)
         whisper_model = get_model(model_size=model, device="cpu", compute_type="int8")
-        
-        # Determine language parameter
         lang_arg = None if (not language or language.lower() in ["auto", "auto-detect", ""]) else language
         
         logger.info(f"Starting transcription for {temp_path} (language: {lang_arg or 'auto-detect'})...")
@@ -70,10 +239,8 @@ async def transcribe(
             word_timestamps=False
         )
         
-        # segments is a generator, so we must iterate it to actually trigger transcription
         segment_list = []
         for segment in segments:
-            # Format timestamp as MM:SS
             def format_time(secs):
                 m = int(secs // 60)
                 s = int(secs % 60)
@@ -100,7 +267,6 @@ async def transcribe(
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
         
     finally:
-        # Clean up temporary file
         if os.path.exists(temp_path):
             try:
                 os.remove(temp_path)

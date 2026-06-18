@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, CheckCircle2 } from 'lucide-react';
+import { X, Mail, Lock, User as UserIcon, Eye, EyeOff, Sparkles, CheckCircle2, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const AuthModal: React.FC = () => {
@@ -9,15 +9,18 @@ export const AuthModal: React.FC = () => {
     setIsAuthModalOpen, 
     authModalMode, 
     setAuthModalMode, 
-    login, 
+    login: saveLoginSession, 
     theme,
     setViewMode,
-    user
+    globalConfig,
   } = useApp();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [tenantName, setTenantName] = useState('');
+  const [tenantSlug, setTenantSlug] = useState('');
+  
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -31,72 +34,79 @@ export const AuthModal: React.FC = () => {
     setEmail('');
     setPassword('');
     setName('');
+    setTenantName('');
+    setTenantSlug('');
     setIsSuccess(false);
     setIsLoading(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    // Basic Validation
-    if (authModalMode === 'signup' && !name.trim()) {
-      setError('Please enter your name.');
-      return;
-    }
-    if (!email.trim() || !email.includes('@')) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
-    }
-
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-      
-      // Handle navigation after success message
-      setTimeout(() => {
-        if (authModalMode === 'signup') {
-          // Go to login mode
-          setAuthModalMode('login');
-          setIsSuccess(false);
-          setPassword(''); // clear password for security
-          setError(''); // clear any errors
-        } else {
-          // Login, set workspace view, and close modal
-          const displayName = email.split('@')[0];
-          login(displayName, email);
+    try {
+      if (authModalMode === 'tenant-signup') {
+        // Multi-Tenant workspace setup
+        const response = await fetch("http://127.0.0.1:8000/api/auth/register-tenant", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tenant_name: tenantName,
+            slug: tenantSlug.toLowerCase().trim(),
+            admin_name: name,
+            admin_email: email,
+            admin_password: password
+          })
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.detail || "Workspace registration failed.");
+        }
+
+        const data = await response.json();
+        setIsSuccess(true);
+        setTimeout(() => {
+          saveLoginSession(data.name, email, data.role, data.access_token, data.refresh_token, data.tenant_slug);
           setViewMode('workspace');
           handleClose();
-        }
-      }, 2000);
-    }, 1200);
-  };
+        }, 1500);
 
-  // Mock social login
-  const handleSocialLogin = (provider: string) => {
-    setIsLoading(true);
-    setTimeout(() => {
+      } else {
+        // Standard Login
+        const response = await fetch("http://127.0.0.1:8000/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: email,
+            password: password
+          })
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.detail || "Incorrect email or password.");
+        }
+
+        const data = await response.json();
+        setIsSuccess(true);
+        setTimeout(() => {
+          saveLoginSession(data.name, email, data.role, data.access_token, data.refresh_token, data.tenant_slug);
+          setViewMode('workspace');
+          handleClose();
+        }, 1500);
+      }
+    } catch (err: any) {
+      setError(err.message || "Connection failed. Please ensure the backend is running.");
+    } finally {
       setIsLoading(false);
-      setIsSuccess(true);
-      setTimeout(() => {
-        login(`${provider} User`, `user@${provider.toLowerCase()}.com`);
-        setViewMode('workspace');
-        handleClose();
-      }, 1500);
-    }, 1000);
+    }
   };
 
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* Backdrop overlay */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -105,7 +115,6 @@ export const AuthModal: React.FC = () => {
           className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
         />
 
-        {/* Modal container */}
         <motion.div
           initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -119,12 +128,10 @@ export const AuthModal: React.FC = () => {
             color: 'var(--text-primary)',
           }}
         >
-          {/* Subtle cyan glow inside dark mode */}
           {theme === 'dark' && (
             <div className="absolute -left-16 -top-16 w-36 h-36 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
           )}
 
-          {/* Close button */}
           <button
             onClick={handleClose}
             className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all cursor-pointer"
@@ -132,7 +139,6 @@ export const AuthModal: React.FC = () => {
             <X size={18} />
           </button>
 
-          {/* Content display */}
           <AnimatePresence mode="wait">
             {isSuccess ? (
               <motion.div
@@ -151,12 +157,12 @@ export const AuthModal: React.FC = () => {
                   <CheckCircle2 size={56} className="animate-pulse" />
                 </motion.div>
                 <h3 className="text-2xl font-display font-black tracking-tight mb-2">
-                  {authModalMode === 'signup' ? 'Account Created!' : 'Authentication Successful'}
+                  {authModalMode === 'tenant-signup' ? 'Workspace Ready!' : 'Authentication Successful'}
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 max-w-[280px]">
-                  {authModalMode === 'signup' 
-                    ? "Your account has been created. Redirecting to Sign In..." 
-                    : "Welcome back! Redirecting to your account..."}
+                  {authModalMode === 'tenant-signup' 
+                    ? "Your corporate tenant has been successfully provisioned. Redirecting..." 
+                    : "Welcome back! Redirecting to your workspace..."}
                 </p>
                 <div className="w-12 h-1 bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-400 rounded-full mt-8 animate-pulse" />
               </motion.div>
@@ -167,25 +173,17 @@ export const AuthModal: React.FC = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                {/* Header */}
                 <div className="mb-6 flex flex-col items-center text-center select-none">
-                  {/* Logo */}
-                  <img
-                    src="/logo.png"
-                    alt="MCC AI Logo"
-                    className="h-20 w-20 rounded-full border-2 border-white/10 shadow-lg mb-4 object-cover"
-                  />
                   <h2 className="text-2xl md:text-3xl font-display font-black tracking-tight leading-tight">
-                    {authModalMode === 'login' ? 'Sign in to platform' : 'Create your account'}
+                    {authModalMode === 'login' ? `Sign in to ${globalConfig?.branding?.platform_name || 'platform'}` : 'Register Workspace'}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {authModalMode === 'login' 
-                      ? 'Access all high-speed transcription & AI tools.' 
-                      : 'Get started with free translation & text-to-speech.'}
+                      ? 'Access high-speed transcription & language models.' 
+                      : 'Provision a custom isolated tenant domain.'}
                   </p>
                 </div>
 
-                {/* Tab Switcher */}
                 <div className="relative flex rounded-xl bg-slate-100 dark:bg-white/5 p-1 mb-6">
                   <button
                     type="button"
@@ -207,25 +205,24 @@ export const AuthModal: React.FC = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setAuthModalMode('signup'); setError(''); }}
+                    onClick={() => { setAuthModalMode('tenant-signup'); setError(''); }}
                     className={`relative flex-1 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
-                      authModalMode === 'signup' 
+                      authModalMode === 'tenant-signup' 
                         ? 'text-slate-900 dark:text-white' 
                         : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                     }`}
                   >
-                    {authModalMode === 'signup' && (
+                    {authModalMode === 'tenant-signup' && (
                       <motion.div
                         layoutId="active-tab-bg"
                         className="absolute inset-0 rounded-lg shadow-sm bg-white dark:bg-slate-800/80 border border-slate-200/40 dark:border-white/5"
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                       />
                     )}
-                    <span className="relative z-10">Sign Up</span>
+                    <span className="relative z-10">Create SaaS Workspace</span>
                   </button>
                 </div>
 
-                {/* Error Banner */}
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
@@ -237,25 +234,58 @@ export const AuthModal: React.FC = () => {
                   </motion.div>
                 )}
 
-                {/* Form Fields */}
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {authModalMode === 'signup' && (
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        Full Name
-                      </label>
-                      <div className="relative">
-                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
-                        <input
-                          type="text"
-                          required
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="John Doe"
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-blue-500 dark:focus:border-cyan-500"
-                        />
+                  {authModalMode === 'tenant-signup' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            Workspace Name
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={tenantName}
+                            onChange={(e) => setTenantName(e.target.value)}
+                            placeholder="Acme Corp"
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-blue-500 dark:focus:border-cyan-500"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                            Workspace URL Slug
+                          </label>
+                          <div className="relative">
+                            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
+                            <input
+                              type="text"
+                              required
+                              value={tenantSlug}
+                              onChange={(e) => setTenantSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ""))}
+                              placeholder="acme"
+                              className="w-full pl-8 pr-3 py-2.5 rounded-xl text-xs font-semibold transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-blue-500 dark:focus:border-cyan-500"
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          Admin Name
+                        </label>
+                        <div className="relative">
+                          <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
+                          <input
+                            type="text"
+                            required
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="John Doe"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-blue-500 dark:focus:border-cyan-500"
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   <div className="space-y-1.5">
@@ -280,15 +310,6 @@ export const AuthModal: React.FC = () => {
                       <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                         Password
                       </label>
-                      {authModalMode === 'login' && (
-                        <button
-                          type="button"
-                          onClick={() => setError('Simulated: Password reset email sent!')}
-                          className="text-[10px] font-bold text-blue-600 dark:text-cyan-400 hover:underline cursor-pointer"
-                        >
-                          Forgot Password?
-                        </button>
-                      )}
                     </div>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
@@ -310,11 +331,10 @@ export const AuthModal: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-extrabold text-white transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                    className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-extrabold text-white transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:opacity-50"
                     style={{
                       background: 'linear-gradient(135deg, #1e40af, #0891b2)',
                       boxShadow: '0 4px 15px rgba(6, 182, 212, 0.2)',
@@ -324,48 +344,12 @@ export const AuthModal: React.FC = () => {
                       <span className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
-                        <span>{authModalMode === 'login' ? 'Sign In' : 'Create Account'}</span>
+                        <span>{authModalMode === 'login' ? 'Sign In' : 'Create Workspace'}</span>
                         <Sparkles size={14} className="animate-pulse" />
                       </>
                     )}
                   </button>
                 </form>
-
-                {/* Divider */}
-                <div className="relative flex py-4 items-center">
-                  <div className="flex-grow border-t border-slate-200 dark:border-white/5"></div>
-                  <span className="flex-shrink mx-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                    Or continue with
-                  </span>
-                  <div className="flex-grow border-t border-slate-200 dark:border-white/5"></div>
-                </div>
-
-                {/* Social Buttons */}
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => handleSocialLogin('Google')}
-                    disabled={isLoading}
-                    className="flex items-center justify-center gap-2 rounded-xl py-2 px-3 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
-                    </svg>
-                    <span>Google</span>
-                  </button>
-                  <button
-                    onClick={() => handleSocialLogin('GitHub')}
-                    disabled={isLoading}
-                    className="flex items-center justify-center gap-2 rounded-xl py-2 px-3 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.479C19.138 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
-                    </svg>
-                    <span>GitHub</span>
-                  </button>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>

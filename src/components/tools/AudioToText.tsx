@@ -114,8 +114,9 @@ export const AudioToText: React.FC = () => {
     setTranscribeProgress(0);
     setUploadProgress(0);
 
-    // If local Faster-Whisper server is active, use it for transcription
-    if (backendStatus === 'connected') {
+    const token = localStorage.getItem("mcc-ai-token");
+    // If local Faster-Whisper server is active and we are in single-tenant mode (no token), use direct upload
+    if (backendStatus === 'connected' && !token) {
       try {
         setProcessState('downloading');
         const formData = new FormData();

@@ -28,3 +28,8 @@ backend/.venv/
 .venv/
 venv/
 
+# Build caches & database
+__pycache__/
+*.db
+invoices_pdf/
+receipts_pdf/

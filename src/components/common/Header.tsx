@@ -24,18 +24,19 @@ export const Header: React.FC = () => {
     setIsAuthModalOpen,
     setAuthModalMode,
     activeTab,
+    globalConfig,
     ttsProvider,
     audioSttProvider,
     transcriptionProvider,
     translationProvider
   } = useApp();
 
-  const activeProviderCode = {
+  const activeProviderCode = ( {
     'text-to-speech': ttsProvider,
     'audio-transcription': audioSttProvider,
     'voice-to-text': transcriptionProvider,
     'translation': translationProvider,
-  }[activeTab] || '';
+  } as Record<string, string> )[activeTab] || '';
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -76,13 +77,16 @@ export const Header: React.FC = () => {
     setMobileMenuOpen(false);
   };
 
-  const menuItems = [
-    { label: 'AI Tools', id: 'ai-language-tools' },
-    { label: 'How It Works', id: 'workflow' },
-    { label: 'Why MCC AI', id: 'features' },
-    { label: 'Languages', id: 'languages' },
-    { label: 'Testimonials', id: 'testimonials' },
-  ];
+  const dbNavs = globalConfig?.navigation;
+  const menuItems = dbNavs && dbNavs.length > 0
+    ? dbNavs.filter((n: any) => n.is_visible).map((n: any) => ({ label: n.label, id: n.route }))
+    : [
+        { label: 'AI Tools', id: 'ai-language-tools' },
+        { label: 'How It Works', id: 'workflow' },
+        { label: 'Why MCC AI', id: 'features' },
+        { label: 'Languages', id: 'languages' },
+        { label: 'Testimonials', id: 'testimonials' },
+      ];
 
   return (
     <header
@@ -104,35 +108,37 @@ export const Header: React.FC = () => {
               onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             >
               <img
-                src="/logo.png"
-                alt="MCC AI Transcription Logo"
+                src={globalConfig?.branding?.logo_url || "/logo.png"}
+                alt="Logo"
                 className="h-10 w-10 min-w-[40px] md:h-12 md:w-12 md:min-w-[48px] object-cover rounded-full shadow-md border border-white/10 hover:scale-105 transition-transform duration-200"
+                style={{ height: globalConfig?.branding?.logo_size || "40px", width: globalConfig?.branding?.logo_size || "40px" }}
               />
               <div className="flex flex-col justify-center select-none">
                 <span className="font-display text-base md:text-lg font-black tracking-tight leading-none text-slate-900 dark:text-white flex items-center gap-1">
-                  MCC <span className="bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent font-extrabold">AI</span>
-                  <Sparkles size={11} className="text-cyan-600 dark:text-cyan-400 animate-pulse hidden md:inline" />
+                  {globalConfig?.branding?.platform_name || "MCC AI"}
                 </span>
                 <span className="text-[7px] md:text-[9px] font-bold tracking-[0.18em] uppercase mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                  Language Platform
+                  {globalConfig?.branding?.tagline || "Language Platform"}
                 </span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Center: Desktop Nav Menu */}
-        <nav className="hidden md:flex items-center justify-center gap-6">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => navigateToSection(item.id)}
-              className="relative text-sm font-bold transition-all duration-200 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white py-1.5 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-blue-600 dark:after:bg-cyan-500 after:transition-all after:duration-200 after:ease-out"
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
+        {/* Center: Desktop Nav Menu (Only shown on Landing Page) */}
+        {viewMode !== 'workspace' && (
+          <nav className="hidden md:flex items-center justify-center gap-6">
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => navigateToSection(item.id)}
+                className="relative text-sm font-bold transition-all duration-200 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white py-1.5 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-blue-600 dark:after:bg-cyan-500 after:transition-all after:duration-200 after:ease-out"
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        )}
 
         {/* Right: Actions */}
         <div className="hidden md:flex items-center gap-3">
