@@ -309,7 +309,7 @@ class BillingSettings(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True) # Null for global config
-    currency = Column(String(10), default="USD") # USD, INR
+    currency = Column(String(10), default="INR") # USD, INR
     gst_percentage = Column(Float, default=18.0)
     invoice_prefix = Column(String(20), default="INV")
     invoice_footer = Column(Text, default="Thank you for choosing MCC AI!")
@@ -362,7 +362,7 @@ class Invoice(Base):
     amount = Column(Float, nullable=False)
     tax_amount = Column(Float, default=0.0)
     total_amount = Column(Float, nullable=False)
-    currency = Column(String(10), default="USD")
+    currency = Column(String(10), default="INR")
     status = Column(String(20), default="pending") # pending, paid, failed, canceled
     billing_period_start = Column(DateTime, nullable=False)
     billing_period_end = Column(DateTime, nullable=False)
@@ -383,7 +383,7 @@ class Payment(Base):
     invoice_id = Column(String(36), ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False)
     tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
     amount = Column(Float, nullable=False)
-    currency = Column(String(10), default="USD")
+    currency = Column(String(10), default="INR")
     payment_method = Column(String(20), nullable=False) # stripe, razorpay, upi
     status = Column(String(20), default="pending") # pending, success, failed
     transaction_id = Column(String(100), nullable=True)

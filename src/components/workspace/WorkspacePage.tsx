@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, Volume2, Languages, FileAudio,
   History, Trash2, Clock, X, Settings, ShieldCheck, Key, Menu, ArrowLeft, LogOut,
-  Activity, Building2, Users, Layers, Server, TrendingUp, CreditCard, Cpu, ShieldAlert, Settings2
+  Activity, Building2, Users, Layers, Server, TrendingUp, CreditCard, Cpu, ShieldAlert, Settings2,
+  ArrowUpRight
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { VoiceToText } from '../tools/VoiceToText';
@@ -73,7 +74,8 @@ export const WorkspacePage: React.FC = () => {
     notification,
     setNotification,
     user,
-    globalConfig
+    globalConfig,
+    billingOverview
   } = useApp();
   
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -81,69 +83,74 @@ export const WorkspacePage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tempKey, setTempKey] = useState(openAiApiKey);
 
+  interface SidebarSection {
+    title: string;
+    items: SidebarMenuItem[];
+  }
+
   // Dynamic Sidebar configuration based on RBAC role
-  const getSidebarConfig = (): SidebarMenuItem[] => {
+  const getSidebarConfig = (): SidebarSection[] => {
     if (user?.role === 'super_admin') {
       return [
-        { id: 'sa-overview', label: 'Dashboard', icon: 'Activity', action: 'tab', tabId: 'sa-overview' },
-        { id: 'sa-tenants', label: 'Tenants', icon: 'Building2', action: 'tab', tabId: 'sa-tenants' },
-        { id: 'sa-users', label: 'Users', icon: 'Users', action: 'tab', tabId: 'sa-users' },
-        { id: 'sa-plans', label: 'Plans', icon: 'Layers', action: 'tab', tabId: 'sa-plans' },
-        { id: 'sa-providers', label: 'AI Providers', icon: 'Server', action: 'tab', tabId: 'sa-providers' },
-        { id: 'sa-usage', label: 'Usage Analytics', icon: 'TrendingUp', action: 'tab', tabId: 'sa-usage' },
-        { id: 'sa-billing', label: 'Billing', icon: 'CreditCard', action: 'tab', tabId: 'sa-billing' },
-        { id: 'sa-ai-logs', label: 'AI Logs', icon: 'Clock', action: 'tab', tabId: 'sa-ai-logs' },
-        { id: 'sa-audit-logs', label: 'Audit Logs', icon: 'ShieldAlert', action: 'tab', tabId: 'sa-audit-logs' },
-        { id: 'sa-health', label: 'System Health', icon: 'Cpu', action: 'tab', tabId: 'sa-health' },
-        { id: 'sa-builder', label: 'Platform Builder', icon: 'Settings2', action: 'tab', tabId: 'sa-builder' }
+        {
+          title: 'Administration',
+          items: [
+            { id: 'sa-overview', label: 'Dashboard', icon: 'Activity', action: 'tab', tabId: 'sa-overview' },
+            { id: 'sa-tenants', label: 'Tenants', icon: 'Building2', action: 'tab', tabId: 'sa-tenants' },
+            { id: 'sa-users', label: 'Users', icon: 'Users', action: 'tab', tabId: 'sa-users' },
+            { id: 'sa-plans', label: 'Plans', icon: 'Layers', action: 'tab', tabId: 'sa-plans' },
+            { id: 'sa-providers', label: 'AI Providers', icon: 'Server', action: 'tab', tabId: 'sa-providers' },
+            { id: 'sa-usage', label: 'Usage Analytics', icon: 'TrendingUp', action: 'tab', tabId: 'sa-usage' },
+            { id: 'sa-billing', label: 'Billing', icon: 'CreditCard', action: 'tab', tabId: 'sa-billing' },
+            { id: 'sa-ai-logs', label: 'AI Logs', icon: 'Clock', action: 'tab', tabId: 'sa-ai-logs' },
+            { id: 'sa-audit-logs', label: 'Audit Logs', icon: 'ShieldAlert', action: 'tab', tabId: 'sa-audit-logs' },
+            { id: 'sa-health', label: 'System Health', icon: 'Cpu', action: 'tab', tabId: 'sa-health' },
+            { id: 'sa-builder', label: 'Platform Builder', icon: 'Settings2', action: 'tab', tabId: 'sa-builder' }
+          ]
+        }
       ];
     }
 
-    const items: SidebarMenuItem[] = [
+    const sections: SidebarSection[] = [
       {
-        id: 'speech-tools',
-        label: 'Speech Tools',
-        icon: 'Volume2',
-        children: [
-          { id: 'text-to-speech', label: 'Text to Voice', action: 'tab', tabId: 'text-to-speech' },
-          { id: 'audio-transcription', label: 'Audio to Text', action: 'tab', tabId: 'audio-transcription' }
+        title: 'Speech Tools',
+        items: [
+          { id: 'text-to-speech', label: 'Text to Voice', icon: 'Volume2', action: 'tab', tabId: 'text-to-speech' },
+          { id: 'audio-transcription', label: 'Audio to Text', icon: 'FileAudio', action: 'tab', tabId: 'audio-transcription' }
         ]
       },
       {
-        id: 'voice-to-text',
-        label: 'Transcription',
-        icon: 'Mic',
-        action: 'tab',
-        tabId: 'voice-to-text'
-      },
-      {
-        id: 'translation',
-        label: 'Translation',
-        icon: 'Languages',
-        action: 'tab',
-        tabId: 'translation'
+        title: 'Transcription',
+        items: [
+          { id: 'voice-to-text', label: 'Transcription', icon: 'Mic', action: 'tab', tabId: 'voice-to-text' },
+          { id: 'translation', label: 'Translation', icon: 'Languages', action: 'tab', tabId: 'translation' }
+        ]
       }
     ];
 
-    // Add Tenant settings Dashboard for Tenant Admin & Manager roles
-    if (user?.role === 'tenant_admin' || user?.role === 'manager') {
-      items.push({
-        id: 'tenant-dashboard-menu',
-        label: 'Workspace Panel',
-        icon: 'Settings',
-        action: 'tab',
-        tabId: 'tenant-dashboard'
-      });
-      items.push({
-        id: 'tenant-billing-menu',
-        label: 'Billing',
-        icon: 'CreditCard',
-        action: 'tab',
-        tabId: 'tenant-billing'
+    // Add Workspace section for Tenant Admin, Manager, and standard user roles
+    if (user?.role === 'tenant_admin' || user?.role === 'manager' || user?.role === 'user') {
+      const workspaceItems: SidebarMenuItem[] = [];
+      if (user?.role === 'tenant_admin' || user?.role === 'manager') {
+        workspaceItems.push({ id: 'tenant-dashboard-menu', label: 'Workspace Panel', icon: 'Settings', action: 'tab', tabId: 'tenant-dashboard' });
+      }
+      workspaceItems.push({ id: 'tenant-billing-menu', label: 'Billing', icon: 'CreditCard', action: 'tab', tabId: 'tenant-billing' });
+      
+      sections.push({
+        title: 'Workspace',
+        items: workspaceItems
       });
     }
 
-    return items;
+    // Add Other section with History
+    sections.push({
+      title: 'Other',
+      items: [
+        { id: 'history-menu', label: 'History', icon: 'History', action: 'history' }
+      ]
+    });
+
+    return sections;
   };
 
   const SIDEBAR_CONFIG = getSidebarConfig();
@@ -182,7 +189,16 @@ export const WorkspacePage: React.FC = () => {
   };
 
   const isSuperAdminTab = activeTab.startsWith('sa-');
-  const superAdminSubTab = isSuperAdminTab ? (activeTab.replace('sa-', '') as any) : 'overview';
+  const getSuperAdminSubTab = (): any => {
+    if (!isSuperAdminTab) return 'overview';
+    const sub = activeTab.replace('sa-', '');
+    if (sub === 'health') return 'system_health';
+    if (sub === 'ai-logs') return 'ai_logs';
+    if (sub === 'audit-logs') return 'audit_logs';
+    if (sub === 'usage') return 'usage_analytics';
+    return sub;
+  };
+  const superAdminSubTab = getSuperAdminSubTab();
 
   const getActiveTabMetadata = () => {
     if (activeTab === 'sa-overview') return { label: 'Dashboard', icon: <Activity size={16} />, activeColor: '#3b82f6' };
@@ -212,7 +228,7 @@ export const WorkspacePage: React.FC = () => {
 
   const ActiveTool = isSuperAdminTab 
     ? () => <SuperAdminDashboard subTab={superAdminSubTab} /> 
-    : {
+    : ({
         'voice-to-text': VoiceToText,
         'text-to-speech': TextToVoice,
         'translation': TextTranslation,
@@ -220,7 +236,7 @@ export const WorkspacePage: React.FC = () => {
         'super-admin-dashboard': SuperAdminDashboard,
         'tenant-dashboard': TenantDashboard,
         'tenant-billing': TenantBilling,
-      }[activeTab] || VoiceToText;
+      } as Record<string, any>)[activeTab] || VoiceToText;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden flex-col sm:flex-row" style={{ background: 'var(--bg-base)' }}>
@@ -375,32 +391,25 @@ export const WorkspacePage: React.FC = () => {
                 </button>
               </div>
 
-              <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
-                {SIDEBAR_CONFIG.map((item) => (
-                  <SidebarMenuNode
-                    key={item.id}
-                    node={item}
-                    expanded={expanded}
-                    toggleExpanded={toggleExpanded}
-                    onSettingsOpen={() => setSettingsOpen(true)}
-                    onSidebarClose={() => setSidebarOpen(false)}
-                  />
+              <nav className="flex-1 overflow-y-auto p-3 space-y-4">
+                {SIDEBAR_CONFIG.map((section) => (
+                  <div key={section.title} className="space-y-1">
+                    <h4 className="px-3 text-[9px] font-bold tracking-[0.15em] text-white/40 uppercase mb-1.5 select-none">
+                      {section.title}
+                    </h4>
+                    {section.items.map((item) => (
+                      <SidebarMenuNode
+                        key={item.id}
+                        node={item}
+                        expanded={expanded}
+                        toggleExpanded={toggleExpanded}
+                        onSettingsOpen={() => setSettingsOpen(true)}
+                        onSidebarClose={() => setSidebarOpen(false)}
+                        onHistoryOpen={() => setHistoryOpen(true)}
+                      />
+                    ))}
+                  </div>
                 ))}
-
-                {user?.role !== 'super_admin' && (
-                  <>
-                    <div className="my-2" style={{ height: '1px', background: 'rgba(255,255,255,0.1)' }} />
-                    <motion.button
-                      onClick={() => { setHistoryOpen(true); setSidebarOpen(false); }}
-                      className="nav-item text-xs font-semibold"
-                      whileTap={{ scale: 0.97 }}
-                      style={{ color: 'var(--sidebar-panel-text)' }}
-                    >
-                      <span className="nav-icon" style={{ color: 'inherit' }}><History size={15} /></span>
-                      <span>History</span>
-                    </motion.button>
-                  </>
-                )}
               </nav>
             </motion.div>
           </>
@@ -442,48 +451,105 @@ export const WorkspacePage: React.FC = () => {
             </div>
           </div>
 
-          <nav className="space-y-1.5" aria-label="Tool navigation">
-            {SIDEBAR_CONFIG.map((item) => (
-              <SidebarMenuNode
-                key={item.id}
-                node={item}
-                expanded={expanded}
-                toggleExpanded={toggleExpanded}
-                onSettingsOpen={() => setSettingsOpen(true)}
-              />
+          <nav className="space-y-4" aria-label="Tool navigation">
+            {SIDEBAR_CONFIG.map((section) => (
+              <div key={section.title} className="space-y-1">
+                <h4 className="px-3 text-[9px] font-bold tracking-[0.15em] text-white/40 uppercase mb-1.5 select-none">
+                  {section.title}
+                </h4>
+                {section.items.map((item) => (
+                  <SidebarMenuNode
+                    key={item.id}
+                    node={item}
+                    expanded={expanded}
+                    toggleExpanded={toggleExpanded}
+                    onSettingsOpen={() => setSettingsOpen(true)}
+                    onHistoryOpen={() => setHistoryOpen(true)}
+                  />
+                ))}
+              </div>
             ))}
-
-            {user?.role !== 'super_admin' && (
-              <>
-                <div className="my-2" style={{ height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-                <motion.button
-                  onClick={() => setHistoryOpen(true)}
-                  className="nav-item relative text-xs font-semibold"
-                  whileTap={{ scale: 0.97 }}
-                  style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                >
-                  <span className="nav-icon" style={{ color: 'inherit' }}><History size={15} /></span>
-                  <span className="flex-grow text-left text-xs">History</span>
-                </motion.button>
-              </>
-            )}
           </nav>
 
-          {user?.role !== 'super_admin' && (
-            <div className="relative w-full p-2 mt-6 mb-4 flex items-center justify-center aspect-[4/3] group">
-              <div className="absolute w-32 h-32 rounded-full bg-blue-500/20 dark:bg-blue-500/30 blur-2xl pointer-events-none" />
-              <img 
-                src="/microphone_card_illustration.png" 
-                alt="Voice Platform"
-                className="h-full w-full object-contain relative z-10 transition-transform duration-300 group-hover:scale-105"
-                style={{ 
-                  mixBlendMode: 'screen',
-                  maskImage: 'radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 85%)',
-                  WebkitMaskImage: 'radial-gradient(circle, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 85%)'
-                }}
-              />
-            </div>
-          )}
+          {user?.role !== 'super_admin' && (() => {
+            const planName = billingOverview?.current_plan?.name || "Free";
+            
+            const planColors: Record<string, string> = {
+              'Free': 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+              'Starter': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+              'Professional': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+              'Enterprise': 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+            };
+            const colorClass = planColors[planName] || 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+
+            const transcriptionUsed = billingOverview?.usage?.audio_minutes_used || 0;
+            const transcriptionLimit = billingOverview?.usage?.audio_minutes_limit || 30;
+            const transcriptionPct = Math.min(100, (transcriptionUsed / transcriptionLimit) * 100);
+
+            const translationUsed = billingOverview?.usage?.translation_chars_used || 0;
+            const translationLimit = billingOverview?.usage?.translation_chars_limit || 50000;
+            const translationPct = Math.min(100, (translationUsed / translationLimit) * 100);
+
+            const ttsUsed = billingOverview?.usage?.tts_chars_used || 0;
+            const ttsLimit = billingOverview?.usage?.tts_chars_limit || 10000;
+            const ttsPct = Math.min(100, (ttsUsed / ttsLimit) * 100);
+
+            return (
+              <div 
+                onClick={() => setActiveTab('tenant-billing')}
+                className="mt-6 mb-4 p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-blue-500/30 transition-all duration-300 cursor-pointer relative group overflow-hidden"
+              >
+                <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-blue-500/10 blur-xl pointer-events-none transition-transform duration-500 group-hover:scale-150" />
+                
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[9px] font-bold text-slate-450 uppercase tracking-wider">Active Workspace</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase border ${colorClass}`}>
+                    {planName}
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  {/* Transcription Meter */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[9px]">
+                      <span className="text-slate-400">Transcription</span>
+                      <span className="text-white font-bold">{transcriptionUsed.toFixed(1)} / {transcriptionLimit} m</span>
+                    </div>
+                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${transcriptionPct}%` }} />
+                    </div>
+                  </div>
+
+                  {/* Translation Meter */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[9px]">
+                      <span className="text-slate-400">Translation</span>
+                      <span className="text-white font-bold">{(translationUsed / 1000).toFixed(1)}k / {(translationLimit / 1000).toFixed(0)}k c</span>
+                    </div>
+                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${translationPct}%` }} />
+                    </div>
+                  </div>
+
+                  {/* TTS Meter */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[9px]">
+                      <span className="text-slate-400">TTS Synthesis</span>
+                      <span className="text-white font-bold">{(ttsUsed / 1000).toFixed(1)}k / {(ttsLimit / 1000).toFixed(0)}k c</span>
+                    </div>
+                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-500 transition-all duration-500" style={{ width: `${ttsPct}%` }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[9px] font-bold text-blue-400 group-hover:text-blue-300 transition-colors">
+                  <span>Manage Plan & Limits</span>
+                  <ArrowUpRight size={10} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="pt-4 mt-auto">

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type ActiveTabType = 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription' | 'super-admin-dashboard' | 'tenant-dashboard' | 'sa-overview' | 'sa-tenants' | 'sa-users' | 'sa-plans' | 'sa-providers' | 'sa-usage' | 'sa-billing' | 'sa-ai-logs' | 'sa-audit-logs' | 'sa-health';
+export type ActiveTabType = 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription' | 'super-admin-dashboard' | 'tenant-dashboard' | 'tenant-billing' | 'sa-overview' | 'sa-tenants' | 'sa-users' | 'sa-plans' | 'sa-providers' | 'sa-usage' | 'sa-billing' | 'sa-ai-logs' | 'sa-audit-logs' | 'sa-health' | 'sa-builder';
 export type ViewModeType = 'landing' | 'workspace';
 
 export interface HistoryItem {
@@ -63,6 +63,8 @@ interface AppContextProps {
   setAuthModalMode: (mode: 'login' | 'signup' | 'tenant-signup') => void;
   globalConfig: any;
   loadGlobalConfig: () => Promise<void>;
+  billingOverview: any;
+  fetchBillingOverview: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -75,6 +77,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [globalConfig, setGlobalConfig] = useState<any>(null);
+  const [billingOverview, setBillingOverview] = useState<any>(null);
+
+  const fetchBillingOverview = async () => {
+    const savedToken = localStorage.getItem('mcc-ai-token');
+    const savedSlug = localStorage.getItem('mcc-ai-tenant-slug');
+    if (!savedToken) {
+      setBillingOverview(null);
+      return;
+    }
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/billing/tenant/overview", {
+        headers: {
+          "Authorization": `Bearer ${savedToken}`,
+          "x-tenant-slug": savedSlug || ""
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBillingOverview(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch billing overview", e);
+    }
+  };
 
   const loadGlobalConfig = async () => {
     try {
@@ -189,6 +215,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       root.setAttribute('data-theme', 'light');
     }
   }, [theme]);
+
+  useEffect(() => {
+    if (token) {
+      fetchBillingOverview();
+    } else {
+      setBillingOverview(null);
+    }
+  }, [token]);
 
   const [openAiApiKey, setOpenAiApiKeyState] = useState<string>(() => {
     return localStorage.getItem('mcc-ai-openai-key') || '';
@@ -320,6 +354,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAuthModalMode,
         globalConfig,
         loadGlobalConfig,
+        billingOverview,
+        fetchBillingOverview
       }}
     >
       {children}

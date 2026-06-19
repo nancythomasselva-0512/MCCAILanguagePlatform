@@ -180,54 +180,17 @@ const TESTIMONIALS = [
   },
 ];
 
-const VIDEO_CHAPTERS = [
-  { time: 5, label: 'Voice To Text', displayTime: '00:05' },
-  { time: 15, label: 'Translation', displayTime: '00:15' },
-  { time: 25, label: 'Text To Voice', displayTime: '00:25' },
-  { time: 35, label: 'Audio To Text', displayTime: '00:35' },
-  { time: 50, label: 'Export Features', displayTime: '00:50' },
-];
+// const VIDEO_CHAPTERS = [
+//   { time: 5, label: 'Voice To Text', displayTime: '00:05' },
+//   { time: 15, label: 'Translation', displayTime: '00:15' },
+//   { time: 25, label: 'Text To Voice', displayTime: '00:25' },
+//   { time: 35, label: 'Audio To Text', displayTime: '00:35' },
+//   { time: 50, label: 'Export Features', displayTime: '00:50' },
+// ];
 
 export const LandingPage: React.FC = () => {
   const { setViewMode, setActiveTab, globalConfig } = useApp();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
-
-  // Video Showcase states
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [isVideoMuted, setIsVideoMuted] = useState(true);
-  const [activeChapter, setActiveChapter] = useState(0);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  const handleTimeUpdate = () => {
-    if (!videoRef.current) return;
-    const current = videoRef.current.currentTime;
-    let currentChapterIdx = 0;
-    for (let i = VIDEO_CHAPTERS.length - 1; i >= 0; i--) {
-      if (current >= VIDEO_CHAPTERS[i].time) {
-        currentChapterIdx = i;
-        break;
-      }
-    }
-    setActiveChapter(currentChapterIdx);
-  };
-
-  const seekToChapter = (seconds: number) => {
-    if (!videoRef.current) return;
-    videoRef.current.currentTime = seconds;
-    videoRef.current.play().catch(() => {});
-    setIsVideoPlaying(true);
-  };
-
-  const togglePlay = () => {
-    if (!videoRef.current) return;
-    if (isVideoPlaying) {
-      videoRef.current.pause();
-      setIsVideoPlaying(false);
-    } else {
-      videoRef.current.play().catch(() => {});
-      setIsVideoPlaying(true);
-    }
-  };
 
   useEffect(() => {
     // Testimonials Auto Loop

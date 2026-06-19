@@ -78,7 +78,7 @@ def get_or_create_settings(db: Session) -> BillingSettings:
     settings = db.query(BillingSettings).filter(BillingSettings.tenant_id == None).first()
     if not settings:
         settings = BillingSettings(
-            currency="USD",
+            currency="INR",
             gst_percentage=18.0,
             invoice_prefix="INV",
             invoice_footer="For any subscription questions, contact billing@mcc-ai.com.",
@@ -193,6 +193,7 @@ def get_tenant_billing_overview(
             "created_at": inv.created_at.isoformat(),
             "due_date": inv.due_date.isoformat(),
             "paid_at": inv.paid_at.isoformat() if inv.paid_at else None,
+            "currency": inv.currency,
             "pdf_path": f"/api/billing/invoices/{inv.id}/download" if inv.pdf_path else None
         })
 

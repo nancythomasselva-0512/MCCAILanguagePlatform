@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../utils/api';
 import { 
   Settings, Paintbrush, FileText, Menu, Sliders, Play, FormInput, 
-  Mail, ShieldCheck, Code2, Users, FolderOpen, Plus, Trash2, Edit2, 
-  Check, Save, Loader2, Sparkles, Image, Video, FileText as DocIcon,
-  Globe, Eye, RefreshCw
+  Mail, ShieldCheck, Code2, Users, FolderOpen, Plus, Trash2, 
+  Save, Loader2, Image, Video, FileText as DocIcon
 } from 'lucide-react';
 
 type SectionType = 
@@ -46,7 +45,6 @@ export const PlatformBuilder: React.FC = () => {
 
   // Website Pages
   const [newPage, setNewPage] = useState({ slug: '', title: '', subtitle: '', is_active: true });
-  const [editingPageId, setEditingPageId] = useState<string | null>(null);
 
   // Navigation Items
   const [newNavItem, setNewNavItem] = useState({ label: '', route: '', icon: '', order: 0, is_visible: true });
@@ -73,7 +71,6 @@ export const PlatformBuilder: React.FC = () => {
   // Tenant Branding setup
   const [selectedTenantId, setSelectedTenantId] = useState('');
   const [customDomain, setCustomDomain] = useState('');
-  const [tenantBrandingMap, setTenantBrandingMap] = useState<any[]>([]);
 
   // Media File mock
   const [mediaFile, setMediaFile] = useState<File | null>(null);

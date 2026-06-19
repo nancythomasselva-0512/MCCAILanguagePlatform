@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sun, Moon, Menu, X, ArrowRight, Sparkles, LogOut, ChevronDown, User, LogIn } from 'lucide-react';
+import { Sun, Moon, Menu, X, ArrowRight, LogOut, ChevronDown, User, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PROVIDER_NAMES: Record<string, string> = {
@@ -128,7 +128,7 @@ export const Header: React.FC = () => {
         {/* Center: Desktop Nav Menu (Only shown on Landing Page) */}
         {viewMode !== 'workspace' && (
           <nav className="hidden md:flex items-center justify-center gap-6">
-            {menuItems.map((item) => (
+            {menuItems.map((item: any) => (
               <button
                 key={item.id}
                 onClick={() => navigateToSection(item.id)}
@@ -315,7 +315,7 @@ export const Header: React.FC = () => {
             className="md:hidden overflow-hidden backdrop-blur-lg"
           >
             <div className="space-y-1 px-4 py-5">
-              {menuItems.map((item) => (
+              {menuItems.map((item: any) => (
                 <button
                   key={item.id}
                   onClick={() => navigateToSection(item.id)}

@@ -8,7 +8,7 @@ export interface SidebarMenuItem {
   id: string;
   label: string;
   icon?: string;
-  action?: 'tab' | 'settings' | 'logout';
+  action?: 'tab' | 'settings' | 'logout' | 'history';
   tabId?: ActiveTabType;
   provider?: string;
   children?: SidebarMenuItem[];
@@ -20,6 +20,7 @@ interface SidebarMenuNodeProps {
   toggleExpanded: (id: string) => void;
   onSettingsOpen: () => void;
   onSidebarClose?: () => void; // for mobile drawer dismissal
+  onHistoryOpen?: () => void;
 }
 
 const LucideIcon = ({ name, size = 15, className = '' }: { name: string; size?: number; className?: string }) => {
@@ -33,7 +34,8 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
   expanded,
   toggleExpanded,
   onSettingsOpen,
-  onSidebarClose
+  onSidebarClose,
+  onHistoryOpen
 }) => {
   const {
     activeTab,
@@ -68,6 +70,9 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
       if (item.tabId === 'voice-to-text') return transcriptionProvider === item.provider;
       if (item.tabId === 'translation') return translationProvider === item.provider;
     }
+    if (item.action === 'history' && activeTab === 'voice-to-text') { // Fallback/default active checks for history if needed
+      return false; 
+    }
     return false;
   };
 
@@ -96,6 +101,9 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
       } else if (node.action === 'logout') {
         logout();
         setViewMode('landing');
+      } else if (node.action === 'history') {
+        if (onHistoryOpen) onHistoryOpen();
+        if (onSidebarClose) onSidebarClose();
       }
     }
   };

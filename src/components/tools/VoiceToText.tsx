@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, MicOff, Copy, Download, Edit3, Check, Play, Trash2,
-  AlertCircle, CheckCircle2, RefreshCw, X, Calendar, Globe, Clock, ChevronDown, Cpu
+  AlertCircle, CheckCircle2, RefreshCw, X, Calendar, Globe, Clock, ChevronDown, Cpu,
+  Award, Activity
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { providerManager } from '../../providers/providerManager';
@@ -47,12 +48,15 @@ const getLanguageName = (code: string): string => {
 
 export const VoiceToText: React.FC = () => {
   const {
+    history,
+    billingOverview,
     addHistoryItem,
     setDetectedLang,
     transcriptionProvider,
     setTranscriptionProvider,
     openAiApiKey,
-    setNotification
+    setNotification,
+    fetchBillingOverview
   } = useApp();
   
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
@@ -162,7 +166,7 @@ export const VoiceToText: React.FC = () => {
             language: langName,
             text: finalTranscript
           }]);
-          addHistoryItem('voice-to-text', 'Voice Recording (Demo)', `${finalTranscript.split(' ').filter(Boolean).length} words`);
+          addHistoryItem('voice-to-text', finalTranscript, `Voice Recording (Demo) • ${finalTranscript.split(' ').filter(Boolean).length} words`);
         }
         setLiveTranscript('');
         liveTranscriptRef.current = '';
@@ -218,6 +222,7 @@ export const VoiceToText: React.FC = () => {
               });
             }
           );
+          fetchBillingOverview();
 
           const finalTranscript = result.text.trim();
           if (finalTranscript) {
@@ -233,8 +238,8 @@ export const VoiceToText: React.FC = () => {
             }]);
             addHistoryItem(
               'voice-to-text',
-              `Voice Recording (${result.finalProvider.toUpperCase()})`,
-              `${finalTranscript.split(' ').filter(Boolean).length} words`
+              finalTranscript,
+              `Live Recording (${result.finalProvider.toUpperCase()}) • ${finalTranscript.split(' ').filter(Boolean).length} words`
             );
           } else {
             setRecordingState('error');
@@ -339,8 +344,12 @@ export const VoiceToText: React.FC = () => {
     setErrorMsg('');
   };
 
+  const vttHistory = (history || []).filter(item => item.type === 'voice-to-text');
+  const audioLimit = billingOverview?.usage?.audio_minutes_limit || 30;
+  const remainingMinutes = Math.max(0, audioLimit - (billingOverview?.usage?.audio_minutes_used || 0));
+
   return (
-    <div className="space-y-5 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-[1600px] mx-auto animate-fadeIn">
       {/* Header with Provider Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5">
         <div>
@@ -450,326 +459,502 @@ export const VoiceToText: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Speech Input Language Selector */}
-      <div className="app-card rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Globe size={16} className="text-[var(--accent)] animate-pulse" />
-          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Speech Input Language</span>
-        </div>
-        <div className="relative w-full sm:w-64">
-          <select
-            id="vtt-language-select"
-            value={selectedLanguage}
-            onChange={(e) => setSelectedLanguage(e.target.value)}
-            disabled={recordingState === 'recording'}
-            className="w-full appearance-none rounded-xl px-3.5 pr-9 py-2.5 text-xs font-semibold focus:outline-none disabled:opacity-50"
+      {/* 2-Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left Column - Forms & Overview */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Info Banner */}
+          <div 
+            className="relative overflow-hidden rounded-3xl p-6 md:p-8 flex items-center justify-between min-h-[140px] border border-blue-100 dark:border-white/5 shadow-sm"
             style={{
-              background: 'var(--bg-subtle)',
-              border: '1px solid var(--border-base)',
-              color: 'var(--text-primary)',
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(29, 78, 216, 0.05) 100%)',
             }}
           >
-            {LANGUAGES.map(lang => (
-              <option key={lang.code} value={lang.code}>{lang.label}</option>
-            ))}
-          </select>
-          <ChevronDown size={13} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
-        </div>
-      </div>
-
-      {/* Microphone Card */}
-      <div className="app-card rounded-3xl p-8 sm:p-16 flex flex-col items-center justify-center relative text-center" style={{ minHeight: '260px' }}>
-        <div className="relative inline-flex items-center justify-center">
-          {recordingState === 'recording' && (
-            <span className="absolute inline-flex h-24 w-24 rounded-full bg-red-500/15 animate-ping" />
-          )}
-          <button
-            id="vtt-record-btn"
-            onClick={recordingState === 'recording' ? () => stopRecording(false) : startRecording}
-            disabled={recordingState === 'processing'}
-            className={`relative z-10 flex h-20 w-20 items-center justify-center rounded-full transition-all duration-300 ${
-              recordingState === 'recording'
-                ? 'bg-red-500 hover:bg-red-600 scale-105 shadow-lg shadow-red-500/25'
-                : recordingState === 'processing'
-                ? 'cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 hover:scale-105 shadow-lg shadow-blue-500/20'
-            }`}
-            style={recordingState === 'processing' ? {
-              background: 'var(--bg-subtle)',
-              color: 'var(--text-muted)',
-            } : {}}
-          >
-            {recordingState === 'processing' ? (
-              <RefreshCw size={22} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
-            ) : recordingState === 'recording' ? (
-              <MicOff size={22} className="text-white" />
-            ) : (
-              <Mic size={22} className="text-white" />
-            )}
-          </button>
-        </div>
-
-        <p className="mt-5 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
-          {recordingState === 'idle' && 'Tap the microphone to start recording'}
-          {recordingState === 'recording' && (
-            <span className="flex items-center gap-2 text-red-500 font-semibold">
-              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-              Recording — {formatTime(recordSeconds)}
-            </span>
-          )}
-          {recordingState === 'processing' && (
-            <span style={{ color: 'var(--text-secondary)' }}>Processing your audio…</span>
-          )}
-          {recordingState === 'done' && (
-            <span className="flex items-center gap-1.5 text-emerald-500 font-semibold">
-              <CheckCircle2 size={15} /> Transcription complete
-            </span>
-          )}
-          {recordingState === 'error' && <span className="text-red-500">Recording failed</span>}
-        </p>
-
-        {/* Live transcript */}
-        {recordingState === 'recording' && (
-          <div
-            className="w-full max-w-lg mt-4 rounded-xl p-3.5 text-sm italic text-left"
-            style={{
-              background: 'var(--bg-subtle)',
-              border: '1px solid var(--border-base)',
-              color: 'var(--text-secondary)',
-              minHeight: '3rem',
-            }}
-          >
-            {liveTranscript || <span style={{ color: 'var(--text-muted)' }}>Listening… speak now…</span>}
-          </div>
-        )}
-      </div>
-
-      {/* Transcription Results */}
-      <AnimatePresence>
-        {segments.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="space-y-4"
-          >
-            <div className="flex items-center justify-between px-0.5">
-              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                Transcription · {segments.length} segment{segments.length !== 1 ? 's' : ''}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={reset}
-                  className="btn-ghost flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs"
-                >
-                  <RefreshCw size={11} /> New
-                </button>
-                <button
-                  id="vtt-export-btn"
-                  onClick={handleExportAll}
-                  className="btn-ghost flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs"
-                >
-                  <Download size={12} /> Export
-                </button>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent pointer-events-none" />
+            
+            <div className="flex items-center gap-5 relative z-10 max-w-[70%] text-left">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-md shadow-blue-500/20 text-white">
+                <Mic size={24} />
+              </div>
+              <div>
+                <h3 className="font-display text-lg md:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-snug">
+                  Voice Transcription
+                </h3>
+                <p className="mt-1.5 text-xs md:text-sm text-slate-600 dark:text-slate-350 leading-relaxed font-medium">
+                  Record your voice via the microphone and transcribe it in real-time. Choose your speech input language for accurate translation.
+                </p>
               </div>
             </div>
+            
+            {/* Banner Illustration on the Right */}
+            <div className="absolute right-0 top-0 bottom-0 w-1/3 max-w-[220px] flex items-center justify-end select-none pointer-events-none pr-4 overflow-hidden">
+              <img 
+                src="/banner_illustration.png" 
+                alt="Voice recording illustration" 
+                className="h-[120%] object-contain mt-2 opacity-95 filter drop-shadow-md dark:brightness-95 dark:contrast-105"
+              />
+            </div>
+          </div>
 
-            <div className="space-y-3">
-              {segments.map((seg) => (
-                <div
-                  key={seg.id}
-                  className="app-card rounded-2xl p-4 flex flex-col gap-3 transition-all"
-                >
-                  {/* Card Header (Metadata & Play button) */}
-                  <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border-base)] pb-3">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                      <span className="flex items-center gap-1.5">
-                        <Calendar size={12} className="text-slate-400" />
-                        {seg.day || new Date().toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
-                      </span>
-                      <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                      <span className="flex items-center gap-1.5">
-                        <Clock size={12} className="text-slate-400" />
-                        {seg.timestamp}
-                      </span>
-                      <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                      <span className="flex items-center gap-1 rounded-full bg-[var(--accent)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--accent)] border border-[var(--accent)]/15">
-                        <Globe size={11} />
-                        {seg.language || 'English'}
-                      </span>
-                      <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                      <span className="flex items-center gap-1.5 text-slate-500">
-                        {seg.text.split(/\s+/).filter(Boolean).length} words
-                      </span>
-                    </div>
+          {/* Speech Input Language Selector */}
+          <div className="app-card rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Globe size={16} className="text-[var(--accent)] animate-pulse" />
+              <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Speech Input Language</span>
+            </div>
+            <div className="relative w-full sm:w-64">
+              <select
+                id="vtt-language-select"
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                disabled={recordingState === 'recording'}
+                className="w-full appearance-none rounded-xl px-3.5 pr-9 py-2.5 text-xs font-semibold focus:outline-none disabled:opacity-50"
+                style={{
+                  background: 'var(--bg-subtle)',
+                  border: '1px solid var(--border-base)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                {LANGUAGES.map(lang => (
+                  <option key={lang.code} value={lang.code}>{lang.label}</option>
+                ))}
+              </select>
+              <ChevronDown size={13} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+            </div>
+          </div>
 
+          {/* Microphone Card */}
+          <div className="app-card rounded-3xl p-8 sm:p-16 flex flex-col items-center justify-center relative text-center" style={{ minHeight: '260px' }}>
+            <div className="relative inline-flex items-center justify-center">
+              {recordingState === 'recording' && (
+                <span className="absolute inline-flex h-24 w-24 rounded-full bg-red-500/15 animate-ping" />
+              )}
+              <button
+                id="vtt-record-btn"
+                onClick={recordingState === 'recording' ? () => stopRecording(false) : startRecording}
+                disabled={recordingState === 'processing'}
+                className={`relative z-10 flex h-20 w-20 items-center justify-center rounded-full transition-all duration-300 ${
+                  recordingState === 'recording'
+                    ? 'bg-red-500 hover:bg-red-600 scale-105 shadow-lg shadow-red-500/25'
+                    : recordingState === 'processing'
+                    ? 'cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 hover:scale-105 shadow-lg shadow-blue-500/20'
+                }`}
+                style={recordingState === 'processing' ? {
+                  background: 'var(--bg-subtle)',
+                  color: 'var(--text-muted)',
+                } : {}}
+              >
+                {recordingState === 'processing' ? (
+                  <RefreshCw size={22} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
+                ) : recordingState === 'recording' ? (
+                  <MicOff size={22} className="text-white" />
+                ) : (
+                  <Mic size={22} className="text-white" />
+                )}
+              </button>
+            </div>
+
+            <p className="mt-5 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+              {recordingState === 'idle' && 'Tap the microphone to start recording'}
+              {recordingState === 'recording' && (
+                <span className="flex items-center gap-2 text-red-500 font-semibold">
+                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                  Recording — {formatTime(recordSeconds)}
+                </span>
+              )}
+              {recordingState === 'processing' && (
+                <span style={{ color: 'var(--text-secondary)' }}>Processing your audio…</span>
+              )}
+              {recordingState === 'done' && (
+                <span className="flex items-center gap-1.5 text-emerald-500 font-semibold">
+                  <CheckCircle2 size={15} /> Transcription complete
+                </span>
+              )}
+              {recordingState === 'error' && <span className="text-red-500">Recording failed</span>}
+            </p>
+
+            {/* Live transcript */}
+            {recordingState === 'recording' && (
+              <div
+                className="w-full max-w-lg mt-4 rounded-xl p-3.5 text-sm italic text-left"
+                style={{
+                  background: 'var(--bg-subtle)',
+                  border: '1px solid var(--border-base)',
+                  color: 'var(--text-secondary)',
+                  minHeight: '3rem',
+                }}
+              >
+                {liveTranscript || <span style={{ color: 'var(--text-muted)' }}>Listening… speak now…</span>}
+              </div>
+            )}
+          </div>
+
+          {/* Transcription Results */}
+          <AnimatePresence>
+            {segments.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="space-y-4"
+              >
+                <div className="flex items-center justify-between px-0.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-left" style={{ color: 'var(--text-muted)' }}>
+                    Transcription · {segments.length} segment{segments.length !== 1 ? 's' : ''}
+                  </span>
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => {
-                        if ('speechSynthesis' in window) {
-                          window.speechSynthesis.cancel();
-                          window.speechSynthesis.speak(new SpeechSynthesisUtterance(seg.text));
-                        }
-                      }}
-                      className="flex h-7 w-7 items-center justify-center rounded-full transition-colors flex-shrink-0"
-                      style={{
-                        border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
-                        color: 'var(--accent)',
-                        background: 'color-mix(in srgb, var(--accent) 5%, transparent)',
-                      }}
-                      title="Play Text-to-Speech"
+                      onClick={reset}
+                      className="btn-ghost flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs"
                     >
-                      <Play size={11} className="ml-0.5" />
+                      <RefreshCw size={11} /> New
                     </button>
-                  </div>
-
-                  {/* Text */}
-                  <div className="flex-1 min-w-0">
-                    {seg.isEditing ? (
-                      <textarea
-                        value={seg.text}
-                        onChange={(e) => setSegments(prev =>
-                          prev.map(s => s.id === seg.id ? { ...s, text: e.target.value } : s)
-                        )}
-                        rows={2}
-                        autoFocus
-                        className="w-full resize-none rounded-xl px-3 py-2 text-sm app-input"
-                      />
-                    ) : (
-                      <p className="text-sm font-medium leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-                        {seg.text}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Actions — always below text, right-aligned */}
-                  <div className="flex items-center gap-2 justify-end relative">
-                    {/* Copy Button Container */}
-                    <div className="relative">
-                      <button
-                        onClick={() => handleCopy(seg.id, seg.text)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-slate-200 dark:hover:bg-slate-800"
-                        style={{
-                          background: 'var(--bg-subtle)',
-                          border: '1px solid var(--border-base)',
-                          color: 'var(--text-muted)',
-                        }}
-                      >
-                        <Copy size={13} />
-                      </button>
-                      <AnimatePresence>
-                        {copiedId === seg.id && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.8, y: 5, x: '-50%' }}
-                            animate={{ opacity: 1, scale: 1, y: -32, x: '-50%' }}
-                            exit={{ opacity: 0, scale: 0.8, y: 5, x: '-50%' }}
-                            transition={{ duration: 0.1 }}
-                            className="absolute left-1/2 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-50"
-                          >
-                            <div className="absolute bottom-[-3px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rotate-45 bg-emerald-500" />
-                            Copied!
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Edit Button */}
                     <button
-                      onClick={() => setSegments(prev =>
-                        prev.map(s => s.id === seg.id ? { ...s, isEditing: !s.isEditing } : s)
-                      )}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-                      style={{
-                        background: seg.isEditing ? 'color-mix(in srgb, #10b981 10%, var(--bg-subtle))' : 'var(--bg-subtle)',
-                        border: '1px solid var(--border-base)',
-                        color: seg.isEditing ? '#10b981' : 'var(--text-muted)',
-                      }}
+                      id="vtt-export-btn"
+                      onClick={handleExportAll}
+                      className="btn-ghost flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs"
                     >
-                      {seg.isEditing ? <Check size={13} /> : <Edit3 size={13} />}
+                      <Download size={12} /> Export
                     </button>
-
-                    {/* Delete Button Container */}
-                    <div className="relative">
-                      <button
-                        onClick={() => setDeleteConfirmId(seg.id)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-                        style={{
-                          background: 'color-mix(in srgb, #ef4444 6%, var(--bg-subtle))',
-                          border: '1px solid color-mix(in srgb, #ef4444 20%, var(--border-base))',
-                          color: '#ef4444',
-                        }}
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                      <AnimatePresence>
-                        {deleteConfirmId === seg.id && (
-                          <>
-                            {/* Backdrop to dismiss confirmation on click outside */}
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-                              onClick={() => setDeleteConfirmId(null)}
-                            />
-                            {/* Modal Box */}
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.9, x: '-50%', y: '-50%' }}
-                              animate={{ opacity: 1, scale: 1, x: '-50%', y: '-50%' }}
-                              exit={{ opacity: 0, scale: 0.9, x: '-50%', y: '-50%' }}
-                              transition={{ duration: 0.15 }}
-                              className="fixed left-1/2 top-1/2 z-50 w-[90%] max-w-sm rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center gap-4"
-                              style={{
-                                background: 'var(--bg-elevated, var(--bg-card))',
-                                border: '1px solid var(--border-base)',
-                                color: 'var(--text-primary)',
-                                boxShadow: 'var(--shadow-2xl)',
-                              }}
-                            >
-                              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 mb-1">
-                                <Trash2 size={20} />
-                              </div>
-                              <div className="space-y-1">
-                                <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-                                  Delete segment?
-                                </h3>
-                                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                                  Are you sure you want to delete this segment? This action cannot be undone.
-                                </p>
-                              </div>
-                              <div className="flex gap-3 w-full mt-2">
-                                <button
-                                  onClick={() => setDeleteConfirmId(null)}
-                                  className="flex-1 rounded-xl py-2.5 text-xs font-bold transition-colors"
-                                  style={{
-                                    background: 'var(--bg-subtle)',
-                                    border: '1px solid var(--border-base)',
-                                    color: 'var(--text-secondary)',
-                                  }}
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSegments(prev => prev.filter(s => s.id !== seg.id));
-                                    setDeleteConfirmId(null);
-                                  }}
-                                  className="flex-1 bg-red-500 hover:bg-red-600 text-white rounded-xl py-2.5 text-xs font-bold transition-colors shadow-lg shadow-red-500/15"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </motion.div>
-                          </>
-                        )}
-                      </AnimatePresence>
-                    </div>
                   </div>
                 </div>
-              ))}
+
+                <div className="space-y-3 text-left">
+                  {segments.map((seg) => (
+                    <div
+                      key={seg.id}
+                      className="app-card rounded-2xl p-4 flex flex-col gap-3 transition-all"
+                    >
+                      {/* Card Header (Metadata & Play button) */}
+                      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border-base)] pb-3">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                          <span className="flex items-center gap-1.5">
+                            <Calendar size={12} className="text-slate-400" />
+                            {seg.day || new Date().toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
+                          </span>
+                          <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                          <span className="flex items-center gap-1.5">
+                            <Clock size={12} className="text-slate-400" />
+                            {seg.timestamp}
+                          </span>
+                          <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                          <span className="flex items-center gap-1 rounded-full bg-[var(--accent)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--accent)] border border-[var(--accent)]/15">
+                            <Globe size={11} />
+                            {seg.language || 'English'}
+                          </span>
+                          <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                          <span className="flex items-center gap-1.5 text-slate-500">
+                            {seg.text.split(/\s+/).filter(Boolean).length} words
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            if ('speechSynthesis' in window) {
+                              window.speechSynthesis.cancel();
+                              window.speechSynthesis.speak(new SpeechSynthesisUtterance(seg.text));
+                            }
+                          }}
+                          className="flex h-7 w-7 items-center justify-center rounded-full transition-colors flex-shrink-0"
+                          style={{
+                            border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
+                            color: 'var(--accent)',
+                            background: 'color-mix(in srgb, var(--accent) 5%, transparent)',
+                          }}
+                          title="Play Text-to-Speech"
+                        >
+                          <Play size={11} className="ml-0.5" />
+                        </button>
+                      </div>
+
+                      {/* Text */}
+                      <div className="flex-1 min-w-0">
+                        {seg.isEditing ? (
+                          <textarea
+                            value={seg.text}
+                            onChange={(e) => setSegments(prev =>
+                              prev.map(s => s.id === seg.id ? { ...s, text: e.target.value } : s)
+                            )}
+                            rows={2}
+                            autoFocus
+                            className="w-full resize-none rounded-xl px-3 py-2 text-sm app-input"
+                          />
+                        ) : (
+                          <p className="text-sm font-medium leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                            {seg.text}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Actions — always below text, right-aligned */}
+                      <div className="flex items-center gap-2 justify-end relative">
+                        {/* Copy Button Container */}
+                        <div className="relative">
+                          <button
+                            onClick={() => handleCopy(seg.id, seg.text)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-slate-200 dark:hover:bg-slate-800"
+                            style={{
+                              background: 'var(--bg-subtle)',
+                              border: '1px solid var(--border-base)',
+                              color: 'var(--text-muted)',
+                            }}
+                          >
+                            <Copy size={13} />
+                          </button>
+                          <AnimatePresence>
+                            {copiedId === seg.id && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.8, y: 5, x: '-50%' }}
+                                animate={{ opacity: 1, scale: 1, y: -32, x: '-50%' }}
+                                exit={{ opacity: 0, scale: 0.8, y: 5, x: '-50%' }}
+                                transition={{ duration: 0.1 }}
+                                className="absolute left-1/2 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-lg pointer-events-none whitespace-nowrap z-50"
+                              >
+                                <div className="absolute bottom-[-3px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rotate-45 bg-emerald-500" />
+                                Copied!
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Edit Button */}
+                        <button
+                          onClick={() => setSegments(prev =>
+                            prev.map(s => s.id === seg.id ? { ...s, isEditing: !s.isEditing } : s)
+                          )}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+                          style={{
+                            background: seg.isEditing ? 'color-mix(in srgb, #10b981 10%, var(--bg-subtle))' : 'var(--bg-subtle)',
+                            border: '1px solid var(--border-base)',
+                            color: seg.isEditing ? '#10b981' : 'var(--text-muted)',
+                          }}
+                        >
+                          {seg.isEditing ? <Check size={13} /> : <Edit3 size={13} />}
+                        </button>
+
+                        {/* Delete Button Container */}
+                        <div className="relative">
+                          <button
+                            onClick={() => setDeleteConfirmId(seg.id)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+                            style={{
+                              background: 'color-mix(in srgb, #ef4444 6%, var(--bg-subtle))',
+                              border: '1px solid color-mix(in srgb, #ef4444 20%, var(--border-base))',
+                              color: '#ef4444',
+                            }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                          <AnimatePresence>
+                            {deleteConfirmId === seg.id && (
+                              <>
+                                {/* Backdrop to dismiss confirmation on click outside */}
+                                <motion.div
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+                                  onClick={() => setDeleteConfirmId(null)}
+                                />
+                                {/* Modal Box */}
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.9, x: '-50%', y: '-50%' }}
+                                  animate={{ opacity: 1, scale: 1, x: '-50%', y: '-50%' }}
+                                  exit={{ opacity: 0, scale: 0.9, x: '-50%', y: '-50%' }}
+                                  transition={{ duration: 0.15 }}
+                                  className="fixed left-1/2 top-1/2 z-50 w-[90%] max-w-sm rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center gap-4"
+                                  style={{
+                                    background: 'var(--bg-elevated, var(--bg-card))',
+                                    border: '1px solid var(--border-base)',
+                                    color: 'var(--text-primary)',
+                                    boxShadow: 'var(--shadow-2xl)',
+                                  }}
+                                >
+                                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 mb-1">
+                                    <Trash2 size={20} />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                                      Delete segment?
+                                    </h3>
+                                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                                      Are you sure you want to delete this segment? This action cannot be undone.
+                                    </p>
+                                  </div>
+                                  <div className="flex gap-3 w-full mt-2">
+                                    <button
+                                      onClick={() => setDeleteConfirmId(null)}
+                                      className="flex-1 rounded-xl py-2.5 text-xs font-bold transition-colors"
+                                      style={{
+                                        background: 'var(--bg-subtle)',
+                                        border: '1px solid var(--border-base)',
+                                        color: 'var(--text-secondary)',
+                                      }}
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setSegments(prev => prev.filter(s => s.id !== seg.id));
+                                        setDeleteConfirmId(null);
+                                      }}
+                                      className="flex-1 bg-red-500 hover:bg-red-600 text-white rounded-xl py-2.5 text-xs font-bold transition-colors shadow-lg shadow-red-500/15"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Usage Overview Row */}
+          <div className="space-y-4 pt-2 text-left">
+            <h3 className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Usage Overview</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              {/* Recordings Today */}
+              <div className="glass-card rounded-2xl p-4.5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Recordings Count</span>
+                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{vttHistory.length}</h4>
+                  </div>
+                  <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 flex-shrink-0">
+                    <Mic size={14} />
+                  </div>
+                </div>
+                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
+                  Total voice sessions
+                </div>
+              </div>
+
+              {/* Recorded Minutes */}
+              <div className="glass-card rounded-2xl p-4.5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Recorded Minutes</span>
+                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{(billingOverview?.usage?.audio_minutes_used || 0).toFixed(1)} mins</h4>
+                  </div>
+                  <div className="h-7 w-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 flex-shrink-0">
+                    <Clock size={14} />
+                  </div>
+                </div>
+                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
+                  Transcription time used
+                </div>
+              </div>
+
+              {/* Remaining Minutes */}
+              <div className="glass-card rounded-2xl p-4.5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Remaining Minutes</span>
+                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{remainingMinutes.toFixed(1)} mins</h4>
+                  </div>
+                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
+                    <Activity size={14} />
+                  </div>
+                </div>
+                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
+                  Out of {audioLimit.toFixed(0)} mins limit
+                </div>
+              </div>
+
+              {/* Active Provider */}
+              <div className="glass-card rounded-2xl p-4.5 border border-slate-250 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Engine</span>
+                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{transcriptionProvider.toUpperCase()}</h4>
+                  </div>
+                  <div className="h-7 w-7 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 flex-shrink-0">
+                    <Award size={14} />
+                  </div>
+                </div>
+                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
+                  Current STT provider
+                </div>
+              </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Right Column - Banners & Recent Activity */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Mic Banner */}
+          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-gradient-to-br from-blue-600/10 to-indigo-500/10 dark:from-blue-600/5 dark:to-indigo-500/5 min-h-[120px] flex flex-col justify-center text-left">
+            <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
+            <div className="relative z-10">
+              <span className="text-[8px] font-black uppercase text-blue-500 dark:text-blue-400 tracking-wider">Live Mic</span>
+              <h4 className="font-display text-sm font-black text-slate-955 dark:text-white mt-1 leading-snug">High-accuracy Real-time</h4>
+              <p className="mt-1 text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                Stream live recording through Whisper & Deepgram engines.
+              </p>
+            </div>
+            <Mic size={52} className="absolute right-[-10px] bottom-[-10px] opacity-10 text-blue-500" />
+          </div>
+
+          {/* Recent Recordings Card */}
+          <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-3 text-left">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
+              <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Recent recordings</h4>
+              <span className="text-[9px] text-blue-500 dark:text-blue-400 font-bold cursor-pointer hover:underline" onClick={() => fetchBillingOverview()}>Refresh</span>
+            </div>
+
+            <div className="space-y-2">
+              {vttHistory.length === 0 ? (
+                <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-[10px] font-medium font-sans">
+                  No recent recordings.
+                </div>
+              ) : (
+                vttHistory.slice(0, 4).map(item => (
+                  <div key={item.id} className="p-2.5 rounded-xl bg-slate-100/50 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5 flex items-start gap-3 hover:border-slate-300 dark:hover:border-white/10 transition-colors">
+                    <span className="text-[9px] font-black text-blue-600 bg-blue-500/10 rounded px-1.5 py-0.5 mt-0.5">REC</span>
+                    <div className="flex-1 min-w-0 text-left font-sans">
+                      <p className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">{item.title}</p>
+                      <span className="text-[8px] text-slate-500 font-medium">{item.details} · {item.timestamp}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Recent Activity Timeline */}
+          <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-3 text-left">
+            <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest border-b border-slate-200 dark:border-white/5 pb-2">Recent Activity</h4>
+            <div className="relative border-l border-slate-200 dark:border-white/5 ml-2 pl-4 space-y-4 text-[10px] font-semibold text-slate-500">
+              {vttHistory.length === 0 ? (
+                <div className="text-center py-4 text-slate-400 dark:text-slate-500 text-[10px] font-medium font-sans">
+                  No recent activity.
+                </div>
+              ) : (
+                vttHistory.slice(0, 3).map(item => (
+                  <div key={item.id} className="relative text-left">
+                    <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full bg-slate-50 dark:bg-[#0B1020] border-2 border-blue-500 flex items-center justify-center z-10" />
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-slate-900 dark:text-white block font-bold truncate max-w-[120px]">{item.title}</span>
+                        <span className="text-[9px] text-slate-550 dark:text-slate-400 mt-0.5 block">{item.details}</span>
+                      </div>
+                      <span className="text-[8px] text-slate-450 dark:text-slate-500 font-mono flex-shrink-0">{item.timestamp}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

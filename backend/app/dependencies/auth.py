@@ -36,9 +36,11 @@ def get_current_user(
         
     return user
 
-def get_current_tenant_context(request: Request) -> Tenant:
+def get_current_tenant_context(request: Request, db: Session = Depends(get_db)) -> Tenant:
     """Gets tenant injected by Middleware if present"""
     tenant = getattr(request.state, "tenant", None)
+    if tenant and db:
+        tenant = db.merge(tenant)
     return tenant
 
 def check_tenant_access(user: User = Depends(get_current_user), tenant: Tenant = Depends(get_current_tenant_context)):

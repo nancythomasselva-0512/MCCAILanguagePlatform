@@ -191,24 +191,26 @@ async def transcribe_audio(
     api_key = resolve_api_key(db, tenant, provider)
     transcript_text = ""
     
-    # 1. Local Whisper engine check
+    # 1. Local Whisper engine call
+    segments_data = []
+    transcription_performed = False
     try:
-        health = requests.get("http://127.0.0.1:8000/api/health", timeout=2)
-        if health.ok:
-            # Transcribe via Local FastAPI engine
-            files = {"file": (file.filename, audio_bytes, file.content_type)}
-            data = {"model": model, "language": language}
-            res = requests.post("http://127.0.0.1:8000/api/transcribe", files=files, data=data)
-            if res.ok:
-                resp = res.json()
-                segments = resp.get("segments", [])
-                transcript_text = " ".join(s["text"] for s in segments)
-                provider = "local-whisper"
-    except Exception:
-        pass  # Fallback to API keys
+        from app.utils.audio import transcribe_local_audio
+        resp = transcribe_local_audio(
+            audio_bytes=audio_bytes,
+            filename=file.filename or "audio.wav",
+            model=model,
+            language=language
+        )
+        segments_data = resp.get("segments", [])
+        transcript_text = " ".join(s["text"] for s in segments_data)
+        provider = "local-whisper"
+        transcription_performed = True
+    except Exception as e:
+        print(f"Local Whisper transcription error: {e}")
         
     # 2. OpenAI Whisper API check
-    if not transcript_text and provider == "openai" and api_key:
+    if not transcription_performed and provider == "openai" and api_key:
         try:
             headers = {"Authorization": f"Bearer {api_key}"}
             files = {"file": (file.filename or "audio.wav", audio_bytes, "audio/wav")}
@@ -216,11 +218,12 @@ async def transcribe_audio(
             res = requests.post("https://api.openai.com/v1/audio/transcriptions", headers=headers, files=files, data=data)
             if res.ok:
                 transcript_text = res.json().get("text", "")
+                transcription_performed = True
         except Exception:
             pass
             
     # 3. Fallback mock transcript if no connections succeeded
-    if not transcript_text:
+    if not transcription_performed:
         transcript_text = f"[Transcribed via Simulated STT]: Speech recognized from file {file.filename}."
         
     # Record history
@@ -241,7 +244,7 @@ async def transcribe_audio(
     return {
         "text": transcript_text,
         "provider": provider,
-        "segments": [{"timestamp": "00:00", "text": transcript_text, "start": 0, "end": estimated_minutes * 60}]
+        "segments": segments_data if segments_data else [{"timestamp": "00:00", "text": transcript_text, "start": 0, "end": estimated_minutes * 60}]
     }
 
 # --- TOOL 3: TEXT-TO-SPEECH SYNTHESIS ---

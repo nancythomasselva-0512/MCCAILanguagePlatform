@@ -3,10 +3,10 @@ import { apiRequest } from '../../utils/api';
 import { 
   Building2, Users, CreditCard, Cpu, Check, 
   Loader2, Sparkles, Server, Trash2, ShieldCheck,
-  AlertTriangle, Activity, Clock, ShieldAlert, Key, Search,
-  RefreshCw, Ban, KeyRound, LogOut, CheckCircle2, Copy,
-  TrendingUp, TrendingDown, Layers, Settings, MoreVertical, Filter,
-  ArrowUpRight, ArrowDownRight, Eye, Settings2, Bell, Sun, Moon, Info, Play
+  AlertTriangle, Activity, Search,
+  Ban, CheckCircle2,
+  TrendingUp, Settings, MoreVertical,
+  ArrowUpRight, Settings2
 } from 'lucide-react';
 
 import { PlatformBuilder } from './PlatformBuilder';
@@ -67,7 +67,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   const [statusFilter, setStatusFilter] = useState('');
   
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  // const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // New Tenant input state (Refined form)
   const [newCompany, setNewCompany] = useState('');
@@ -151,7 +151,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
   // Tenant Actions
   const handleUpdateTenantStatus = async (tenantId: string, status: string) => {
-    setActionLoading(tenantId);
+    // setActionLoading(tenantId);
     try {
       await apiRequest(`/super-admin/tenants/${tenantId}/status?status=${status}`, {
         method: "PATCH"
@@ -161,7 +161,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
     } catch (err) {
       alert("Error updating tenant status.");
     } finally {
-      setActionLoading(null);
+      // setActionLoading(null);
       setActiveMenuId(null);
     }
   };
@@ -2144,7 +2144,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     const mockPayload = {
                       transaction_id: viewingPaymentDetails.transaction_id,
                       payment_gateway: viewingPaymentDetails.gateway,
-                      currency: "USD",
+                      currency: viewingPaymentDetails.currency || "INR",
                       checkout_amount: viewingPaymentDetails.amount,
                       status: viewingPaymentDetails.status.toLowerCase() === 'success' ? 'captured' : 'failed',
                       timestamp: viewingPaymentDetails.date,
