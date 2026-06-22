@@ -1,20 +1,29 @@
 import logging
+import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 from sqlalchemy.orm import Session
-from app.models.models import AuditLog, Tenant, User
+from app.models.models import AuditLog, Tenant, User, Payment
 
 logger = logging.getLogger("mcc-ai-saas-emails")
 
-def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str):
+def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str, attachment_path: str = None, recipient_email: str = None):
     """
-    Simulates sending email by logging the action and appending to system Audit Logs.
+    Sends a real email using SMTP configuration if environment variables are set,
+    otherwise logs the action and appends to system Audit Logs.
     """
     logger.info(f"===> AUTOMATED EMAIL SENT <===")
     logger.info(f"Tenant ID: {tenant_id}")
     logger.info(f"Subject: {subject}")
     logger.info(f"Body:\n{body_text}")
+    if attachment_path:
+        logger.info(f"Attachment: {attachment_path}")
     logger.info(f"==============================")
     
-    # Save a record in audit logs
+    # 1. Save a record in audit logs
     log = AuditLog(
         tenant_id=tenant_id,
         action="automated_email",
@@ -22,6 +31,63 @@ def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str):
     )
     db.add(log)
     db.commit()
+
+    # 2. Try sending the real email via SMTP
+    if not recipient_email:
+        # Look up the tenant admin user's email
+        admin_user = db.query(User).filter(User.tenant_id == tenant_id, User.role == "tenant_admin").first()
+        if not admin_user or not admin_user.email:
+            logger.warning(f"No tenant admin user or email found for tenant {tenant_id}. Cannot send SMTP mail.")
+            return
+        recipient_email = admin_user.email
+
+    logger.info(f"Attempting to send real SMTP email to: {recipient_email}")
+
+    # Load SMTP settings from core configuration settings
+    from app.core.config import settings
+    smtp_host = settings.SMTP_HOST
+    smtp_port = settings.SMTP_PORT
+    smtp_user = settings.SMTP_USER
+    smtp_password = settings.SMTP_PASSWORD
+    sender_email = settings.SMTP_SENDER or smtp_user or "noreply@mcc-ai.com"
+
+    if not smtp_host:
+        logger.info("SMTP_HOST not configured. Email will only be simulated in logs.")
+        return
+
+    try:
+        # Create MIME message
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = recipient_email
+        msg['Subject'] = subject
+
+        # Attach text body
+        msg.attach(MIMEText(body_text, 'plain'))
+
+        # Attach PDF if exists
+        if attachment_path and os.path.exists(attachment_path):
+            with open(attachment_path, "rb") as f:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(f.read())
+            encoders.encode_base64(part)
+            part.add_header(
+                "Content-Disposition",
+                f"attachment; filename={os.path.basename(attachment_path)}",
+            )
+            msg.attach(part)
+            logger.info(f"Attached receipt PDF to email: {attachment_path}")
+
+        # Connect and send
+        server = smtplib.SMTP(smtp_host, smtp_port)
+        server.starttls()
+        if smtp_user and smtp_password:
+            server.login(smtp_user, smtp_password)
+        server.sendmail(sender_email, recipient_email, msg.as_string())
+        server.quit()
+        logger.info(f"Real SMTP email successfully sent to {recipient_email}!")
+    except Exception as smtp_err:
+        logger.error(f"Failed to send SMTP email via {smtp_host}:{smtp_port}: {smtp_err}")
 
 def send_welcome_subscription_email(db: Session, tenant: Tenant, plan_name: str):
     subject = f"Welcome to MCC {plan_name} Plan!"
@@ -33,20 +99,136 @@ def send_invoice_generated_email(db: Session, tenant: Tenant, invoice_number: st
     body = f"Hello {tenant.tenant_name},\n\nA new invoice {invoice_number} has been generated for your workspace subscription. Total amount: ${amount:.2f}.\n\nPlease review it in your Billing settings.\n\nThanks,\nMCC AI Billing"
     log_email_action(db, tenant.id, subject, body)
 
+def send_user_subscription_activated_email(
+    db: Session,
+    tenant: Tenant,
+    user: User,
+    plan_name: str,
+    amount_paid: float,
+    currency: str,
+    payment_id: str,
+    invoice_number: str,
+    start_date: str,
+    expiry_date: str,
+    invoice_id: str
+):
+    subject = "Subscription Activated Successfully"
+    download_url = f"http://localhost:8000/api/billing/invoices/{invoice_id}/download"
+    body = (
+        f"Hello {user.name},\n\n"
+        f"Your subscription has been activated successfully!\n\n"
+        f"Subscription Details:\n"
+        f"- User Name: {user.name}\n"
+        f"- Plan Name: {plan_name}\n"
+        f"- Amount Paid: {currency} {amount_paid:.2f}\n"
+        f"- Payment ID: {payment_id}\n"
+        f"- Invoice Number: {invoice_number}\n"
+        f"- Start Date: {start_date}\n"
+        f"- Expiry Date: {expiry_date}\n\n"
+        f"You can download your invoice by clicking the link below:\n"
+        f"{download_url}\n\n"
+        f"Thank you for choosing MCC AI!\n"
+        f"The MCC AI Team"
+    )
+    
+    # Locate invoice PDF to attach
+    attachment_path = None
+    try:
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        pdf_file = os.path.join(base_dir, "invoices_pdf", f"{invoice_number}.pdf")
+        if os.path.exists(pdf_file):
+            attachment_path = pdf_file
+    except Exception as e:
+        logger.error(f"Could not locate invoice PDF to attach: {e}")
+
+    log_email_action(db, tenant.id, subject, body, attachment_path, recipient_email=user.email)
+
+def send_admin_purchase_notification_email(
+    db: Session,
+    user: User,
+    tenant: Tenant,
+    plan_name: str,
+    amount_paid: float,
+    currency: str,
+    payment_id: str,
+    purchase_date: str,
+    expiry_date: str
+):
+    subject = "New Subscription Purchase"
+    body = (
+        f"Hello Admin,\n\n"
+        f"A new subscription has been purchased on the platform!\n\n"
+        f"Purchase Details:\n"
+        f"- User Name: {user.name}\n"
+        f"- User Email: {user.email}\n"
+        f"- Workspace Tenant: {tenant.tenant_name} (slug: {tenant.slug})\n"
+        f"- Plan Purchased: {plan_name}\n"
+        f"- Amount Paid: {currency} {amount_paid:.2f}\n"
+        f"- Payment ID: {payment_id}\n"
+        f"- Purchase Date: {purchase_date}\n"
+        f"- Subscription Expiry Date: {expiry_date}\n\n"
+        f"Regards,\n"
+        f"MCC AI Billing System"
+    )
+    
+    # Find super admin email
+    super_admin = db.query(User).filter(User.role == "super_admin").first()
+    recipient_email = super_admin.email if super_admin else None
+    
+    if not recipient_email:
+        # Fallback to config sender email or default admin email
+        from app.core.config import settings
+        recipient_email = settings.SMTP_SENDER or settings.SMTP_USER or "admin@mcc-ai.com"
+        
+    log_email_action(db, tenant.id, subject, body, recipient_email=recipient_email)
+
 def send_payment_success_email(db: Session, tenant: Tenant, invoice_number: str, amount: float, transaction_id: str):
     subject = f"Payment Successful! Invoice {invoice_number}"
     body = f"Hello {tenant.tenant_name},\n\nYour payment of ${amount:.2f} for Invoice {invoice_number} was successfully processed.\nTransaction ID: {transaction_id}.\n\nYour invoice is now marked as PAID and a PDF has been generated for your records.\n\nThank you for your business!\nMCC AI Billing"
-    log_email_action(db, tenant.id, subject, body)
+    
+    # Locate the receipt PDF
+    attachment_path = None
+    try:
+        payment = db.query(Payment).filter(Payment.transaction_id == transaction_id).first()
+        if payment:
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            pdf_file = os.path.join(base_dir, "receipts_pdf", f"receipt_{payment.id}.pdf")
+            if os.path.exists(pdf_file):
+                attachment_path = pdf_file
+    except Exception as e:
+        logger.error(f"Could not locate receipt PDF to attach: {e}")
+
+    log_email_action(db, tenant.id, subject, body, attachment_path)
 
 def send_payment_failure_email(db: Session, tenant: Tenant, invoice_number: str, amount: float, reason: str):
     subject = f"Payment Failed: Invoice {invoice_number}"
     body = f"Hello {tenant.tenant_name},\n\nWe were unable to process your payment of ${amount:.2f} for Invoice {invoice_number}.\nReason: {reason}.\n\nPlease try paying again via your Billing Panel.\n\nRegards,\nMCC AI Billing"
     log_email_action(db, tenant.id, subject, body)
 
-def send_subscription_expiry_reminder_email(db: Session, tenant: Tenant, days_left: int):
-    subject = f"Action Required: Your MCC AI subscription expires in {days_left} days"
-    body = f"Hello {tenant.tenant_name},\n\nThis is a friendly reminder that your active subscription is expiring in {days_left} days. Please renew to avoid any disruptions in service.\n\nBest,\nThe MCC AI Team"
+def send_subscription_expiry_warning_email(db: Session, tenant: Tenant, days_left: int):
+    if days_left == 0:
+        subject = "Action Required: Your MCC AI subscription has expired"
+        body = (
+            f"Hello {tenant.tenant_name},\n\n"
+            f"This is to notify you that your active subscription has expired today. "
+            f"Please renew your subscription to avoid any disruption to your workspace resource limits.\n\n"
+            f"Best,\n"
+            f"The MCC AI Team"
+        )
+    else:
+        subject = f"Action Required: Your MCC AI subscription expires in {days_left} days"
+        body = (
+            f"Hello {tenant.tenant_name},\n\n"
+            f"This is a friendly reminder that your active subscription is expiring in {days_left} days. "
+            f"Please renew your plan to avoid any disruptions in service.\n\n"
+            f"Best,\n"
+            f"The MCC AI Team"
+        )
     log_email_action(db, tenant.id, subject, body)
+
+def send_subscription_expiry_reminder_email(db: Session, tenant: Tenant, days_left: int):
+    # Keep alias for compatibility
+    send_subscription_expiry_warning_email(db, tenant, days_left)
 
 def send_renewal_confirmation_email(db: Session, tenant: Tenant, plan_name: str):
     subject = f"Subscription Renewed Successfully - {plan_name}"

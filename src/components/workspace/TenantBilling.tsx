@@ -662,20 +662,12 @@ export const TenantBilling: React.FC = () => {
                 </div>
 
                 {/* PDF Downloads */}
-                <div className="grid grid-cols-2 gap-3 w-full pt-2">
-                  <a
-                    href={`http://127.0.0.1:8000/api/billing/invoices/${completedSessionData.invoiceId}/download`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-center gap-1.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-650 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                  >
-                    <Download size={14} /> Download Invoice
-                  </a>
+                <div className="w-full pt-2">
                   <a
                     href={`http://127.0.0.1:8000/api/billing/payments/${completedSessionData.paymentId}/receipt`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center justify-center gap-1.5 bg-blue-50 dark:bg-blue-600/10 hover:bg-blue-100 dark:hover:bg-blue-600/20 text-blue-650 dark:text-blue-400 border border-blue-200 dark:border-blue-500/10 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-1.5 w-full bg-blue-50 dark:bg-blue-600/10 hover:bg-blue-100 dark:hover:bg-blue-600/20 text-blue-650 dark:text-blue-400 border border-blue-200 dark:border-blue-500/10 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
                   >
                     <Download size={14} /> Download Receipt
                   </a>
@@ -893,12 +885,6 @@ export const TenantBilling: React.FC = () => {
                     className="bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex-1"
                   >
                     Back
-                  </button>
-                  <button
-                    onClick={() => handleCompleteCheckout(false)}
-                    className="bg-red-50 dark:bg-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-650 dark:text-red-200 border border-red-200 dark:border-red-900/20 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex-1"
-                  >
-                    Fail Payment
                   </button>
                   <button
                     onClick={() => handleCompleteCheckout(true)}

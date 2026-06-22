@@ -33,3 +33,5 @@ __pycache__/
 *.db
 invoices_pdf/
 receipts_pdf/
+.env
+

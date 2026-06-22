@@ -44,7 +44,14 @@ interface SuperAdminDashboardProps {
 }
 
 export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeTab, setActiveTab] = useState<TabType>(subTab || 'overview');
+
+  // Sync internal tab when the global activeTab changes (e.g. after refresh)
+  useEffect(() => {
+    if (subTab && subTab !== activeTab) {
+      setActiveTab(subTab);
+    }
+  }, [subTab]);
   const [metrics, setMetrics] = useState<any>(null);
   const [tenants, setTenants] = useState<any[]>([]);
   const [providers, setProviders] = useState<any[]>([]);
@@ -65,6 +72,11 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   const [searchTerm, setSearchTerm] = useState('');
   const [planFilter, setPlanFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
+  // Subscription filters
+  const [subSearchTerm, setSubSearchTerm] = useState('');
+  const [subStatusFilter, setSubStatusFilter] = useState('');
+  const [subCycleFilter, setSubCycleFilter] = useState('');
   
   const [loading, setLoading] = useState(true);
   // const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -358,6 +370,58 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
     } catch (err: any) {
       alert(err.message || "Failed to update global billing configurations.");
     }
+  };
+
+  const exportPaymentsToCSV = () => {
+    if (!billingOverview?.payments) return;
+    const headers = ["Transaction ID", "Invoice Number", "Tenant Name", "Workspace", "Plan", "Gateway", "Amount", "Status", "Date"];
+    const rows = billingOverview.payments.map((p: any) => [
+      p.transaction_id || '',
+      p.invoice_number || '',
+      p.tenant_name || '',
+      p.workspace || '',
+      p.plan || '',
+      p.gateway || '',
+      p.amount || 0,
+      p.status || '',
+      p.date || ''
+    ]);
+    
+    const csvContent = [headers.join(","), ...rows.map((e: any) => e.map((val: any) => `"${String(val).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `payments_export_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportSubscriptionsToCSV = () => {
+    if (!billingOverview?.subscriptions) return;
+    const headers = ["User Name", "Email", "Plan", "Amount", "Payment Status", "Subscription Status", "Start Date", "Expiry Date", "Payment ID"];
+    const rows = billingOverview.subscriptions.map((s: any) => [
+      s.user_name || "N/A",
+      s.email || "N/A",
+      s.plan || '',
+      s.amount || 0,
+      s.payment_status || 'N/A',
+      s.status || '',
+      s.started || '',
+      s.expires || '',
+      s.payment_id || 'N/A'
+    ]);
+    
+    const csvContent = [headers.join(","), ...rows.map((e: any) => e.map((val: any) => `"${String(val).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `subscriptions_export_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (loading) {
@@ -1452,10 +1516,18 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           {/* TAB 3: PAYMENTS TAB */}
           {billingSubTab === 'payments' && (
             <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-4">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <TrendingUp size={14} className="text-blue-400" />
-                Payments tracking
-              </h3>
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-3">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <TrendingUp size={14} className="text-blue-400" />
+                  Payments Tracking
+                </h3>
+                <button
+                  onClick={exportPaymentsToCSV}
+                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold transition-all cursor-pointer"
+                >
+                  Export CSV
+                </button>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
@@ -1530,42 +1602,125 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           {/* TAB 4: SUBSCRIPTIONS */}
           {billingSubTab === 'subscriptions' && (
             <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-4">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
                 <CheckCircle2 size={14} className="text-blue-400" />
-                Active Workspace Subscriptions
+                Subscription Management
               </h3>
+
+              {/* Cards Grid */}
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
+                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Total Revenue</p>
+                  <h3 className="text-2xl font-black text-white mt-1">${(billingOverview.total_revenue || 0).toLocaleString()}</h3>
+                </div>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
+                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Active Subscriptions</p>
+                  <h3 className="text-2xl font-black text-emerald-400 mt-1">{billingOverview.active_subscriptions || 0}</h3>
+                </div>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
+                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Expired Subscriptions</p>
+                  <h3 className="text-2xl font-black text-red-500 mt-1">{billingOverview.expired_subscriptions || 0}</h3>
+                </div>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
+                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Monthly Revenue</p>
+                  <h3 className="text-2xl font-black text-blue-400 mt-1">${(billingOverview.mrr || 0).toLocaleString()}</h3>
+                </div>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
+                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Yearly Revenue</p>
+                  <h3 className="text-2xl font-black text-purple-400 mt-1">${(billingOverview.arr || 0).toLocaleString()}</h3>
+                </div>
+              </div>
+
+              {/* Filters / Search Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-white/5 pb-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <Search size={14} className="text-slate-500 dark:text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search user, email, plan..."
+                    value={subSearchTerm}
+                    onChange={(e) => setSubSearchTerm(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <select
+                    value={subStatusFilter}
+                    onChange={(e) => setSubStatusFilter(e.target.value)}
+                    className="px-2 py-1 rounded bg-slate-100 dark:bg-[#0B1020] border border-slate-200 dark:border-white/5 text-[10px] font-bold text-slate-700 dark:text-slate-300 outline-none"
+                    style={{ background: 'var(--bg-subtle)' }}
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Expired">Expired</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                  <select
+                    value={subCycleFilter}
+                    onChange={(e) => setSubCycleFilter(e.target.value)}
+                    className="px-2 py-1 rounded bg-slate-100 dark:bg-[#0B1020] border border-slate-200 dark:border-white/5 text-[10px] font-bold text-slate-700 dark:text-slate-300 outline-none"
+                    style={{ background: 'var(--bg-subtle)' }}
+                  >
+                    <option value="">All Cycles</option>
+                    <option value="monthly">Monthly Plan</option>
+                    <option value="yearly">Yearly Plan</option>
+                  </select>
+                  <button
+                    onClick={exportSubscriptionsToCSV}
+                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold transition-all cursor-pointer"
+                  >
+                    Export CSV
+                  </button>
+                </div>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 font-bold font-sans">
-                      <th className="py-2.5">Tenant Workspace</th>
-                      <th className="py-2.5">Plan Name</th>
-                      <th className="py-2.5">Cycle</th>
-                      <th className="py-2.5">Price</th>
-                      <th className="py-2.5">Status</th>
-                      <th className="py-2.5">Started Date</th>
-                      <th className="py-2.5">Expires Date</th>
+                      <th className="py-2.5">User Name</th>
+                      <th className="py-2.5">Email</th>
+                      <th className="py-2.5">Plan</th>
+                      <th className="py-2.5">Amount</th>
+                      <th className="py-2.5">Payment Status</th>
+                      <th className="py-2.5">Subscription Status</th>
+                      <th className="py-2.5 font-mono">Start Date</th>
+                      <th className="py-2.5 font-mono">Expiry Date</th>
+                      <th className="py-2.5">Payment ID</th>
                       <th className="py-2.5 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {billingOverview.subscriptions?.map((sub: any) => (
+                    {billingOverview.subscriptions?.filter((sub: any) => {
+                      const matchSearch = (sub.user_name || '').toLowerCase().includes(subSearchTerm.toLowerCase()) ||
+                                          (sub.email || '').toLowerCase().includes(subSearchTerm.toLowerCase()) ||
+                                          (sub.plan || '').toLowerCase().includes(subSearchTerm.toLowerCase());
+                      const matchStatus = subStatusFilter === '' || sub.status === subStatusFilter;
+                      const matchCycle = subCycleFilter === '' || sub.billing_cycle === subCycleFilter;
+                      return matchSearch && matchStatus && matchCycle;
+                    }).map((sub: any) => (
                       <tr key={sub.id} className="border-b border-slate-200 dark:border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-3 font-semibold text-slate-700 dark:text-white">{sub.tenant_name}</td>
+                        <td className="py-3 font-semibold text-slate-700 dark:text-white">{sub.user_name || 'N/A'}</td>
+                        <td className="py-3 font-mono text-slate-500 dark:text-slate-450">{sub.email || 'N/A'}</td>
                         <td className="py-3">
                           <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 capitalize">
                             {sub.plan}
                           </span>
                         </td>
-                        <td className="py-3 text-slate-650 dark:text-slate-400 capitalize">{sub.billing_cycle || 'monthly'}</td>
-                        <td className="py-3 text-white font-bold">${sub.price || 0}</td>
+                        <td className="py-3 text-white font-bold">${sub.amount || 0}</td>
+                        <td className="py-3 text-slate-400">{sub.payment_status || 'N/A'}</td>
                         <td className="py-3">
-                          <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold border uppercase ${
+                            sub.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                            sub.status === 'Expired' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                            'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                          }`}>
                             {sub.status || 'Active'}
                           </span>
                         </td>
                         <td className="py-3 text-slate-500 font-mono">{sub.started || '-'}</td>
                         <td className="py-3 text-slate-500 font-mono font-bold">{sub.expires}</td>
+                        <td className="py-3 font-mono text-[10px] text-slate-400">{sub.payment_id || 'N/A'}</td>
                         <td className="py-3 text-right">
                           <button
                             onClick={() => handleRenewPlan(sub.tenant_name)}
@@ -1578,7 +1733,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     ))}
                     {(!billingOverview.subscriptions || billingOverview.subscriptions.length === 0) && (
                       <tr>
-                        <td colSpan={8} className="py-8 text-center text-slate-400 font-semibold">No active subscriptions found.</td>
+                        <td colSpan={10} className="py-8 text-center text-slate-400 font-semibold">No subscriptions found.</td>
                       </tr>
                     )}
                   </tbody>

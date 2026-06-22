@@ -4,12 +4,12 @@ import { X, Mail, Lock, User as UserIcon, Eye, EyeOff, Sparkles, CheckCircle2, G
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const AuthModal: React.FC = () => {
-  const { 
-    isAuthModalOpen, 
-    setIsAuthModalOpen, 
-    authModalMode, 
-    setAuthModalMode, 
-    login: saveLoginSession, 
+  const {
+    isAuthModalOpen,
+    setIsAuthModalOpen,
+    authModalMode,
+    setAuthModalMode,
+    login: saveLoginSession,
     theme,
     setViewMode,
     globalConfig,
@@ -20,7 +20,7 @@ export const AuthModal: React.FC = () => {
   const [name, setName] = useState('');
   const [tenantName, setTenantName] = useState('');
   const [tenantSlug, setTenantSlug] = useState('');
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -38,6 +38,9 @@ export const AuthModal: React.FC = () => {
     setTenantSlug('');
     setIsSuccess(false);
     setIsLoading(false);
+    if (window.location.pathname === '/admin') {
+      window.location.href = '/';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,13 +68,16 @@ export const AuthModal: React.FC = () => {
           throw new Error(data.detail || "Workspace registration failed.");
         }
 
-        const data = await response.json();
+        await response.json();
         setIsSuccess(true);
         setTimeout(() => {
-          saveLoginSession(data.name, email, data.role, data.access_token, data.refresh_token, data.tenant_slug);
-          setViewMode('workspace');
-          handleClose();
-        }, 1500);
+          setIsSuccess(false);
+          setAuthModalMode('login');
+          setPassword('');
+          setName('');
+          setTenantName('');
+          setTenantSlug('');
+        }, 2000);
 
       } else {
         // Standard Login
@@ -90,6 +96,20 @@ export const AuthModal: React.FC = () => {
         }
 
         const data = await response.json();
+
+        // Enforce role separation checks based on route path
+        const role = data.role;
+        const isAdminRoute = window.location.pathname === '/admin';
+        if (isAdminRoute) {
+          if (role !== 'super_admin') {
+            throw new Error("This login is reserved for the Platform Super Administrator.");
+          }
+        } else {
+          if (role === 'super_admin') {
+            throw new Error("Super Admin accounts must log in through the Admin Portal.");
+          }
+        }
+
         setIsSuccess(true);
         setTimeout(() => {
           saveLoginSession(data.name, email, data.role, data.access_token, data.refresh_token, data.tenant_slug);
@@ -122,8 +142,8 @@ export const AuthModal: React.FC = () => {
           transition={{ type: "spring", duration: 0.4 }}
           className="relative w-full max-w-md overflow-hidden rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-2xl p-8"
           style={{
-            background: theme === 'dark' 
-              ? 'radial-gradient(circle at top left, rgba(16, 24, 48, 0.95), rgba(8, 12, 24, 0.98))' 
+            background: theme === 'dark'
+              ? 'radial-gradient(circle at top left, rgba(16, 24, 48, 0.95), rgba(8, 12, 24, 0.98))'
               : 'rgba(255, 255, 255, 0.98)',
             color: 'var(--text-primary)',
           }}
@@ -157,11 +177,11 @@ export const AuthModal: React.FC = () => {
                   <CheckCircle2 size={56} className="animate-pulse" />
                 </motion.div>
                 <h3 className="text-2xl font-display font-black tracking-tight mb-2">
-                  {authModalMode === 'tenant-signup' ? 'Workspace Ready!' : 'Authentication Successful'}
+                  {authModalMode === 'tenant-signup' ? 'Workspace Registered!' : 'Authentication Successful'}
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 max-w-[280px]">
-                  {authModalMode === 'tenant-signup' 
-                    ? "Your corporate tenant has been successfully provisioned. Redirecting..." 
+                  {authModalMode === 'tenant-signup'
+                    ? "Your corporate tenant has been successfully registered. Please sign in to continue."
                     : "Welcome back! Redirecting to your workspace..."}
                 </p>
                 <div className="w-12 h-1 bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-400 rounded-full mt-8 animate-pulse" />
@@ -175,53 +195,59 @@ export const AuthModal: React.FC = () => {
               >
                 <div className="mb-6 flex flex-col items-center text-center select-none">
                   <h2 className="text-2xl md:text-3xl font-display font-black tracking-tight leading-tight">
-                    {authModalMode === 'login' ? `Sign in to ${globalConfig?.branding?.platform_name || 'platform'}` : 'Register Workspace'}
+                    {window.location.pathname === '/admin'
+                      ? 'Admin Sign In'
+                      : authModalMode === 'tenant-signup'
+                        ? 'Register Workspace'
+                        : `Sign in to ${globalConfig?.branding?.platform_name || 'platform'}`}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {authModalMode === 'login' 
-                      ? 'Access high-speed transcription & language models.' 
-                      : 'Provision a custom isolated tenant domain.'}
+                    {window.location.pathname === '/admin'
+                      ? 'Configure tenant workspace parameters or platform options.'
+                      : authModalMode === 'tenant-signup'
+                        ? 'Provision a custom isolated tenant domain.'
+                        : 'Access high-speed transcription & language models.'}
                   </p>
                 </div>
 
-                <div className="relative flex rounded-xl bg-slate-100 dark:bg-white/5 p-1 mb-6">
-                  <button
-                    type="button"
-                    onClick={() => { setAuthModalMode('login'); setError(''); }}
-                    className={`relative flex-1 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
-                      authModalMode === 'login' 
-                        ? 'text-slate-900 dark:text-white' 
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    {authModalMode === 'login' && (
-                      <motion.div
-                        layoutId="active-tab-bg"
-                        className="absolute inset-0 rounded-lg shadow-sm bg-white dark:bg-slate-800/80 border border-slate-200/40 dark:border-white/5"
-                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                    <span className="relative z-10">Sign In</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setAuthModalMode('tenant-signup'); setError(''); }}
-                    className={`relative flex-1 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${
-                      authModalMode === 'tenant-signup' 
-                        ? 'text-slate-900 dark:text-white' 
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                    }`}
-                  >
-                    {authModalMode === 'tenant-signup' && (
-                      <motion.div
-                        layoutId="active-tab-bg"
-                        className="absolute inset-0 rounded-lg shadow-sm bg-white dark:bg-slate-800/80 border border-slate-200/40 dark:border-white/5"
-                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                    <span className="relative z-10">Create SaaS Workspace</span>
-                  </button>
-                </div>
+                {window.location.pathname !== '/admin' && (
+                  <div className="relative flex rounded-xl bg-slate-100 dark:bg-white/5 p-1 mb-6">
+                    <button
+                      type="button"
+                      onClick={() => { setAuthModalMode('login'); setError(''); }}
+                      className={`relative flex-1 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${authModalMode === 'login'
+                          ? 'text-slate-900 dark:text-white'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                        }`}
+                    >
+                      {authModalMode === 'login' && (
+                        <motion.div
+                          layoutId="active-tab-bg"
+                          className="absolute inset-0 rounded-lg shadow-sm bg-white dark:bg-slate-800/80 border border-slate-200/40 dark:border-white/5"
+                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                      <span className="relative z-10">Sign In</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setAuthModalMode('tenant-signup'); setError(''); }}
+                      className={`relative flex-1 py-2 text-xs font-bold transition-all duration-200 cursor-pointer ${authModalMode === 'tenant-signup'
+                          ? 'text-slate-900 dark:text-white'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                        }`}
+                    >
+                      {authModalMode === 'tenant-signup' && (
+                        <motion.div
+                          layoutId="active-tab-bg"
+                          className="absolute inset-0 rounded-lg shadow-sm bg-white dark:bg-slate-800/80 border border-slate-200/40 dark:border-white/5"
+                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                      <span className="relative z-10">Register Workspace</span>
+                    </button>
+                  </div>
+                )}
 
                 {error && (
                   <motion.div
@@ -271,7 +297,7 @@ export const AuthModal: React.FC = () => {
 
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                          Admin Name
+                          Your Name
                         </label>
                         <div className="relative">
                           <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
@@ -290,7 +316,7 @@ export const AuthModal: React.FC = () => {
 
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      Email Address
+                      {window.location.pathname === '/admin' ? 'Admin Email Address' : 'Email Address'}
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
@@ -299,7 +325,7 @@ export const AuthModal: React.FC = () => {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
+                        placeholder={window.location.pathname === '/admin' ? 'admin@company.com' : 'you@example.com'}
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-blue-500 dark:focus:border-cyan-500"
                       />
                     </div>
@@ -344,7 +370,13 @@ export const AuthModal: React.FC = () => {
                       <span className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
-                        <span>{authModalMode === 'login' ? 'Sign In' : 'Create Workspace'}</span>
+                        <span>
+                          {window.location.pathname === '/admin'
+                            ? 'Admin Sign In'
+                            : authModalMode === 'tenant-signup'
+                              ? 'Register Workspace'
+                              : 'Sign In'}
+                        </span>
                         <Sparkles size={14} className="animate-pulse" />
                       </>
                     )}

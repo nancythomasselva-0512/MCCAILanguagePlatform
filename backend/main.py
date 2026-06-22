@@ -144,27 +144,31 @@ def seed_database():
         db.commit()
 
         # 2. Seed default Super Admin
-        admin_email = "mrfadmin@gmail.com"
+        admin_email = "aachinancy@gmail.com"
         existing_admin = db.query(User).filter(User.email == admin_email).first()
-        if not existing_admin:
+        if existing_admin:
+            existing_admin.password_hash = get_password_hash("admin123")
+            db.add(existing_admin)
+            logger.info(f"Updated default Super Admin password for: {admin_email}")
+        else:
             # Look up and rename/re-key the old seed admin if present in the database file
-            old_admin = db.query(User).filter(User.email == "admin@mcc-ai.com").first()
+            old_admin = db.query(User).filter(User.email.in_(["mrfadmin@gmail.com", "admin@mcc-ai.com"])).first()
             if old_admin:
                 old_admin.email = admin_email
-                old_admin.password_hash = get_password_hash("mrfadmin123")
+                old_admin.password_hash = get_password_hash("admin123")
                 db.add(old_admin)
-                logger.info(f"Updated default Super Admin to: {admin_email} / mrfadmin123")
+                logger.info(f"Updated default Super Admin to: {admin_email} / admin123")
             else:
                 super_admin = User(
                     name="Platform Owner",
                     email=admin_email,
-                    password_hash=get_password_hash("mrfadmin123"),
+                    password_hash=get_password_hash("admin123"),
                     role="super_admin",
                     status="active"
                 )
                 db.add(super_admin)
-                logger.info(f"Seeded default Super Admin: {admin_email} / mrfadmin123")
-            db.commit()
+                logger.info(f"Seeded default Super Admin: {admin_email} / admin123")
+        db.commit()
     except Exception as e:
         logger.error(f"Error seeding database: {e}")
     finally:

@@ -226,8 +226,8 @@ export const WorkspacePage: React.FC = () => {
 
   const currentTab = getActiveTabMetadata();
 
-  const ActiveTool = isSuperAdminTab 
-    ? () => <SuperAdminDashboard subTab={superAdminSubTab} /> 
+  const ActiveTool = isSuperAdminTab
+    ? null
     : ({
         'voice-to-text': VoiceToText,
         'text-to-speech': TextToVoice,
@@ -570,13 +570,16 @@ export const WorkspacePage: React.FC = () => {
         <main className="flex-grow overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10">
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeTab}
+              key={isSuperAdminTab ? 'admin-panel' : activeTab}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}
             >
-              <ActiveTool />
+              {isSuperAdminTab
+                ? <SuperAdminDashboard subTab={superAdminSubTab} />
+                : ActiveTool && <ActiveTool />
+              }
             </motion.div>
           </AnimatePresence>
         </main>

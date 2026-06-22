@@ -1,7 +1,6 @@
 import datetime
 import uuid
 from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, ForeignKey, Text
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -99,7 +98,7 @@ class TranscriptionHistory(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="NO ACTION"), nullable=False)
     file_name = Column(String(255), nullable=False)
     file_size = Column(Integer, nullable=False)
     duration_seconds = Column(Float, nullable=False)
@@ -114,7 +113,7 @@ class TranslationHistory(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="NO ACTION"), nullable=False)
     source_text = Column(Text, nullable=False)
     translated_text = Column(Text, nullable=False)
     source_lang = Column(String(50), nullable=False)
@@ -129,7 +128,7 @@ class TtsHistory(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="NO ACTION"), nullable=False)
     text = Column(Text, nullable=False)
     voice_name = Column(String(100), nullable=False)
     characters_count = Column(Integer, nullable=False)
@@ -143,8 +142,8 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True)
-    user_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="NO ACTION"), nullable=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="NO ACTION"), nullable=True)
     action = Column(String(100), nullable=False)  # login, create_user, delete_tenant, modify_provider
     details = Column(Text, nullable=True)
     ip_address = Column(String(45), nullable=True)
@@ -381,7 +380,7 @@ class Payment(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     invoice_id = Column(String(36), ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False)
-    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="NO ACTION"), nullable=False)
     amount = Column(Float, nullable=False)
     currency = Column(String(10), default="INR")
     payment_method = Column(String(20), nullable=False) # stripe, razorpay, upi
@@ -397,7 +396,7 @@ class PaymentTransaction(Base):
     __tablename__ = "payment_transactions"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    payment_id = Column(String(36), ForeignKey("payments.id", ondelete="CASCADE"), nullable=True)
+    payment_id = Column(String(36), ForeignKey("payments.id", ondelete="NO ACTION"), nullable=True)
     tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
     gateway = Column(String(20), nullable=False) # stripe, razorpay, upi
     event_type = Column(String(50), nullable=True)
@@ -429,7 +428,7 @@ class InvoiceHistory(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
-    invoice_id = Column(String(36), ForeignKey("invoices.id", ondelete="CASCADE"), nullable=False)
+    invoice_id = Column(String(36), ForeignKey("invoices.id", ondelete="NO ACTION"), nullable=False)
     invoice_number = Column(String(50), nullable=False)
     action = Column(String(50), nullable=False)  # create, status_change, refund, fail
     old_status = Column(String(20), nullable=True)

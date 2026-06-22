@@ -133,7 +133,31 @@ def translate_text(
         # Google fallback translation URL
         try:
             # Google Translate client fallback simulation
-            lang_codes = {"Auto Detect": "auto", "English": "en", "Tamil": "ta", "Hindi": "hi", "Spanish": "es", "French": "fr"}
+            lang_codes = {
+                "Auto Detect": "auto",
+                "English": "en",
+                "Tamil": "ta",
+                "Hindi": "hi",
+                "Spanish": "es",
+                "French": "fr",
+                "German": "de",
+                "Portuguese": "pt",
+                "Arabic": "ar",
+                "Japanese": "ja",
+                "Korean": "ko",
+                "Chinese (Simplified)": "zh-CN",
+                "Russian": "ru",
+                "Italian": "it",
+                "Dutch": "nl",
+                "Polish": "pl",
+                "Turkish": "tr",
+                "Vietnamese": "vi",
+                "Thai": "th",
+                "Indonesian": "id",
+                "Bengali": "bn",
+                "Urdu": "ur",
+                "Swahili": "sw"
+            }
             src = lang_codes.get(source_lang, "auto")
             tgt = lang_codes.get(target_lang, "en")
             url = f"https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl={src}&tl={tgt}&q={requests.utils.quote(text)}"

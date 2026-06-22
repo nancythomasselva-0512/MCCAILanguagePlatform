@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useApp } from './context/AppContext';
 import { Header } from './components/common/Header';
 import { AuthModal } from './components/common/AuthModal';
@@ -6,7 +7,14 @@ import { WorkspacePage } from './components/workspace/WorkspacePage';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function App() {
-  const { viewMode } = useApp();
+  const { viewMode, setAuthModalMode, setIsAuthModalOpen } = useApp();
+
+  useEffect(() => {
+    if (window.location.pathname === '/admin') {
+      setAuthModalMode('admin-login');
+      setIsAuthModalOpen(true);
+    }
+  }, [setAuthModalMode, setIsAuthModalOpen]);
 
   return (
     <div className="flex min-h-screen flex-col" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>

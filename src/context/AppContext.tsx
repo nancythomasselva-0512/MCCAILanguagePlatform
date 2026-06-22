@@ -36,7 +36,7 @@ interface AppContextProps {
   setOpenAiApiKey: (key: string) => void;
   detectedLang: string;
   setDetectedLang: (lang: string) => void;
-  
+
   // Provider states
   ttsProvider: string;
   setTtsProvider: (provider: string) => void;
@@ -50,7 +50,7 @@ interface AppContextProps {
   // Notification toast
   notification: { message: string; type: 'success' | 'info' | 'warning' | 'error' } | null;
   setNotification: (notif: { message: string; type: 'success' | 'info' | 'warning' | 'error' } | null) => void;
-  
+
   // Auth state
   user: UserProfile | null;
   token: string | null;
@@ -59,8 +59,8 @@ interface AppContextProps {
   logout: () => void;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
-  authModalMode: 'login' | 'signup' | 'tenant-signup';
-  setAuthModalMode: (mode: 'login' | 'signup' | 'tenant-signup') => void;
+  authModalMode: 'login' | 'signup' | 'tenant-signup' | 'admin-login';
+  setAuthModalMode: (mode: 'login' | 'signup' | 'tenant-signup' | 'admin-login') => void;
   globalConfig: any;
   loadGlobalConfig: () => Promise<void>;
   billingOverview: any;
@@ -108,7 +108,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (response.ok) {
         const data = await response.json();
         setGlobalConfig(data);
-        
+
         // Apply theme variables dynamically to document root
         if (data.theme) {
           const root = document.documentElement;
@@ -122,7 +122,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             root.style.setProperty('--font-sans', `'${data.theme.font_family}', sans-serif`);
           }
         }
-        
+
         // Apply branding name dynamically to document title
         if (data.branding?.platform_name) {
           document.title = `${data.branding.platform_name} - ${data.branding.tagline || 'Language Platform'}`;
@@ -137,7 +137,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     loadGlobalConfig();
   }, []);
 
-  const [activeTab, setActiveTab] = useState<ActiveTabType>(() => {
+  const [activeTab, setActiveTabState] = useState<ActiveTabType>(() => {
+    const savedTab = localStorage.getItem('mcc-ai-active-tab');
+    if (savedTab) return savedTab as ActiveTabType;
+
     const savedUser = localStorage.getItem('mcc-ai-user');
     if (savedUser) {
       try {
@@ -149,9 +152,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // ignore
       }
     }
-    return 'voice-to-text';
+    return 'text-to-speech';
   });
-  const [viewMode, setViewMode] = useState<ViewModeType>('landing');
+
+  const setActiveTab = (tab: ActiveTabType) => {
+    setActiveTabState(tab);
+    localStorage.setItem('mcc-ai-active-tab', tab);
+  };
+
+  const [viewMode, setViewMode] = useState<ViewModeType>(() => {
+    return localStorage.getItem('mcc-ai-token') ? 'workspace' : 'landing';
+  });
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     const saved = localStorage.getItem('mcc-ai-history');
     return saved ? JSON.parse(saved) : [];
@@ -202,7 +213,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | 'tenant-signup'>('login');
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | 'tenant-signup' | 'admin-login'>('login');
 
   useEffect(() => {
     localStorage.setItem('mcc-ai-theme', theme);
@@ -279,11 +290,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tenant_slug: slug || null,
       avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`
     };
-    
+
     setUser(profile);
     setTokenState(token);
     setTenantSlugState(slug || null);
-    
+
     localStorage.setItem('mcc-ai-user', JSON.stringify(profile));
     localStorage.setItem('mcc-ai-token', token);
     localStorage.setItem('mcc-ai-refresh-token', refreshToken);
@@ -294,12 +305,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     setNotification({ message: `Welcome back, ${name}!`, type: 'success' });
-    
+
     // Set default active tab based on role
     if (role === 'super_admin') {
       setActiveTab('sa-overview');
     } else {
-      setActiveTab('voice-to-text');
+      setActiveTab('text-to-speech');
     }
     setViewMode('workspace');
   };
@@ -312,6 +323,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem('mcc-ai-token');
     localStorage.removeItem('mcc-ai-refresh-token');
     localStorage.removeItem('mcc-ai-tenant-slug');
+    localStorage.removeItem('mcc-ai-active-tab');
     setViewMode('landing');
     setNotification({ message: 'Logged out successfully.', type: 'info' });
   };
