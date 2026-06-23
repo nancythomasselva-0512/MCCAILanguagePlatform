@@ -107,7 +107,7 @@ export const TenantDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <Loader2 className="animate-spin text-blue-500" size={32} />
+        <Loader2 className="animate-spin text-teal-500" size={32} />
       </div>
     );
   }
@@ -118,25 +118,25 @@ export const TenantDashboard: React.FC = () => {
   const ttsMax = 50000; // default Starter max tts chars
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-8">
+    <div className="space-y-6 w-full p-4 md:p-8">
       {/* Dashboard sub header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/5 pb-5">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Settings className="text-blue-500" size={20} />
+            <Settings className="text-teal-500" size={20} />
             Workspace Settings & Dashboard
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
+          <p className="text-base text-slate-500 dark:text-slate-400 font-semibold mt-1">
             Manage your workspace limits, set tenant API keys, and organize team members.
           </p>
         </div>
 
-        <div className="flex bg-slate-100 dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200 dark:border-white/5">
+        <div className="flex bg-white dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200 dark:border-white/5">
           <button
             onClick={() => setActiveSubTab('metrics')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-base font-bold transition-all cursor-pointer ${
               activeSubTab === 'metrics' 
-                ? 'bg-blue-600 text-white' 
+                ? 'bg-teal-600 text-white' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
@@ -144,9 +144,9 @@ export const TenantDashboard: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveSubTab('team')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-base font-bold transition-all cursor-pointer ${
               activeSubTab === 'team' 
-                ? 'bg-blue-600 text-white' 
+                ? 'bg-teal-600 text-white' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
@@ -154,9 +154,9 @@ export const TenantDashboard: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveSubTab('keys')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-base font-bold transition-all cursor-pointer ${
               activeSubTab === 'keys' 
-                ? 'bg-blue-600 text-white' 
+                ? 'bg-teal-600 text-white' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
@@ -168,7 +168,7 @@ export const TenantDashboard: React.FC = () => {
       {activeSubTab === 'metrics' && metrics && (
         <div className="space-y-6 animate-fadeIn">
           {/* Billing cycle dates */}
-          <div className="app-card rounded-2xl p-4 flex justify-between text-xs text-slate-655 dark:text-slate-400">
+          <div className="app-card rounded-2xl p-4 flex justify-between text-base text-slate-655 dark:text-slate-400">
             <span>Billing period start: <strong className="text-slate-900 dark:text-white">{new Date(metrics.billing_period_start).toLocaleDateString()}</strong></span>
             <span>Billing period end: <strong className="text-slate-900 dark:text-white">{new Date(metrics.billing_period_end).toLocaleDateString()}</strong></span>
           </div>
@@ -176,36 +176,36 @@ export const TenantDashboard: React.FC = () => {
           {/* Progress limit meters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="app-card rounded-2xl p-5 space-y-3">
-              <div className="flex justify-between items-center text-xs">
+              <div className="flex justify-between items-center text-base">
                 <span className="font-bold text-slate-900 dark:text-white">Audio Transcription</span>
                 <span className="text-slate-500 dark:text-slate-400">{roundValue(metrics.audio_minutes_used)} mins consumed</span>
               </div>
               <div className="w-full h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, (metrics.audio_minutes_used / audioMax) * 100)}%` }} />
+                <div className="h-full bg-teal-500 rounded-full" style={{ width: `${Math.min(100, (metrics.audio_minutes_used / audioMax) * 100)}%` }} />
               </div>
-              <p className="text-[10px] text-slate-500">Starter Plan allocation: {audioMax} minutes</p>
+              <p className="text-sm text-slate-500">Starter Plan allocation: {audioMax} minutes</p>
             </div>
 
             <div className="app-card rounded-2xl p-5 space-y-3">
-              <div className="flex justify-between items-center text-xs">
+              <div className="flex justify-between items-center text-base">
                 <span className="font-bold text-slate-900 dark:text-white">Language translation</span>
                 <span className="text-slate-500 dark:text-slate-400">{metrics.translation_chars_used} chars translated</span>
               </div>
               <div className="w-full h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, (metrics.translation_chars_used / transMax) * 100)}%` }} />
               </div>
-              <p className="text-[10px] text-slate-500">Starter Plan allocation: {transMax} characters</p>
+              <p className="text-sm text-slate-500">Starter Plan allocation: {transMax} characters</p>
             </div>
 
             <div className="app-card rounded-2xl p-5 space-y-3">
-              <div className="flex justify-between items-center text-xs">
+              <div className="flex justify-between items-center text-base">
                 <span className="font-bold text-slate-900 dark:text-white">Text to speech</span>
                 <span className="text-slate-500 dark:text-slate-400">{metrics.tts_chars_used} chars synthesized</span>
               </div>
               <div className="w-full h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
                 <div className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min(100, (metrics.tts_chars_used / ttsMax) * 100)}%` }} />
               </div>
-              <p className="text-[10px] text-slate-500">Starter Plan allocation: {ttsMax} characters</p>
+              <p className="text-sm text-slate-500">Starter Plan allocation: {ttsMax} characters</p>
             </div>
           </div>
         </div>
@@ -216,52 +216,52 @@ export const TenantDashboard: React.FC = () => {
           {/* Invite Member form */}
           <div className="app-card rounded-2xl p-5 h-fit space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <UserPlus className="text-blue-500" size={16} />
+              <UserPlus className="text-teal-500" size={16} />
               Add Team Member
             </h3>
             <form onSubmit={handleInviteUser} className="space-y-3">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Full Name</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Full Name</label>
                 <input
                   type="text"
                   required
                   value={newUserName}
                   onChange={(e) => setNewUserName(e.target.value)}
                   placeholder="John Doe"
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
+                  className="w-full px-3 py-2 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Email Address</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Email Address</label>
                 <input
                   type="email"
                   required
                   value={newUserEmail}
                   onChange={(e) => setNewUserEmail(e.target.value)}
                   placeholder="john@acme.com"
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
+                  className="w-full px-3 py-2 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Initial Password</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Initial Password</label>
                 <input
                   type="password"
                   required
                   value={newUserPassword}
                   onChange={(e) => setNewUserPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
+                  className="w-full px-3 py-2 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Role Designation</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Role Designation</label>
                 <select
                   value={newUserRole}
                   onChange={(e) => setNewUserRole(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
+                  className="w-full px-3 py-2 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
                   style={{ background: 'var(--bg-subtle)' }}
                 >
                   <option value="user">Workspace User</option>
@@ -272,7 +272,7 @@ export const TenantDashboard: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-base font-bold cursor-pointer"
               >
                 Create Member Account
               </button>
@@ -283,7 +283,7 @@ export const TenantDashboard: React.FC = () => {
           <div className="lg:col-span-2 app-card rounded-2xl p-6">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Workspace Active Members</h3>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-base border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400">
                     <th className="py-2">User</th>
@@ -302,7 +302,7 @@ export const TenantDashboard: React.FC = () => {
                         <span className="badge badge-info">{u.role.replace("_", " ")}</span>
                       </td>
                       <td className="py-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${u.status === 'active' ? 'bg-emerald-500/10 text-emerald-550 dark:text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                        <span className={`px-2 py-0.5 rounded text-sm font-bold ${u.status === 'active' ? 'bg-emerald-500/10 text-emerald-550 dark:text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
                           {u.status}
                         </span>
                       </td>
@@ -310,7 +310,7 @@ export const TenantDashboard: React.FC = () => {
                         {u.id !== user?.id && (
                           <button
                             onClick={() => handleUpdateUserStatus(u.id, u.status)}
-                            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-500 px-2 py-1 rounded text-[9px] font-bold cursor-pointer"
+                            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-500 px-2 py-1 rounded text-sm font-bold cursor-pointer"
                           >
                             {u.status === 'active' ? 'Suspend' : 'Activate'}
                           </button>
@@ -330,19 +330,19 @@ export const TenantDashboard: React.FC = () => {
           {/* Key Input Form */}
           <div className="app-card rounded-2xl p-5 h-fit space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Key className="text-blue-500" size={16} />
+              <Key className="text-teal-500" size={16} />
               Set Custom API Keys
             </h3>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
               If configured, calls from this workspace will use your custom API credentials instead of platform defaults.
             </p>
             <form onSubmit={handleSaveWorkspaceKey} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">AI Provider</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">AI Provider</label>
                 <select
                   value={selectedProvider}
                   onChange={(e) => setSelectedProvider(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
+                  className="w-full px-3 py-2 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
                   style={{ background: 'var(--bg-subtle)' }}
                 >
                   <option value="openai">OpenAI Whisper/TTS</option>
@@ -352,19 +352,19 @@ export const TenantDashboard: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Secret API Key</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Secret API Key</label>
                 <input
                   type="password"
                   value={providerKey}
                   onChange={(e) => setProviderKey(e.target.value)}
                   placeholder="sk-sksksksksksksksksksk"
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
+                  className="w-full px-3 py-2 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-350 dark:border-white/5 text-slate-900 dark:text-white outline-none"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-base font-bold cursor-pointer"
               >
                 Apply Custom Key
               </button>
@@ -382,17 +382,17 @@ export const TenantDashboard: React.FC = () => {
                 >
                   <div>
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white capitalize">{key.provider_name}</h4>
-                    <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold mt-1">Status: {key.is_enabled ? "Active override" : "Suspended override"}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold mt-1">Status: {key.is_enabled ? "Active override" : "Suspended override"}</p>
                   </div>
                   
-                  <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 text-[10px] font-semibold text-slate-550 dark:text-slate-400 flex justify-between">
+                  <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 text-sm font-semibold text-slate-550 dark:text-slate-400 flex justify-between">
                     <span>Key: configured</span>
-                    <span className="text-blue-500 dark:text-blue-400">Workspace Level</span>
+                    <span className="text-teal-500 dark:text-teal-400">Workspace Level</span>
                   </div>
                 </div>
               ))}
               {keys.length === 0 && (
-                <div className="col-span-2 text-center py-10 text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                <div className="col-span-2 text-center py-10 text-base text-slate-500 dark:text-slate-400 font-semibold">
                   No custom workspace keys configured. Using platform default fallback credentials.
                 </div>
               )}

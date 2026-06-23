@@ -398,7 +398,7 @@ export const PlatformBuilder: React.FC = () => {
     return (
       <div className="flex h-64 items-center justify-center bg-transparent">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin text-blue-500" size={32} />
+          <Loader2 className="animate-spin text-teal-500" size={32} />
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Syncing Builder Catalog...</p>
         </div>
       </div>
@@ -436,7 +436,7 @@ export const PlatformBuilder: React.FC = () => {
               onClick={() => setActiveSec(sec.id as SectionType)}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                 isActive 
-                  ? 'bg-blue-600/15 text-blue-400 border border-blue-500/20' 
+                  ? 'bg-teal-600/15 text-teal-400 border border-teal-500/20' 
                   : 'text-slate-700 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'
               }`}
             >
@@ -535,7 +535,7 @@ export const PlatformBuilder: React.FC = () => {
             <button
               onClick={handleSaveBranding}
               disabled={saving}
-              className="mt-2 py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+              className="mt-2 py-2 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
             >
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
               Save Branding Settings
@@ -638,7 +638,7 @@ export const PlatformBuilder: React.FC = () => {
             <button
               onClick={handleSaveTheme}
               disabled={saving}
-              className="mt-2 py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+              className="mt-2 py-2 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50"
             >
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
               Save Theme Settings
@@ -668,7 +668,7 @@ export const PlatformBuilder: React.FC = () => {
                 />
                 <button
                   onClick={handleAddPage}
-                  className="py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Plus size={14} /> Add Page
                 </button>
@@ -736,7 +736,7 @@ export const PlatformBuilder: React.FC = () => {
                 />
                 <button
                   onClick={handleAddNavItem}
-                  className="py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Plus size={14} /> Add Link
                 </button>
@@ -749,7 +749,7 @@ export const PlatformBuilder: React.FC = () => {
                 {config?.navigation?.map((nav: any) => (
                   <div key={nav.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-100/50 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5">
                     <div className="flex items-center gap-3">
-                      <div className="p-1.5 rounded bg-blue-500/10 text-blue-400">
+                      <div className="p-1.5 rounded bg-teal-500/10 text-teal-400">
                         <Menu size={12} />
                       </div>
                       <div>
@@ -780,7 +780,7 @@ export const PlatformBuilder: React.FC = () => {
                 <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-slate-100/50 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5">
                   <span className="text-xs font-bold text-slate-800 dark:text-white">{sect}</span>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[9px] font-black bg-blue-500/15 text-blue-400 border border-blue-500/20">Order: {i+1}</span>
+                    <span className="px-2 py-0.5 rounded text-[9px] font-black bg-teal-500/15 text-teal-400 border border-teal-500/20">Order: {i+1}</span>
                     <button className="px-2.5 py-1 rounded text-[10px] font-black bg-emerald-500/10 text-emerald-400">Enabled</button>
                   </div>
                 </div>
@@ -820,7 +820,7 @@ export const PlatformBuilder: React.FC = () => {
                     setCmsPosts([...cmsPosts, { id: Date.now().toString(), ...newCms }]);
                     setNewCms({ title: '', type: 'Blog', is_active: true });
                   }}
-                  className="py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Plus size={14} /> Add CMS Entry
                 </button>
@@ -834,7 +834,7 @@ export const PlatformBuilder: React.FC = () => {
                   <div key={post.id} className="flex items-center justify-between p-3.5 rounded-xl bg-slate-100/50 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5">
                     <div>
                       <p className="text-xs font-bold text-slate-800 dark:text-white">{post.title}</p>
-                      <span className="px-2 py-0.5 rounded text-[8px] font-black bg-blue-500/10 text-blue-400 border border-blue-500/20">{post.type}</span>
+                      <span className="px-2 py-0.5 rounded text-[8px] font-black bg-teal-500/10 text-teal-400 border border-teal-500/20">{post.type}</span>
                     </div>
                     <button
                       onClick={() => setCmsPosts(cmsPosts.filter(c => c.id !== post.id))}
@@ -908,7 +908,7 @@ export const PlatformBuilder: React.FC = () => {
                 />
                 <button
                   onClick={handleAddWidget}
-                  className="py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Plus size={14} /> Add Widget
                 </button>
@@ -958,7 +958,7 @@ export const PlatformBuilder: React.FC = () => {
                   <span>Form Fields Schema</span>
                   <button
                     onClick={handleAddFormField}
-                    className="text-blue-400 flex items-center gap-1 hover:underline text-[9px] font-black"
+                    className="text-teal-400 flex items-center gap-1 hover:underline text-[9px] font-black"
                   >
                     <Plus size={10} /> Add Field
                   </button>
@@ -996,7 +996,7 @@ export const PlatformBuilder: React.FC = () => {
 
               <button
                 onClick={handleSaveForm}
-                className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5"
+                className="py-2 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5"
               >
                 <Save size={13} /> Save Custom Form Schema
               </button>
@@ -1065,7 +1065,7 @@ export const PlatformBuilder: React.FC = () => {
             <button
               onClick={handleSaveEmailTemplate}
               disabled={saving}
-              className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="py-2 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
               Save Email Template
@@ -1088,7 +1088,7 @@ export const PlatformBuilder: React.FC = () => {
                   type="checkbox"
                   checked={platformForm.invite_only}
                   onChange={(e) => setPlatformForm({ ...platformForm, invite_only: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
                 />
               </div>
 
@@ -1101,7 +1101,7 @@ export const PlatformBuilder: React.FC = () => {
                   type="checkbox"
                   checked={platformForm.registration_approval}
                   onChange={(e) => setPlatformForm({ ...platformForm, registration_approval: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
                 />
               </div>
 
@@ -1114,7 +1114,7 @@ export const PlatformBuilder: React.FC = () => {
                   type="checkbox"
                   checked={platformForm.enable_email_login}
                   onChange={(e) => setPlatformForm({ ...platformForm, enable_email_login: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
                 />
               </div>
 
@@ -1127,7 +1127,7 @@ export const PlatformBuilder: React.FC = () => {
                   type="checkbox"
                   checked={platformForm.enable_google_login}
                   onChange={(e) => setPlatformForm({ ...platformForm, enable_google_login: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
                 />
               </div>
 
@@ -1140,7 +1140,7 @@ export const PlatformBuilder: React.FC = () => {
                   type="checkbox"
                   checked={platformForm.enable_otp_login}
                   onChange={(e) => setPlatformForm({ ...platformForm, enable_otp_login: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
                 />
               </div>
 
@@ -1153,14 +1153,14 @@ export const PlatformBuilder: React.FC = () => {
                   type="checkbox"
                   checked={platformForm.enable_magic_link}
                   onChange={(e) => setPlatformForm({ ...platformForm, enable_magic_link: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="h-4 w-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
                 />
               </div>
             </div>
             <button
               onClick={handleSavePlatformSettings}
               disabled={saving}
-              className="mt-2 py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="mt-2 py-2 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
               Save Access Control Settings
@@ -1206,7 +1206,7 @@ export const PlatformBuilder: React.FC = () => {
             <button
               onClick={handleSavePlatformSettings}
               disabled={saving}
-              className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="py-2 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
               Inject Code scripts
@@ -1248,7 +1248,7 @@ export const PlatformBuilder: React.FC = () => {
                   <button
                     onClick={handleSaveTenantBranding}
                     disabled={saving}
-                    className="w-full py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 h-9"
+                    className="w-full py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 h-9"
                   >
                     {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
                     Bind Domain
@@ -1266,7 +1266,7 @@ export const PlatformBuilder: React.FC = () => {
                       <p className="text-xs font-bold text-slate-800 dark:text-white">{t.name}</p>
                       <span className="text-[9px] text-slate-400 font-mono">Workspace Slug: /{t.slug}</span>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded text-[10px] font-black bg-blue-500/10 text-blue-400 border border-blue-500/20">Branded Tenant</span>
+                    <span className="px-2.5 py-0.5 rounded text-[10px] font-black bg-teal-500/10 text-teal-400 border border-teal-500/20">Branded Tenant</span>
                   </div>
                 ))}
               </div>
@@ -1283,12 +1283,12 @@ export const PlatformBuilder: React.FC = () => {
                 <input
                   type="file"
                   onChange={(e) => setMediaFile(e.target.files ? e.target.files[0] : null)}
-                  className="text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600/10 file:text-blue-400 hover:file:bg-blue-600/20 cursor-pointer"
+                  className="text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-teal-600/10 file:text-teal-400 hover:file:bg-teal-600/20 cursor-pointer"
                 />
                 <button
                   type="submit"
                   disabled={saving || !mediaFile}
-                  className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all"
+                  className="py-2 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all"
                 >
                   {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
                   Upload Media Asset
@@ -1305,7 +1305,7 @@ export const PlatformBuilder: React.FC = () => {
                   return (
                     <div key={m.id} className="relative rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-slate-950/40 p-3 flex flex-col justify-between h-36">
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-black uppercase text-blue-400 tracking-wider">{m.file_type}</span>
+                        <span className="text-[9px] font-black uppercase text-teal-400 tracking-wider">{m.file_type}</span>
                         <button
                           onClick={() => handleDeleteMedia(m.id)}
                           className="p-1 rounded text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
@@ -1316,9 +1316,9 @@ export const PlatformBuilder: React.FC = () => {
                       
                       <div className="flex-grow flex items-center justify-center my-2">
                         {isImage ? (
-                          <Image className="text-blue-500 opacity-60" size={32} />
+                          <Image className="text-teal-500 opacity-60" size={32} />
                         ) : isVideo ? (
-                          <Video className="text-violet-500 opacity-60" size={32} />
+                          <Video className="text-teal-500 opacity-60" size={32} />
                         ) : (
                           <DocIcon className="text-amber-500 opacity-60" size={32} />
                         )}

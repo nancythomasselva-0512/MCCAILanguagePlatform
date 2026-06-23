@@ -184,7 +184,7 @@ export const AuthModal: React.FC = () => {
                     ? "Your corporate tenant has been successfully registered. Please sign in to continue."
                     : "Welcome back! Redirecting to your workspace..."}
                 </p>
-                <div className="w-12 h-1 bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-400 rounded-full mt-8 animate-pulse" />
+                <div className="w-12 h-1 bg-gradient-to-r from-teal-600 to-cyan-500 dark:from-teal-400 dark:to-cyan-400 rounded-full mt-8 animate-pulse" />
               </motion.div>
             ) : (
               <motion.div
@@ -274,7 +274,7 @@ export const AuthModal: React.FC = () => {
                             value={tenantName}
                             onChange={(e) => setTenantName(e.target.value)}
                             placeholder="Acme Corp"
-                            className="w-full px-3.5 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-blue-500 dark:focus:border-cyan-500"
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-teal-500 dark:focus:border-cyan-500"
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -289,7 +289,7 @@ export const AuthModal: React.FC = () => {
                               value={tenantSlug}
                               onChange={(e) => setTenantSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ""))}
                               placeholder="acme"
-                              className="w-full pl-8 pr-3 py-2.5 rounded-xl text-xs font-semibold transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-blue-500 dark:focus:border-cyan-500"
+                              className="w-full pl-8 pr-3 py-2.5 rounded-xl text-xs font-semibold transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-teal-500 dark:focus:border-cyan-500"
                             />
                           </div>
                         </div>
@@ -307,7 +307,7 @@ export const AuthModal: React.FC = () => {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="John Doe"
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-blue-500 dark:focus:border-cyan-500"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-teal-500 dark:focus:border-cyan-500"
                           />
                         </div>
                       </div>
@@ -326,7 +326,7 @@ export const AuthModal: React.FC = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder={window.location.pathname === '/admin' ? 'admin@company.com' : 'you@example.com'}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-blue-500 dark:focus:border-cyan-500"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-teal-500 dark:focus:border-cyan-500"
                       />
                     </div>
                   </div>
@@ -345,7 +345,7 @@ export const AuthModal: React.FC = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full pl-10 pr-10 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-blue-500 dark:focus:border-cyan-500"
+                        className="w-full pl-10 pr-10 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-teal-500 dark:focus:border-cyan-500"
                       />
                       <button
                         type="button"

@@ -427,12 +427,12 @@ export const TextToVoice: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto animate-fadeIn">
+    <div className="space-y-6 w-full animate-fadeIn">
       {/* Header with Provider Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5">
         <div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-            <Volume2 className="text-violet-500" size={20} />
+            <Volume2 className="text-teal-500" size={20} />
             Text to Voice
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
@@ -447,7 +447,7 @@ export const TextToVoice: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer"
             style={{ background: 'var(--bg-card)' }}
           >
-            <Cpu size={14} className="text-violet-500" />
+            <Cpu size={14} className="text-teal-500" />
             <span>AI Provider: {ttsProvider === 'browser' ? 'Web Speech API (Free)' : ttsProvider === 'openai' ? 'OpenAI TTS' : 'ElevenLabs TTS'}</span>
             <ChevronDown size={14} className={`text-slate-400 transition-transform ${providerDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -471,7 +471,7 @@ export const TextToVoice: React.FC = () => {
                     }}
                     className={`w-full flex flex-col items-start gap-0.5 px-3 py-2 text-left rounded-xl transition-all cursor-pointer ${
                       ttsProvider === p.id
-                        ? 'bg-gradient-to-r from-blue-600/10 to-violet-500/10 text-slate-900 dark:text-white border border-blue-500/20'
+                        ? 'bg-gradient-to-r from-teal-600/10 to-teal-500/10 text-slate-900 dark:text-white border border-teal-500/20'
                         : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-350 border border-transparent'
                     }`}
                   >
@@ -506,17 +506,17 @@ export const TextToVoice: React.FC = () => {
         <div className="lg:col-span-3 space-y-6">
           {/* Info Banner */}
           <div 
-            className="relative overflow-hidden rounded-3xl p-6 md:p-8 flex items-center justify-between min-h-[140px] border border-violet-100 dark:border-white/5 shadow-sm"
+            className="relative overflow-hidden rounded-3xl p-6 md:p-8 flex items-center justify-between min-h-[140px] border border-teal-100 dark:border-white/5 shadow-sm"
             style={{
               background: theme === 'dark' 
-                ? 'linear-gradient(135deg, rgba(30, 27, 75, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%)'
-                : 'linear-gradient(135deg, #eef2ff 0%, #fae8ff 100%)',
+                ? 'linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(15, 118, 110, 0.6) 100%)'
+                : 'linear-gradient(135deg, #ccfbf1 0%, #dcfce7 100%)',
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent dark:from-indigo-500/5 dark:via-purple-500/2 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent dark:from-emerald-500/5 dark:via-emerald-500/2 pointer-events-none" />
             
             <div className="flex items-center gap-5 relative z-10 max-w-[70%]">
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 shadow-md shadow-indigo-500/20 text-white">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 shadow-md shadow-emerald-500/20 text-white">
                 <Volume2 size={24} />
               </div>
               <div>
@@ -534,7 +534,7 @@ export const TextToVoice: React.FC = () => {
               <img 
                 src="/banner_illustration.png" 
                 alt="Speech synthesis illustration" 
-                className="h-[120%] object-contain mt-2 opacity-95 filter drop-shadow-md dark:brightness-95 dark:contrast-105"
+                className="h-[120%] object-contain mt-2 opacity-95 filter drop-shadow-md hue-rotate-[250deg] dark:brightness-95 dark:contrast-105"
               />
             </div>
           </div>
@@ -543,7 +543,7 @@ export const TextToVoice: React.FC = () => {
           <div className="app-card rounded-3xl p-6 border border-slate-200/60 dark:border-white/5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Pencil size={13} className="text-blue-600 dark:text-blue-400" />
+                <Pencil size={13} className="text-teal-600 dark:text-teal-400" />
                 <label className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Your Text</label>
               </div>
             </div>
@@ -571,7 +571,7 @@ export const TextToVoice: React.FC = () => {
             {/* Voice Card */}
             <div className="app-card rounded-3xl p-5 flex flex-col justify-between min-h-[120px] border border-slate-200/60 dark:border-white/5">
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400">
                   <Volume2 size={15} />
                 </div>
                 <label className="text-[11px] font-bold uppercase tracking-wider select-none" style={{ color: 'var(--text-muted)' }}>Voice</label>
@@ -603,7 +603,7 @@ export const TextToVoice: React.FC = () => {
                   </div>
                   <span className="text-[11px] font-bold uppercase tracking-wider select-none" style={{ color: 'var(--text-muted)' }}>Speed</span>
                 </div>
-                <span className="font-bold text-xs text-blue-600 dark:text-blue-400">{speed.toFixed(1)}X</span>
+                <span className="font-bold text-xs text-teal-600 dark:text-teal-400">{speed.toFixed(1)}X</span>
               </div>
               <input 
                 id="ttv-speed-slider" 
@@ -632,7 +632,7 @@ export const TextToVoice: React.FC = () => {
                   </div>
                   <span className="text-[11px] font-bold uppercase tracking-wider select-none" style={{ color: 'var(--text-muted)' }}>Pitch</span>
                 </div>
-                <span className="font-bold text-xs text-blue-600 dark:text-blue-400">{pitch.toFixed(1)}X</span>
+                <span className="font-bold text-xs text-teal-600 dark:text-teal-400">{pitch.toFixed(1)}X</span>
               </div>
               <input 
                 id="ttv-pitch-slider" 
@@ -716,7 +716,7 @@ export const TextToVoice: React.FC = () => {
                 <button 
                   id="ttv-play-btn" 
                   onClick={startTTS}
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/40 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 transition-all cursor-pointer hover:scale-105 active:scale-95"
                 >
                   <Play size={22} className="fill-current ml-1" />
                 </button>
@@ -732,7 +732,7 @@ export const TextToVoice: React.FC = () => {
                 <button 
                   id="ttv-pause-btn" 
                   onClick={pauseResume}
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/40 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 transition-all cursor-pointer hover:scale-105 active:scale-95"
                 >
                   {playState === 'paused' ? (
                     <Play size={22} className="fill-current ml-1" />
@@ -765,7 +765,7 @@ export const TextToVoice: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Audio Generated</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{ttsHistory.length}</h4>
                   </div>
-                  <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 flex-shrink-0">
+                  <div className="h-7 w-7 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0">
                     <Music4 size={14} />
                   </div>
                 </div>
@@ -781,7 +781,7 @@ export const TextToVoice: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Characters Synthesized</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{(billingOverview?.usage?.tts_chars_used || 0).toLocaleString()}</h4>
                   </div>
-                  <div className="h-7 w-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 flex-shrink-0">
+                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
                     <FileText size={14} />
                   </div>
                 </div>
@@ -828,23 +828,23 @@ export const TextToVoice: React.FC = () => {
         {/* Right Column - Banners & Recent Activity */}
         <div className="lg:col-span-1 space-y-6">
           {/* Connected Banner */}
-          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-gradient-to-br from-indigo-600/10 to-violet-500/10 dark:from-indigo-600/5 dark:to-violet-500/5 min-h-[120px] flex flex-col justify-center">
+          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-gradient-to-br from-emerald-600/10 to-teal-500/10 dark:from-emerald-600/5 dark:to-teal-500/5 min-h-[120px] flex flex-col justify-center">
             <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
             <div className="relative z-10">
-              <span className="text-[8px] font-black uppercase text-violet-500 dark:text-violet-400 tracking-wider">Voice Engine</span>
+              <span className="text-[8px] font-black uppercase text-teal-500 dark:text-teal-400 tracking-wider">Voice Engine</span>
               <h4 className="font-display text-sm font-black text-slate-950 dark:text-white mt-1 leading-snug">18+ Realistic Voice Models</h4>
               <p className="mt-1 text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
                 High-fidelity realistic text-to-speech voice generation.
               </p>
             </div>
-            <Volume2 size={52} className="absolute right-[-10px] bottom-[-10px] opacity-10 text-violet-500" />
+            <Volume2 size={52} className="absolute right-[-10px] bottom-[-10px] opacity-10 text-teal-500" />
           </div>
 
           {/* Recent Generations Card */}
           <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-3">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
               <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Recent Audio Files</h4>
-              <span className="text-[9px] text-blue-500 dark:text-blue-400 font-bold cursor-pointer hover:underline" onClick={() => fetchBillingOverview()}>Refresh</span>
+              <span className="text-[9px] text-teal-500 dark:text-teal-400 font-bold cursor-pointer hover:underline" onClick={() => fetchBillingOverview()}>Refresh</span>
             </div>
 
             <div className="space-y-2">
@@ -859,7 +859,7 @@ export const TextToVoice: React.FC = () => {
                   const displayDetails = isNewFormat ? item.details : `${item.title} • ${item.details}`;
                   return (
                     <div key={item.id} className="p-2.5 rounded-xl bg-slate-100/50 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5 flex items-start gap-3 hover:border-slate-300 dark:hover:border-white/10 transition-colors">
-                      <span className="text-[9px] font-black text-violet-650 bg-violet-500/10 rounded px-1.5 py-0.5 mt-0.5">{getVoiceBadge(item.title, item.details)}</span>
+                      <span className="text-[9px] font-black text-teal-650 bg-teal-500/10 rounded px-1.5 py-0.5 mt-0.5">{getVoiceBadge(item.title, item.details)}</span>
                       <div className="flex-1 min-w-0 text-left font-sans">
                         <p className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">{displayTitle}</p>
                         <span className="text-[8px] text-slate-500 font-medium">{displayDetails} · {item.timestamp}</span>
@@ -886,7 +886,7 @@ export const TextToVoice: React.FC = () => {
                   const displayDetails = isNewFormat ? item.details : `${item.title} • ${item.details}`;
                   return (
                     <div key={item.id} className="relative">
-                      <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full bg-slate-50 dark:bg-[#0B1020] border-2 border-violet-500 flex items-center justify-center z-10" />
+                      <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full bg-slate-50 dark:bg-[#0B1020] border-2 border-teal-500 flex items-center justify-center z-10" />
                       <div className="flex justify-between items-start">
                         <div>
                           <span className="text-slate-900 dark:text-white block font-bold truncate max-w-[120px]">{displayTitle}</span>

@@ -221,8 +221,8 @@ export const LandingPage: React.FC = () => {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border-base)_1px,transparent_1px),linear-gradient(to_bottom,var(--border-base)_1px,transparent_1px)] bg-[size:40px_40px] opacity-25 dark:opacity-10 pointer-events-none" />
         
         {/* Soft blur auroras */}
-        <div className="absolute top-[15%] right-[-15%] w-[50%] h-[50%] rounded-full blur-[180px] opacity-20 dark:opacity-15 bg-radial from-blue-600 via-cyan-500 to-transparent pointer-events-none" />
-        <div className="absolute bottom-[10%] left-[-15%] w-[50%] h-[50%] rounded-full blur-[180px] opacity-20 dark:opacity-15 bg-radial from-purple-600 via-indigo-500 to-transparent pointer-events-none" />
+        <div className="absolute top-[15%] right-[-15%] w-[50%] h-[50%] rounded-full blur-[180px] opacity-20 dark:opacity-15 bg-radial from-emerald-500 via-teal-400 to-transparent pointer-events-none" />
+        <div className="absolute bottom-[10%] left-[-15%] w-[50%] h-[50%] rounded-full blur-[180px] opacity-20 dark:opacity-15 bg-radial from-teal-500 via-cyan-400 to-transparent pointer-events-none" />
 
         <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
@@ -235,13 +235,13 @@ export const LandingPage: React.FC = () => {
             >
               {/* Badges block */}
               <div className="flex flex-wrap gap-2 mb-6">
-                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md bg-blue-500/10 dark:bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-400">
+                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md bg-teal-500/10 dark:bg-teal-500/10 border border-teal-500/30 text-teal-700 dark:text-teal-400">
                   <Activity size={10} className="animate-pulse" /> Real-Time AI
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 dark:text-cyan-400">
                   +2M Users
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md bg-purple-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-400">
+                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md bg-lime-500/10 border border-lime-500/30 text-lime-700 dark:text-lime-400">
                   99.2% Accuracy
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
@@ -252,7 +252,7 @@ export const LandingPage: React.FC = () => {
               {/* Title Word Reveal Sequence */}
               <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight xs:text-5xl sm:text-6xl md:text-7xl text-slate-900 dark:text-white mb-6">
                 {globalConfig?.branding?.platform_name || 'MCC AI'} -{' '}
-                <span className="bg-gradient-to-r from-blue-600 via-cyan-500 to-purple-600 dark:from-blue-400 dark:via-cyan-400 dark:to-purple-400 bg-clip-text text-transparent font-black">
+                <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 dark:from-teal-400 dark:via-cyan-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
                   {globalConfig?.branding?.tagline || 'Language AI Platform'}
                 </span>
               </h1>
@@ -269,7 +269,7 @@ export const LandingPage: React.FC = () => {
                 onClick={() => { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                 className="group flex items-center justify-center gap-2.5 rounded-full px-8 py-4 text-base font-extrabold text-white transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] cursor-pointer shadow-lg"
                 style={{ 
-                  background: 'linear-gradient(135deg, #1e40af, #0891b2)', 
+                  background: 'linear-gradient(135deg, #0D9488, #10B981)', 
                 }}
               >
                 <Play size={16} className="fill-current" />
@@ -279,7 +279,7 @@ export const LandingPage: React.FC = () => {
               <button
                 id="hero-explore-btn"
                 onClick={() => document.getElementById('ai-language-tools')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-extrabold transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] text-slate-900 dark:text-white bg-white/70 dark:bg-white/5 border border-[#DDE5F0] dark:border-white/10 hover:bg-white dark:hover:bg-white/10 hover:border-blue-500/20 backdrop-blur-md cursor-pointer"
+                className="flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-extrabold transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] text-slate-900 dark:text-white bg-white/70 dark:bg-white/5 border border-[#DDE5F0] dark:border-white/10 hover:bg-white dark:hover:bg-white/10 hover:border-teal-500/20 backdrop-blur-md cursor-pointer"
               >
                 Explore Modules
                 <ChevronRight size={16} />
@@ -362,12 +362,12 @@ export const LandingPage: React.FC = () => {
         <div className="mx-auto max-w-7xl">
           
           <div className="mb-14 text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-widest bg-blue-500/10 dark:bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-400 mb-4 shadow-[0_0_15px_rgba(37,99,235,0.1)]">
+            <span className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-widest bg-teal-500/10 dark:bg-teal-500/10 border border-teal-500/30 text-teal-700 dark:text-teal-400 mb-4 shadow-[0_0_15px_rgba(37,99,235,0.1)]">
               <Zap size={11} /> AI Language Workstation
             </span>
             <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
               Center Stage{' '}
-              <span className="bg-gradient-to-r from-blue-600 via-cyan-600 to-purple-600 dark:from-blue-400 dark:via-cyan-400 dark:to-purple-400 bg-clip-text text-transparent font-black">
+              <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-teal-400 dark:via-cyan-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
                 Product Showcase
               </span>
             </h2>
@@ -394,7 +394,7 @@ export const LandingPage: React.FC = () => {
                         {[1, 3, 2, 4, 3, 5, 3, 2, 4, 1].map((val, idx) => (
                           <motion.span 
                             key={idx}
-                            className="w-1.5 bg-blue-600 dark:bg-blue-500 rounded-full"
+                            className="w-1.5 bg-teal-600 dark:bg-teal-500 rounded-full"
                             animate={{ height: [`${val * 12}%`, `${val * 20}%`, `${val * 12}%`] }}
                             transition={{ repeat: Infinity, duration: 1.0, delay: idx * 0.08 }}
                           />
@@ -408,7 +408,7 @@ export const LandingPage: React.FC = () => {
 
                     {tool.id === 'text-to-speech' && (
                       <div className="flex flex-col gap-2 w-4/5">
-                        <div className="flex justify-between items-center text-[7px] text-purple-700 dark:text-purple-400 font-extrabold uppercase tracking-wider">
+                        <div className="flex justify-between items-center text-[7px] text-emerald-700 dark:text-emerald-400 font-extrabold uppercase tracking-wider">
                           <span>Synthesizing Voice</span>
                           <span>480Hz</span>
                         </div>
@@ -416,7 +416,7 @@ export const LandingPage: React.FC = () => {
                           {[4, 2, 7, 5, 8, 3, 6, 2, 5, 4, 8, 3].map((h, i) => (
                             <motion.span
                               key={i}
-                              className="flex-1 bg-purple-600 dark:bg-purple-500 rounded-full"
+                              className="flex-1 bg-emerald-600 dark:bg-emerald-500 rounded-full"
                               style={{ height: `${h * 10}%` }}
                               animate={{ scaleY: [1, 1.4, 1] }}
                               transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.05 }}
@@ -514,7 +514,7 @@ export const LandingPage: React.FC = () => {
           <div className="mb-14 text-center">
             <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
               Interactive AI{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent font-black">
+              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
                 Process Flow
               </span>
             </h2>
@@ -527,7 +527,7 @@ export const LandingPage: React.FC = () => {
             
             {/* Dotted vector connector line */}
             <div className="pointer-events-none absolute top-12 left-[12%] hidden h-0.5 w-[76%] lg:block"
-              style={{ background: 'linear-gradient(to right, #3b82f6, #a855f7, #f59e0b, #10b981)' }} />
+              style={{ background: 'linear-gradient(to right, #14b8a6, #0d9488, #10b981, #059669)' }} />
 
             {[
               { idx: '01', title: 'Input Capture', desc: 'Speak, type, or drag-and-drop raw audio streams directly inside the web browser.', icon: <Mic size={16} /> },
@@ -542,7 +542,7 @@ export const LandingPage: React.FC = () => {
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-display text-sm font-black shadow-lg"
-                    style={{ background: 'linear-gradient(135deg, #3b82f6, #a855f7)' }}>
+                    style={{ background: 'linear-gradient(135deg, #14b8a6, #10b981)' }}>
                     {w.idx}
                   </div>
                   <div className="text-slate-600 dark:text-slate-400 group-hover:scale-105 transition-transform">{w.icon}</div>
@@ -565,7 +565,7 @@ export const LandingPage: React.FC = () => {
           <div className="mb-14 text-center">
             <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
               Enterprise{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent font-black">
+              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
                 Infrastructure
               </span>
             </h2>
@@ -610,7 +610,7 @@ export const LandingPage: React.FC = () => {
           <div className="mb-10 text-center">
             <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
               Supported{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent font-black">
+              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
                 Languages Network
               </span>
             </h2>
@@ -642,13 +642,13 @@ export const LandingPage: React.FC = () => {
               </span>
               {/* Europe Node */}
               <span className="absolute top-[25%] left-[56%] flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-60"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
               </span>
               {/* India Node */}
               <span className="absolute top-[42%] left-[64%] flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-60"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
               </span>
               {/* Japan Node */}
               <span className="absolute top-[32%] left-[82%] flex h-3 w-3">
@@ -664,11 +664,11 @@ export const LandingPage: React.FC = () => {
                 />
                 <motion.path 
                   d="M 565 130 Q 600 200 645 215" 
-                  fill="none" stroke="rgba(168, 85, 247, 0.45)" strokeWidth="1.5" strokeDasharray="5 3"
+                  fill="none" stroke="rgba(16, 185, 129, 0.45)" strokeWidth="1.5" strokeDasharray="5 3"
                 />
                 <motion.path 
                   d="M 825 165 Q 750 180 645 215" 
-                  fill="none" stroke="rgba(59, 130, 246, 0.45)" strokeWidth="1.5" strokeDasharray="5 3"
+                  fill="none" stroke="rgba(20, 184, 166, 0.45)" strokeWidth="1.5" strokeDasharray="5 3"
                 />
               </svg>
             </div>
@@ -704,7 +704,7 @@ export const LandingPage: React.FC = () => {
           <div className="mb-12 text-center">
             <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
               Loved by{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent font-black">
+              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
                 Creators
               </span>
             </h2>
@@ -767,16 +767,16 @@ export const LandingPage: React.FC = () => {
       {/* ── PRICING & PLAN DETAILS SECTION ───────────────────────────────────── */}
       <section className="py-20 sm:py-28 px-4 relative overflow-hidden bg-slate-50/50 dark:bg-[#070d1e]/20 border-y border-slate-200 dark:border-white/5">
         {/* Cinematic ambient background glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-blue-500/10 via-purple-500/10 to-cyan-500/10 dark:from-blue-500/15 dark:via-purple-500/20 dark:to-cyan-500/15 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-teal-500/10 via-emerald-500/10 to-cyan-500/10 dark:from-teal-500/15 dark:via-emerald-500/20 dark:to-cyan-500/15 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="mx-auto max-w-5xl text-center relative z-10">
           <div className="space-y-4 mb-16">
-            <span className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-widest bg-blue-500/10 dark:bg-blue-500/10 border border-blue-500/30 text-blue-700 dark:text-blue-400 mb-4 shadow-[0_0_15px_rgba(37,99,235,0.1)]">
+            <span className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[10px] font-extrabold uppercase tracking-widest bg-teal-500/10 dark:bg-teal-500/10 border border-teal-500/30 text-teal-700 dark:text-teal-400 mb-4 shadow-[0_0_15px_rgba(37,99,235,0.1)]">
               <Zap size={11} /> Pricing Plans
             </span>
             <h2 className="font-display text-4xl sm:text-6xl font-black tracking-tight text-slate-900 dark:text-white">
               SaaS{' '}
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 dark:from-blue-400 dark:via-purple-400 dark:to-cyan-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-teal-600 via-emerald-600 to-cyan-600 dark:from-teal-400 dark:via-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent">
                 Plan Details
               </span>
             </h2>
@@ -793,7 +793,7 @@ export const LandingPage: React.FC = () => {
             >
               <div className="w-full">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-500/10 text-blue-600 dark:text-blue-400 tracking-wider">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-teal-500/10 text-teal-600 dark:text-teal-400 tracking-wider">
                     Most Popular
                   </span>
                   <span className="text-sm font-bold text-slate-500 dark:text-slate-400">14 Days Trial</span>
@@ -844,7 +844,7 @@ export const LandingPage: React.FC = () => {
               <div className="w-full mt-8">
                 <button
                   onClick={() => { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className="w-full py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-lg text-center block"
+                  className="w-full py-3 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-lg text-center block"
                 >
                   Start 14-Day Free Trial
                 </button>
@@ -858,7 +858,7 @@ export const LandingPage: React.FC = () => {
             >
               <div className="w-full">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-purple-500/10 text-purple-600 dark:text-purple-400 tracking-wider">
+                  <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 tracking-wider">
                     Paid Tiers
                   </span>
                   <span className="text-sm font-bold text-slate-500 dark:text-slate-400">Post-Trial Options</span>
@@ -874,7 +874,7 @@ export const LandingPage: React.FC = () => {
                       <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Starter Plan</h4>
                       <p className="text-[10px] text-slate-500">60 mins audio / 100k translation / 50k TTS</p>
                     </div>
-                    <span className="text-base font-black text-blue-600 dark:text-blue-400">$19/mo</span>
+                    <span className="text-base font-black text-teal-600 dark:text-teal-400">$19/mo</span>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 flex justify-between items-center">
@@ -882,7 +882,7 @@ export const LandingPage: React.FC = () => {
                       <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Professional Plan</h4>
                       <p className="text-[10px] text-slate-500">300 mins audio / 500k translation / 250k TTS</p>
                     </div>
-                    <span className="text-base font-black text-blue-600 dark:text-blue-400">$49/mo</span>
+                    <span className="text-base font-black text-teal-600 dark:text-teal-400">$49/mo</span>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 flex justify-between items-center">
@@ -890,7 +890,7 @@ export const LandingPage: React.FC = () => {
                       <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Enterprise Plan</h4>
                       <p className="text-[10px] text-slate-500">1200 mins audio / 2M translation / 1M TTS</p>
                     </div>
-                    <span className="text-base font-black text-blue-600 dark:text-blue-400">$149/mo</span>
+                    <span className="text-base font-black text-teal-600 dark:text-teal-400">$149/mo</span>
                   </div>
                 </div>
               </div>
@@ -930,7 +930,7 @@ export const LandingPage: React.FC = () => {
           <button
             id="cta-launch-btn"
             onClick={() => { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className="mt-8 inline-flex items-center gap-2.5 rounded-full bg-slate-900 dark:bg-white px-8 py-4 text-sm font-extrabold text-white dark:text-blue-900 transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] shadow-lg cursor-pointer"
+            className="mt-8 inline-flex items-center gap-2.5 rounded-full bg-slate-900 dark:bg-white px-8 py-4 text-sm font-extrabold text-white dark:text-teal-900 transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] shadow-lg cursor-pointer"
           >
             <Play size={13} className="fill-current" />
             Launch Workspace Free

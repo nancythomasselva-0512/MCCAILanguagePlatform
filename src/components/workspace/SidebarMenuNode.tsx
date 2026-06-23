@@ -60,10 +60,10 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
     if (item.children && item.children.length > 0) {
       return item.children.some(child => isNodeActive(child));
     }
-    
+
     if (item.action === 'tab' && item.tabId === activeTab) {
       if (!item.provider) return true;
-      
+
       // Check tool-specific provider selection
       if (item.tabId === 'text-to-speech') return ttsProvider === item.provider;
       if (item.tabId === 'audio-transcription') return audioSttProvider === item.provider;
@@ -71,7 +71,7 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
       if (item.tabId === 'translation') return translationProvider === item.provider;
     }
     if (item.action === 'history' && activeTab === 'voice-to-text') { // Fallback/default active checks for history if needed
-      return false; 
+      return false;
     }
     return false;
   };
@@ -85,7 +85,7 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
     } else {
       if (node.action === 'tab' && node.tabId) {
         setActiveTab(node.tabId);
-        
+
         // Update active provider in context if defined
         if (node.provider) {
           if (node.tabId === 'text-to-speech') setTtsProvider(node.provider);
@@ -93,7 +93,7 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
           else if (node.tabId === 'voice-to-text') setTranscriptionProvider(node.provider);
           else if (node.tabId === 'translation') setTranslationProvider(node.provider);
         }
-        
+
         if (onSidebarClose) onSidebarClose();
       } else if (node.action === 'settings') {
         onSettingsOpen();
@@ -113,32 +113,31 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
       {/* Node Button */}
       <button
         onClick={handleClick}
-        className={`w-full flex items-center justify-between py-2.5 px-3 rounded-xl text-xs font-semibold transition-all relative overflow-hidden select-none cursor-pointer ${
-          isFolder 
-            ? 'text-white/80 hover:text-white hover:bg-white/5' 
-            : active 
-            ? 'text-white font-bold' 
-            : 'text-white/70 hover:text-white hover:bg-white/5'
-        }`}
+        className={`w-full flex items-center justify-between py-1.5 px-4 rounded-xl text-sm font-semibold transition-all relative overflow-hidden select-none cursor-pointer ${isFolder
+            ? 'text-teal-600 hover:text-teal-800 hover:bg-[var(--sidebar-panel-hover-bg)]'
+            : active
+              ? 'text-[var(--sidebar-panel-text-active)] font-bold'
+              : 'text-teal-600 hover:text-teal-800 hover:bg-[var(--sidebar-panel-hover-bg)]'
+          }`}
       >
         {/* Selection Indicator background */}
         {active && !isFolder && (
           <motion.div
             layoutId="sidebarNodeActiveBg"
-            className="absolute inset-0 bg-gradient-to-r from-blue-600/80 to-violet-500/80 rounded-xl"
-            style={{ zIndex: 0 }}
+            className="absolute inset-0 rounded-xl"
+            style={{ zIndex: 0, background: "var(--sidebar-panel-active-bg)" }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
           />
         )}
 
         <div className="flex items-center gap-2.5 relative z-10">
           {node.icon ? (
-            <span className="flex h-5 w-5 items-center justify-center rounded text-white/90">
+            <span className="flex h-5 w-5 items-center justify-center rounded text-current">
               <LucideIcon name={node.icon} size={15} />
             </span>
           ) : (
             // Default Bullet Dot for Sub-menu elements
-            <span className={`h-1.5 w-1.5 rounded-full ml-1.5 transition-colors ${active ? 'bg-white' : 'bg-white/30 group-hover:bg-white/50'}`} />
+            <span className={`h-1.5 w-1.5 rounded-full ml-1.5 transition-colors ${active ? 'bg-white' : 'bg-[var(--sidebar-panel-text)] opacity-30 group-hover:opacity-50'}`} />
           )}
           <span className="text-left leading-none">{node.label}</span>
         </div>
@@ -148,7 +147,7 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
           <motion.span
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.2 }}
-            className="text-white/50 relative z-10 flex h-4 w-4 items-center justify-center"
+            className="opacity-50 text-[var(--sidebar-panel-text)] relative z-10 flex h-4 w-4 items-center justify-center"
           >
             <Icons.ChevronDown size={14} />
           </motion.span>
@@ -163,7 +162,7 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.24, ease: 'easeInOut' }}
-            className="overflow-hidden pl-3 border-l border-white/10 ml-4.5 space-y-0.5 mt-1 rounded-r-xl bg-white/[0.02] dark:bg-black/[0.05] py-1 shadow-inner"
+            className="overflow-hidden pl-3 border-l border-[var(--border-subtle)] ml-4.5 space-y-0.5 mt-1 rounded-r-xl bg-[var(--bg-subtle)] py-1 shadow-inner"
           >
             {node.children!.map((child) => (
               <SidebarMenuNode

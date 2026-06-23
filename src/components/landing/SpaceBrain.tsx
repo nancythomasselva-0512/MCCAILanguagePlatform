@@ -208,7 +208,7 @@ export const SpaceBrain: React.FC = () => {
   return (
     <div className="relative flex items-center justify-center w-full h-full max-w-[450px] aspect-square mx-auto">
       {/* Background radial cyan/purple aura */}
-      <div className="absolute inset-0 -z-10 rounded-full blur-3xl opacity-20 bg-radial from-cyan-500 via-purple-500 to-transparent"></div>
+      <div className="absolute inset-0 -z-10 rounded-full blur-3xl opacity-20 bg-radial from-cyan-500 via-emerald-500 to-transparent"></div>
       <canvas ref={canvasRef} className="w-full h-full animate-float select-none pointer-events-none" />
     </div>
   );

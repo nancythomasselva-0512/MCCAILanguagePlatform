@@ -61,14 +61,14 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export const WorkspacePage: React.FC = () => {
-  const { 
-    activeTab, 
+  const {
+    activeTab,
     setActiveTab,
-    history, 
-    clearHistory, 
-    deleteHistoryItem, 
-    openAiApiKey, 
-    setOpenAiApiKey, 
+    history,
+    clearHistory,
+    deleteHistoryItem,
+    openAiApiKey,
+    setOpenAiApiKey,
     setViewMode,
     logout,
     notification,
@@ -77,7 +77,7 @@ export const WorkspacePage: React.FC = () => {
     globalConfig,
     billingOverview
   } = useApp();
-  
+
   const [historyOpen, setHistoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -135,7 +135,7 @@ export const WorkspacePage: React.FC = () => {
         workspaceItems.push({ id: 'tenant-dashboard-menu', label: 'Workspace Panel', icon: 'Settings', action: 'tab', tabId: 'tenant-dashboard' });
       }
       workspaceItems.push({ id: 'tenant-billing-menu', label: 'Billing', icon: 'CreditCard', action: 'tab', tabId: 'tenant-billing' });
-      
+
       sections.push({
         title: 'Workspace',
         items: workspaceItems
@@ -229,14 +229,14 @@ export const WorkspacePage: React.FC = () => {
   const ActiveTool = isSuperAdminTab
     ? null
     : ({
-        'voice-to-text': VoiceToText,
-        'text-to-speech': TextToVoice,
-        'translation': TextTranslation,
-        'audio-transcription': AudioToText,
-        'super-admin-dashboard': SuperAdminDashboard,
-        'tenant-dashboard': TenantDashboard,
-        'tenant-billing': TenantBilling,
-      } as Record<string, any>)[activeTab] || VoiceToText;
+      'voice-to-text': VoiceToText,
+      'text-to-speech': TextToVoice,
+      'translation': TextTranslation,
+      'audio-transcription': AudioToText,
+      'super-admin-dashboard': SuperAdminDashboard,
+      'tenant-dashboard': TenantDashboard,
+      'tenant-billing': TenantBilling,
+    } as Record<string, any>)[activeTab] || VoiceToText;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden flex-col sm:flex-row" style={{ background: 'var(--bg-base)' }}>
@@ -276,8 +276,8 @@ export const WorkspacePage: React.FC = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                    <Key size={10} /> OpenAI API Key
+                  <label className="mb-2 flex items-center gap-1.5 text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                    <Key size={14} /> OpenAI API Key
                   </label>
                   <input
                     type="password"
@@ -286,16 +286,16 @@ export const WorkspacePage: React.FC = () => {
                     placeholder="sk-proj-..."
                     className="glass-input w-full rounded-xl px-4 py-3 text-sm"
                   />
-                  <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                     Used for high-accuracy Whisper transcription. Stored locally in your browser only.
                   </p>
                 </div>
-                <div className="flex items-start gap-2 rounded-xl p-3 text-xs" style={{
+                <div className="flex items-start gap-2 rounded-xl p-3 text-sm" style={{
                   background: 'color-mix(in srgb, #10b981 8%, var(--bg-card))',
                   border: '1px solid color-mix(in srgb, #10b981 20%, transparent)',
                   color: '#10b981',
                 }}>
-                  <ShieldCheck size={14} className="flex-shrink-0 mt-0.5" />
+                  <ShieldCheck size={16} className="flex-shrink-0 mt-0.5" />
                   <span>Your API key is sent directly to OpenAI. We never store it.</span>
                 </div>
               </div>
@@ -384,17 +384,17 @@ export const WorkspacePage: React.FC = () => {
             >
               <div className="flex items-center justify-between px-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-white">{globalConfig?.branding?.platform_name || "MCC AI"} Workstation</span>
+                  <span className="text-sm font-bold text-[var(--text-primary)]">{globalConfig?.branding?.platform_name || "MCC AI"} Workstation</span>
                 </div>
-                <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1.5 hover:bg-white/10" style={{ color: '#ffffff' }}>
+                <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1.5 hover:bg-white/40" style={{ color: '#ffffff' }}>
                   <X size={18} />
                 </button>
               </div>
 
-              <nav className="flex-1 overflow-y-auto p-3 space-y-4">
+              <nav className="flex-1 overflow-y-auto p-3 space-y-2.5">
                 {SIDEBAR_CONFIG.map((section) => (
                   <div key={section.title} className="space-y-1">
-                    <h4 className="px-3 text-[9px] font-bold tracking-[0.15em] text-white/40 uppercase mb-1.5 select-none">
+                    <h4 className="px-4 text-xs font-bold tracking-[0.1em] text-teal-800 uppercase mb-1 mt-1.5 select-none">
                       {section.title}
                     </h4>
                     {section.items.map((item) => (
@@ -420,15 +420,15 @@ export const WorkspacePage: React.FC = () => {
       <aside
         className="hidden w-64 flex-shrink-0 sm:flex sm:flex-col justify-between p-6 rounded-none relative z-10"
         style={{
-          background: 'linear-gradient(180deg, #0d1224 0%, #070913 100%)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'var(--sidebar-bg)',
+          borderRight: 'none',
         }}
       >
         <div className="flex flex-col flex-1">
           <div className="flex items-center gap-2.5 mb-6 select-none">
             <button
               onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all cursor-pointer hover:scale-105 active:scale-95 flex-shrink-0"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/40 hover:bg-white/20 border border-white/10 text-[var(--text-primary)] transition-all cursor-pointer hover:scale-105 active:scale-95 flex-shrink-0"
               title="Back to Home"
             >
               <ArrowLeft size={14} />
@@ -437,24 +437,24 @@ export const WorkspacePage: React.FC = () => {
               <img
                 src={globalConfig?.branding?.logo_url || "/logo.png"}
                 alt="Logo"
-                className="h-8 w-8 rounded-full border border-white/20 object-cover flex-shrink-0"
+                className="h-8 w-8 rounded-full border border-white/40 object-cover flex-shrink-0"
                 style={{ height: globalConfig?.branding?.logo_size || "32px", width: globalConfig?.branding?.logo_size || "32px" }}
               />
               <div className="flex flex-col justify-center min-w-0">
-                <span className="font-display text-xs font-black tracking-tight leading-none text-white truncate flex items-center gap-0.5">
+                <span className="font-display text-base font-black tracking-tight leading-none text-[var(--text-primary)] truncate flex items-center gap-0.5">
                   {globalConfig?.branding?.platform_name || "MCC AI"}
                 </span>
-                <span className="text-[6px] font-bold tracking-[0.15em] uppercase mt-0.5 text-slate-400 truncate">
+                <span className="text-[10px] font-bold tracking-wider uppercase mt-1 text-[var(--sidebar-panel-text)] opacity-80 whitespace-nowrap overflow-hidden text-ellipsis">
                   {globalConfig?.branding?.tagline || "Language Platform"}
                 </span>
               </div>
             </div>
           </div>
 
-          <nav className="space-y-4" aria-label="Tool navigation">
+          <nav className="space-y-2.5 flex-1 overflow-y-auto min-h-0 pr-2 mb-2 custom-scrollbar" aria-label="Tool navigation">
             {SIDEBAR_CONFIG.map((section) => (
               <div key={section.title} className="space-y-1">
-                <h4 className="px-3 text-[9px] font-bold tracking-[0.15em] text-white/40 uppercase mb-1.5 select-none">
+                <h4 className="px-4 text-xs font-bold tracking-[0.1em] text-teal-800 uppercase mb-1 mt-1.5 select-none">
                   {section.title}
                 </h4>
                 {section.items.map((item) => (
@@ -473,14 +473,14 @@ export const WorkspacePage: React.FC = () => {
 
           {user?.role !== 'super_admin' && (() => {
             const planName = billingOverview?.current_plan?.name || "Free";
-            
+
             const planColors: Record<string, string> = {
               'Free': 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-              'Starter': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+              'Starter': 'bg-teal-500/10 text-teal-400 border-teal-500/20',
               'Professional': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-              'Enterprise': 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+              'Enterprise': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
             };
-            const colorClass = planColors[planName] || 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+            const colorClass = planColors[planName] || 'bg-teal-500/10 text-teal-400 border-teal-500/20';
 
             const transcriptionUsed = billingOverview?.usage?.audio_minutes_used || 0;
             const transcriptionLimit = billingOverview?.usage?.audio_minutes_limit || 30;
@@ -495,36 +495,36 @@ export const WorkspacePage: React.FC = () => {
             const ttsPct = Math.min(100, (ttsUsed / ttsLimit) * 100);
 
             return (
-              <div 
+              <div
                 onClick={() => setActiveTab('tenant-billing')}
-                className="mt-6 mb-4 p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-blue-500/30 transition-all duration-300 cursor-pointer relative group overflow-hidden"
+                className="mt-4 mb-2 p-3 rounded-xl bg-white/40 hover:bg-white/60 shadow-sm backdrop-blur-md border border-white/40 hover:border-teal-500/30 transition-all duration-300 cursor-pointer relative group overflow-hidden"
               >
-                <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-blue-500/10 blur-xl pointer-events-none transition-transform duration-500 group-hover:scale-150" />
-                
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[9px] font-bold text-slate-450 uppercase tracking-wider">Active Workspace</span>
-                  <span className={`px-2 py-0.5 rounded-full text-[8px] font-extrabold uppercase border ${colorClass}`}>
+                <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-teal-500/10 blur-xl pointer-events-none transition-transform duration-500 group-hover:scale-150" />
+
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-bold text-[var(--sidebar-panel-text)] uppercase tracking-wider">Active Workspace</span>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${colorClass}`}>
                     {planName}
                   </span>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="space-y-0.5">
                   {/* Transcription Meter */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[9px]">
-                      <span className="text-slate-400">Transcription</span>
-                      <span className="text-white font-bold">{transcriptionUsed.toFixed(1)} / {transcriptionLimit} m</span>
+                  <div className="space-y-0.5">
+                    <div className="flex justify-between text-[11px] leading-none">
+                      <span className="text-[var(--sidebar-panel-text)] opacity-80">Transcription</span>
+                      <span className="text-[var(--text-primary)] font-bold">{transcriptionUsed.toFixed(1)} / {transcriptionLimit} m</span>
                     </div>
                     <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${transcriptionPct}%` }} />
+                      <div className="h-full bg-teal-500 transition-all duration-500" style={{ width: `${transcriptionPct}%` }} />
                     </div>
                   </div>
 
                   {/* Translation Meter */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[9px]">
-                      <span className="text-slate-400">Translation</span>
-                      <span className="text-white font-bold">{(translationUsed / 1000).toFixed(1)}k / {(translationLimit / 1000).toFixed(0)}k c</span>
+                  <div className="space-y-0.5">
+                    <div className="flex justify-between text-[11px] leading-none">
+                      <span className="text-[var(--sidebar-panel-text)] opacity-80">Translation</span>
+                      <span className="text-[var(--text-primary)] font-bold">{(translationUsed / 1000).toFixed(1)}k / {(translationLimit / 1000).toFixed(0)}k c</span>
                     </div>
                     <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
                       <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${translationPct}%` }} />
@@ -532,10 +532,10 @@ export const WorkspacePage: React.FC = () => {
                   </div>
 
                   {/* TTS Meter */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[9px]">
-                      <span className="text-slate-400">TTS Synthesis</span>
-                      <span className="text-white font-bold">{(ttsUsed / 1000).toFixed(1)}k / {(ttsLimit / 1000).toFixed(0)}k c</span>
+                  <div className="space-y-0.5">
+                    <div className="flex justify-between text-[11px] leading-none">
+                      <span className="text-[var(--sidebar-panel-text)] opacity-80">TTS Synthesis</span>
+                      <span className="text-[var(--text-primary)] font-bold">{(ttsUsed / 1000).toFixed(1)}k / {(ttsLimit / 1000).toFixed(0)}k c</span>
                     </div>
                     <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
                       <div className="h-full bg-amber-500 transition-all duration-500" style={{ width: `${ttsPct}%` }} />
@@ -543,9 +543,9 @@ export const WorkspacePage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[9px] font-bold text-blue-400 group-hover:text-blue-300 transition-colors">
+                <div className="mt-4 pt-3 border-t border-white/40 flex items-center justify-between text-sm font-bold text-[var(--sidebar-panel-text)] group-hover:text-[var(--text-primary)] transition-colors">
                   <span>Manage Plan & Limits</span>
-                  <ArrowUpRight size={10} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </div>
               </div>
             );
@@ -555,16 +555,16 @@ export const WorkspacePage: React.FC = () => {
         <div className="pt-4 mt-auto">
           <button
             onClick={() => logout()}
-            className="w-full flex items-center justify-center gap-2 rounded-xl py-2 px-4 text-xs font-bold text-white border border-white/10 hover:bg-white/5 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-sm font-bold text-red-500 hover:text-red-600 border border-red-500/20 hover:bg-red-500/10 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
           >
-            <LogOut size={13} />
+            <LogOut size={16} />
             <span>Logout</span>
           </button>
         </div>
       </aside>
 
       {/* Right Panel */}
-      <div className="flex-grow h-full flex flex-col min-w-0 overflow-hidden bg-slate-50/20 dark:bg-slate-950/20">
+      <div className="flex-grow h-full flex flex-col min-w-0 overflow-hidden bg-[var(--bg-base)]">
         <Header />
 
         <main className="flex-grow overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10">
@@ -612,16 +612,16 @@ export const WorkspacePage: React.FC = () => {
                 <div className="flex items-center justify-between px-4 py-3.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-base)' }}>
                   <div className="flex items-center gap-2">
                     <History size={14} style={{ color: 'var(--accent)' }} />
-                    <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>History</span>
+                    <span className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>History</span>
                     {history.length > 0 && (
-                      <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
+                      <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
                         {history.length}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-1">
                     {history.length > 0 && (
-                      <button onClick={clearHistory} className="rounded-md px-2 py-1 text-[10px] font-medium transition-colors hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
+                      <button onClick={clearHistory} className="rounded-md px-2 py-1 text-sm font-medium transition-colors hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
                         Clear all
                       </button>
                     )}
@@ -647,7 +647,7 @@ export const WorkspacePage: React.FC = () => {
                         >
                           <div className="mt-0.5 flex-shrink-0">
                             <span
-                              className="text-[9px] rounded-full px-1.5 py-0.5 font-bold"
+                              className="text-xs rounded-full px-2 py-1 font-bold"
                               style={{
                                 background: `color-mix(in srgb, ${TYPE_COLORS[item.type]} 12%, var(--bg-subtle))`,
                                 color: TYPE_COLORS[item.type],
@@ -658,10 +658,10 @@ export const WorkspacePage: React.FC = () => {
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="truncate text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{item.title}</p>
-                            <p className="mt-0.5 truncate text-[10px]" style={{ color: 'var(--text-muted)' }}>{item.details}</p>
-                            <p className="mt-0.5 flex items-center gap-1 text-[9px]" style={{ color: 'var(--text-disabled)' }}>
-                              <Clock size={8} /> {item.timestamp}
+                            <p className="truncate text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{item.title}</p>
+                            <p className="mt-1 truncate text-xs" style={{ color: 'var(--text-muted)' }}>{item.details}</p>
+                            <p className="mt-1 flex items-center gap-1 text-xs" style={{ color: 'var(--text-disabled)' }}>
+                              <Clock size={12} /> {item.timestamp}
                             </p>
                           </div>
                           <button
@@ -687,23 +687,23 @@ export const WorkspacePage: React.FC = () => {
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="fixed top-6 right-6 z-[9999] flex items-center gap-3 rounded-2xl p-4.5 shadow-2xl border backdrop-blur-md text-white font-sans text-xs max-w-sm"
+              className="fixed top-6 right-6 z-[9999] flex items-center gap-3 rounded-2xl p-4.5 shadow-2xl border backdrop-blur-md text-[var(--text-primary)] font-sans text-xs max-w-sm"
               style={{
                 background: 'rgba(15, 23, 42, 0.95)',
                 borderColor: 'rgba(255,255,255,0.1)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
               }}
             >
-              <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-white font-black text-xs">
+              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-500 text-[var(--text-primary)] font-black text-sm">
                 !
               </span>
               <div className="flex-grow text-left">
-                <p className="font-bold text-[10px] uppercase tracking-wider text-amber-400 mb-0.5">System Notice</p>
-                <p className="text-slate-200 leading-relaxed font-semibold">{notification.message}</p>
+                <p className="font-bold text-sm uppercase tracking-wider text-amber-400 mb-1">System Notice</p>
+                <p className="text-slate-200 text-sm leading-relaxed font-semibold">{notification.message}</p>
               </div>
-              <button 
-                onClick={() => setNotification(null)} 
-                className="flex-shrink-0 p-1 rounded-lg hover:bg-white/15 text-white/40 hover:text-white transition-colors cursor-pointer"
+              <button
+                onClick={() => setNotification(null)}
+                className="flex-shrink-0 p-1 rounded-lg hover:bg-white/15 text-[var(--text-primary)]/40 hover:text-[var(--text-primary)] transition-colors cursor-pointer"
               >
                 <X size={14} />
               </button>

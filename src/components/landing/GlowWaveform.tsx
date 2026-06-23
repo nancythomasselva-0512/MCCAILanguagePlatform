@@ -154,7 +154,7 @@ export const GlowWaveform: React.FC = () => {
   return (
     <div className="relative flex items-center justify-center w-full h-full max-w-[450px] aspect-square mx-auto">
       {/* Background radial blue glow */}
-      <div className="absolute inset-0 -z-10 rounded-full blur-3xl opacity-20 bg-radial from-blue-500 via-cyan-500 to-transparent"></div>
+      <div className="absolute inset-0 -z-10 rounded-full blur-3xl opacity-20 bg-radial from-teal-500 via-cyan-500 to-transparent"></div>
       <canvas ref={canvasRef} className="w-full h-full animate-float select-none pointer-events-none" />
     </div>
   );

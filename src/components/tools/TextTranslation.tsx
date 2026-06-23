@@ -145,7 +145,7 @@ export const TextTranslation: React.FC = () => {
   const remainingChars = Math.max(0, translationLimit - (billingOverview?.usage?.translation_chars_used || 0));
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto animate-fadeIn">
+    <div className="space-y-6 w-full animate-fadeIn">
       {/* Header with Provider Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5">
         <div>
@@ -192,7 +192,7 @@ export const TextTranslation: React.FC = () => {
                     }}
                     className={`w-full flex flex-col items-start gap-0.5 px-3 py-2 text-left rounded-xl transition-all cursor-pointer ${
                       translationProvider === p.id
-                        ? 'bg-gradient-to-r from-blue-600/10 to-emerald-500/10 text-slate-900 dark:text-white border border-blue-500/20'
+                        ? 'bg-gradient-to-r from-teal-600/10 to-emerald-500/10 text-slate-900 dark:text-white border border-teal-500/20'
                         : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-350 border border-transparent'
                     }`}
                   >
@@ -380,7 +380,7 @@ export const TextTranslation: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Translations Count</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{translationHistory.length}</h4>
                   </div>
-                  <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 flex-shrink-0">
+                  <div className="h-7 w-7 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0">
                     <Activity size={14} />
                   </div>
                 </div>
@@ -396,7 +396,7 @@ export const TextTranslation: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Characters Used</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{(billingOverview?.usage?.translation_chars_used || 0).toLocaleString()}</h4>
                   </div>
-                  <div className="h-7 w-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 flex-shrink-0">
+                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
                     <FileText size={14} />
                   </div>
                 </div>
@@ -428,7 +428,7 @@ export const TextTranslation: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Engine</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{translationProvider.toUpperCase()}</h4>
                   </div>
-                  <div className="h-7 w-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 flex-shrink-0">
+                  <div className="h-7 w-7 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0">
                     <Award size={14} />
                   </div>
                 </div>
@@ -443,7 +443,7 @@ export const TextTranslation: React.FC = () => {
         {/* Right Column - Banners & Recent Activity */}
         <div className="lg:col-span-1 space-y-6">
           {/* Connected Banner */}
-          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-gradient-to-br from-blue-600/10 to-emerald-500/10 dark:from-blue-600/5 dark:to-emerald-500/5 min-h-[120px] flex flex-col justify-center">
+          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-gradient-to-br from-teal-600/10 to-emerald-500/10 dark:from-teal-600/5 dark:to-emerald-500/5 min-h-[120px] flex flex-col justify-center">
             <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
             <div className="relative z-10">
               <span className="text-[8px] font-black uppercase text-emerald-500 dark:text-emerald-400 tracking-wider">Engine Status</span>
@@ -459,7 +459,7 @@ export const TextTranslation: React.FC = () => {
           <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-3">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
               <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Recent Translations</h4>
-              <span className="text-[9px] text-blue-500 dark:text-blue-400 font-bold cursor-pointer hover:underline" onClick={() => fetchBillingOverview()}>Refresh</span>
+              <span className="text-[9px] text-teal-500 dark:text-teal-400 font-bold cursor-pointer hover:underline" onClick={() => fetchBillingOverview()}>Refresh</span>
             </div>
 
             <div className="space-y-2">
@@ -470,7 +470,7 @@ export const TextTranslation: React.FC = () => {
               ) : (
                 translationHistory.slice(0, 4).map(item => (
                   <div key={item.id} className="p-2.5 rounded-xl bg-slate-100/50 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5 flex items-start gap-3 hover:border-slate-300 dark:hover:border-white/10 transition-colors text-left font-sans font-medium">
-                    <span className="text-[9px] font-black text-blue-600 bg-blue-500/10 rounded px-1.5 py-0.5 mt-0.5">TRANS</span>
+                    <span className="text-[9px] font-black text-teal-600 bg-teal-500/10 rounded px-1.5 py-0.5 mt-0.5">TRANS</span>
                     <div className="flex-1 min-w-0 text-left">
                       <p className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">{item.title}</p>
                       <span className="text-[8px] text-slate-500 font-medium">{item.details} · {item.timestamp}</span>

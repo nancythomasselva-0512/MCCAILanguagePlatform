@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sun, Moon, Menu, X, ArrowRight, LogOut, ChevronDown, User, LogIn } from 'lucide-react';
+import { Sun, Moon, Menu, X, ArrowRight, LogOut, ChevronDown, User, LogIn, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PROVIDER_NAMES: Record<string, string> = {
@@ -40,7 +40,31 @@ export const Header: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const query = searchQuery.toLowerCase();
+      let targetTab = '';
+
+      if (query.includes('plan') || query.includes('bill') || query.includes('subscript') || query.includes('pay') || query.includes('upgrade')) targetTab = 'billing';
+      else if (query.includes('dash') || query.includes('home') || query.includes('overview')) targetTab = 'dashboard';
+      else if (query.includes('translate') || query.includes('language')) targetTab = 'text-translation';
+      else if ((query.includes('audio') || query.includes('mp3')) && query.includes('text')) targetTab = 'audio-to-text';
+      else if (query.includes('voice') && query.includes('text')) targetTab = 'voice-to-text';
+      else if (query.includes('text') && query.includes('voice')) targetTab = 'text-to-voice';
+      else if (query.includes('tts') || query.includes('speech') || query.includes('read')) targetTab = 'text-to-voice';
+      else if (query.includes('stt') || query.includes('transcrib')) targetTab = 'voice-to-text';
+      else if (query.includes('admin') || query.includes('super')) targetTab = 'sa-overview';
+
+      if (targetTab) {
+        if (setActiveTab) setActiveTab(targetTab);
+        setSearchQuery('');
+        (e.target as HTMLInputElement).blur();
+      }
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -99,10 +123,10 @@ export const Header: React.FC = () => {
           : '0 4px 20px -1px rgba(0, 0, 0, 0.04)',
       }}
     >
-      <div className={`w-full flex h-16 md:h-20 items-center justify-between px-4 sm:px-6 ${viewMode === 'workspace' ? 'w-full px-4 md:px-8' : 'max-w-7xl mx-auto'}`}>
+      <div className={`w-full flex h-14 md:h-16 items-center justify-between px-4 sm:px-6 ${viewMode === 'workspace' ? 'w-full px-4 md:px-8' : 'max-w-7xl mx-auto'}`}>
 
         <div className="flex items-center gap-2 md:gap-3">
-          {viewMode !== 'workspace' && (
+          {viewMode !== 'workspace' ? (
             <div
               className="flex cursor-pointer items-center gap-2 md:gap-3"
               onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
@@ -122,6 +146,15 @@ export const Header: React.FC = () => {
                 </span>
               </div>
             </div>
+          ) : (
+            <div className="hidden md:flex flex-col justify-center animate-fadeIn">
+              <span className="font-display text-lg font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                Welcome back, {user?.name?.split(' ')[0] || 'User'} 👋
+              </span>
+              <span className="text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 uppercase">
+                Ready to conquer the day and create something amazing
+              </span>
+            </div>
           )}
         </div>
 
@@ -132,7 +165,7 @@ export const Header: React.FC = () => {
               <button
                 key={item.id}
                 onClick={() => navigateToSection(item.id)}
-                className="relative text-sm font-bold transition-all duration-200 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white py-1.5 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-blue-600 dark:after:bg-cyan-500 after:transition-all after:duration-200 after:ease-out"
+                className="relative text-sm font-bold transition-all duration-200 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white py-1.5 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-teal-500 dark:after:bg-emerald-500 after:transition-all after:duration-200 after:ease-out"
               >
                 {item.label}
               </button>
@@ -142,6 +175,22 @@ export const Header: React.FC = () => {
 
         {/* Right: Actions */}
         <div className="hidden md:flex items-center gap-3">
+          {viewMode === 'workspace' && (
+            <div className="relative w-56 lg:w-64 transition-all mr-2">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <Search size={14} className="text-slate-400 dark:text-slate-500" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search tools, history..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearch}
+                className="block w-full pl-9 pr-4 py-1.5 border border-slate-200 dark:border-white/10 rounded-full leading-5 bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 sm:text-xs shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900/80"
+              />
+            </div>
+          )}
+
           <button
             onClick={toggleTheme}
             className="flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
@@ -161,7 +210,7 @@ export const Header: React.FC = () => {
               {/* Active Workspace / Open Workspace Button */}
               <button
                 onClick={() => handleLaunchWorkspace()}
-                className={`group flex items-center gap-2 rounded-full px-5 py-2 text-xs font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer`}
+                className={`group flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer`}
                 style={{
                   background: viewMode === 'workspace'
                     ? (theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.08)')
@@ -170,30 +219,23 @@ export const Header: React.FC = () => {
                   border: '1px solid var(--border-base)',
                 }}
               >
-                <span className={`h-2 w-2 rounded-full ${viewMode === 'workspace' ? 'bg-emerald-500 animate-pulse' : 'bg-blue-500'}`} />
+                <span className={`h-1.5 w-1.5 rounded-full ${viewMode === 'workspace' ? 'bg-emerald-500 animate-pulse' : 'bg-teal-500'}`} />
                 <span>{viewMode === 'workspace' ? 'Workspace Active' : 'Go to Workspace'}</span>
               </button>
-
-              {viewMode === 'workspace' && activeProviderCode && (
-                <div className="flex items-center gap-1.5 rounded-full bg-indigo-500/10 dark:bg-indigo-500/25 border border-indigo-500/20 dark:border-indigo-500/30 px-3.5 py-1.5 text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 select-none shadow-sm transition-all hover:scale-[1.02]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                  <span>{PROVIDER_NAMES[activeProviderCode] || activeProviderCode.toUpperCase()}</span>
-                </div>
-              )}
 
               {viewMode === 'workspace' && (
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-2 rounded-full p-1 pr-3 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-full p-0.5 pr-2.5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer"
                   >
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 text-white flex items-center justify-center text-xs font-black border border-white/10 uppercase select-none">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-600 to-emerald-500 text-white flex items-center justify-center text-[10px] font-black border border-white/10 uppercase select-none">
                       {user.name ? user.name.charAt(0) : 'U'}
                     </div>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 max-w-[80px] truncate">
+                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 max-w-[80px] truncate">
                       {user.name}
                     </span>
-                    <ChevronDown size={14} className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={12} className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   <AnimatePresence>
@@ -249,10 +291,10 @@ export const Header: React.FC = () => {
                 onClick={() => handleOpenAuth('login')}
                 className="group flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 style={{
-                  background: 'linear-gradient(135deg, #1e40af, #0891b2)',
+                  background: 'linear-gradient(135deg, #0D9488, #10B981)',
                   color: '#ffffff',
                   border: '1px solid transparent',
-                  boxShadow: '0 0 15px rgba(6, 182, 212, 0.15)',
+                  boxShadow: '0 0 15px rgba(13, 148, 136, 0.15)',
                 }}
               >
                 <span>Sign In / Sign Up</span>
@@ -279,7 +321,7 @@ export const Header: React.FC = () => {
 
           {user && viewMode === 'workspace' && (
             <div
-              className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 text-white flex items-center justify-center text-xs font-black border border-white/10 uppercase select-none cursor-pointer"
+              className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-600 to-emerald-500 text-white flex items-center justify-center text-xs font-black border border-white/10 uppercase select-none cursor-pointer"
               onClick={() => handleLaunchWorkspace()}
             >
               {user.name ? user.name.charAt(0) : 'U'}
@@ -330,7 +372,7 @@ export const Header: React.FC = () => {
               {user ? (
                 <div className="pt-4 mt-4 space-y-3" style={{ borderTop: '1px solid var(--border-base)' }}>
                   <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 text-white flex items-center justify-center text-sm font-black border border-white/10 uppercase select-none">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-teal-600 to-emerald-500 text-white flex items-center justify-center text-sm font-black border border-white/10 uppercase select-none">
                       {user.name ? user.name.charAt(0) : 'U'}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -342,7 +384,7 @@ export const Header: React.FC = () => {
                   <button
                     onClick={() => handleLaunchWorkspace()}
                     className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white cursor-pointer"
-                    style={{ background: 'linear-gradient(135deg, #1e40af, #0891b2)' }}
+                    style={{ background: 'linear-gradient(135deg, #0D9488, #10B981)' }}
                   >
                     <span>Launch Workspace</span>
                     <ArrowRight size={14} />
@@ -361,7 +403,7 @@ export const Header: React.FC = () => {
                   <button
                     onClick={() => handleOpenAuth('login')}
                     className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white cursor-pointer"
-                    style={{ background: 'linear-gradient(135deg, #1e40af, #0891b2)' }}
+                    style={{ background: 'linear-gradient(135deg, #0D9488, #10B981)' }}
                   >
                     <LogIn size={13} />
                     <span>Sign In / Sign Up</span>

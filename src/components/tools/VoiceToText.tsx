@@ -349,12 +349,12 @@ export const VoiceToText: React.FC = () => {
   const remainingMinutes = Math.max(0, audioLimit - (billingOverview?.usage?.audio_minutes_used || 0));
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto animate-fadeIn">
+    <div className="space-y-6 w-full animate-fadeIn">
       {/* Header with Provider Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5">
         <div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-            <Mic className="text-blue-500" size={20} />
+            <Mic className="text-teal-500" size={20} />
             Voice Transcription
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
@@ -369,7 +369,7 @@ export const VoiceToText: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer"
             style={{ background: 'var(--bg-card)' }}
           >
-            <Cpu size={14} className="text-blue-500" />
+            <Cpu size={14} className="text-teal-500" />
             <span>AI Provider: {
               transcriptionProvider === 'openai' ? 'OpenAI Whisper' :
               transcriptionProvider === 'deepgram' ? 'Deepgram Nova-2' : 'AssemblyAI'
@@ -396,7 +396,7 @@ export const VoiceToText: React.FC = () => {
                     }}
                     className={`w-full flex flex-col items-start gap-0.5 px-3 py-2 text-left rounded-xl transition-all cursor-pointer ${
                       transcriptionProvider === p.id
-                        ? 'bg-gradient-to-r from-blue-600/10 to-blue-500/10 text-slate-900 dark:text-white border border-blue-500/20'
+                        ? 'bg-gradient-to-r from-teal-600/10 to-teal-500/10 text-slate-900 dark:text-white border border-teal-500/20'
                         : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-350 border border-transparent'
                     }`}
                   >
@@ -465,15 +465,15 @@ export const VoiceToText: React.FC = () => {
         <div className="lg:col-span-3 space-y-6">
           {/* Info Banner */}
           <div 
-            className="relative overflow-hidden rounded-3xl p-6 md:p-8 flex items-center justify-between min-h-[140px] border border-blue-100 dark:border-white/5 shadow-sm"
+            className="relative overflow-hidden rounded-3xl p-6 md:p-8 flex items-center justify-between min-h-[140px] border border-teal-100 dark:border-white/5 shadow-sm"
             style={{
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(29, 78, 216, 0.05) 100%)',
+              background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%)',
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 via-emerald-500/5 to-transparent pointer-events-none" />
             
             <div className="flex items-center gap-5 relative z-10 max-w-[70%] text-left">
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-md shadow-blue-500/20 text-white">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-teal-600 to-emerald-500 shadow-md shadow-teal-500/20 text-white">
                 <Mic size={24} />
               </div>
               <div>
@@ -491,7 +491,7 @@ export const VoiceToText: React.FC = () => {
               <img 
                 src="/banner_illustration.png" 
                 alt="Voice recording illustration" 
-                className="h-[120%] object-contain mt-2 opacity-95 filter drop-shadow-md dark:brightness-95 dark:contrast-105"
+                className="h-[120%] object-contain mt-2 opacity-95 filter drop-shadow-md hue-rotate-[250deg] dark:brightness-95 dark:contrast-105"
               />
             </div>
           </div>
@@ -538,7 +538,7 @@ export const VoiceToText: React.FC = () => {
                     ? 'bg-red-500 hover:bg-red-600 scale-105 shadow-lg shadow-red-500/25'
                     : recordingState === 'processing'
                     ? 'cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 hover:scale-105 shadow-lg shadow-blue-500/20'
+                    : 'bg-teal-600 hover:bg-teal-700 hover:scale-105 shadow-lg shadow-teal-500/20'
                 }`}
                 style={recordingState === 'processing' ? {
                   background: 'var(--bg-subtle)',
@@ -828,7 +828,7 @@ export const VoiceToText: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Recordings Count</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{vttHistory.length}</h4>
                   </div>
-                  <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 flex-shrink-0">
+                  <div className="h-7 w-7 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0">
                     <Mic size={14} />
                   </div>
                 </div>
@@ -844,7 +844,7 @@ export const VoiceToText: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Recorded Minutes</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{(billingOverview?.usage?.audio_minutes_used || 0).toFixed(1)} mins</h4>
                   </div>
-                  <div className="h-7 w-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 flex-shrink-0">
+                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
                     <Clock size={14} />
                   </div>
                 </div>
@@ -876,7 +876,7 @@ export const VoiceToText: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Engine</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{transcriptionProvider.toUpperCase()}</h4>
                   </div>
-                  <div className="h-7 w-7 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 flex-shrink-0">
+                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
                     <Award size={14} />
                   </div>
                 </div>
@@ -891,23 +891,23 @@ export const VoiceToText: React.FC = () => {
         {/* Right Column - Banners & Recent Activity */}
         <div className="lg:col-span-1 space-y-6">
           {/* Mic Banner */}
-          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-gradient-to-br from-blue-600/10 to-indigo-500/10 dark:from-blue-600/5 dark:to-indigo-500/5 min-h-[120px] flex flex-col justify-center text-left">
+          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-gradient-to-br from-teal-600/10 to-emerald-500/10 dark:from-teal-600/5 dark:to-emerald-500/5 min-h-[120px] flex flex-col justify-center text-left">
             <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
             <div className="relative z-10">
-              <span className="text-[8px] font-black uppercase text-blue-500 dark:text-blue-400 tracking-wider">Live Mic</span>
+              <span className="text-[8px] font-black uppercase text-teal-500 dark:text-teal-400 tracking-wider">Live Mic</span>
               <h4 className="font-display text-sm font-black text-slate-955 dark:text-white mt-1 leading-snug">High-accuracy Real-time</h4>
               <p className="mt-1 text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
                 Stream live recording through Whisper & Deepgram engines.
               </p>
             </div>
-            <Mic size={52} className="absolute right-[-10px] bottom-[-10px] opacity-10 text-blue-500" />
+            <Mic size={52} className="absolute right-[-10px] bottom-[-10px] opacity-10 text-teal-500" />
           </div>
 
           {/* Recent Recordings Card */}
           <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-3 text-left">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
               <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Recent recordings</h4>
-              <span className="text-[9px] text-blue-500 dark:text-blue-400 font-bold cursor-pointer hover:underline" onClick={() => fetchBillingOverview()}>Refresh</span>
+              <span className="text-[9px] text-teal-500 dark:text-teal-400 font-bold cursor-pointer hover:underline" onClick={() => fetchBillingOverview()}>Refresh</span>
             </div>
 
             <div className="space-y-2">
@@ -918,7 +918,7 @@ export const VoiceToText: React.FC = () => {
               ) : (
                 vttHistory.slice(0, 4).map(item => (
                   <div key={item.id} className="p-2.5 rounded-xl bg-slate-100/50 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5 flex items-start gap-3 hover:border-slate-300 dark:hover:border-white/10 transition-colors">
-                    <span className="text-[9px] font-black text-blue-600 bg-blue-500/10 rounded px-1.5 py-0.5 mt-0.5">REC</span>
+                    <span className="text-[9px] font-black text-teal-600 bg-teal-500/10 rounded px-1.5 py-0.5 mt-0.5">REC</span>
                     <div className="flex-1 min-w-0 text-left font-sans">
                       <p className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">{item.title}</p>
                       <span className="text-[8px] text-slate-500 font-medium">{item.details} · {item.timestamp}</span>
@@ -940,7 +940,7 @@ export const VoiceToText: React.FC = () => {
               ) : (
                 vttHistory.slice(0, 3).map(item => (
                   <div key={item.id} className="relative text-left">
-                    <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full bg-slate-50 dark:bg-[#0B1020] border-2 border-blue-500 flex items-center justify-center z-10" />
+                    <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full bg-slate-50 dark:bg-[#0B1020] border-2 border-teal-500 flex items-center justify-center z-10" />
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-slate-900 dark:text-white block font-bold truncate max-w-[120px]">{item.title}</span>

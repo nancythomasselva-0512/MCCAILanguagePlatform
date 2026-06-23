@@ -428,8 +428,8 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
     return (
       <div className="flex h-48 items-center justify-center bg-transparent">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin text-blue-500" size={32} />
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Loading metrics...</p>
+          <Loader2 className="animate-spin text-teal-500" size={32} />
+          <p className="text-sm text-slate-400 font-bold uppercase tracking-wider">Loading metrics...</p>
         </div>
       </div>
     );
@@ -444,18 +444,18 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           {/* Morning Check Dashboard Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {/* Total Tenants */}
-            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between h-36">
+            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 flex flex-col justify-between h-36">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Tenants</p>
+                  <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Tenants</p>
                   <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{metrics.total_tenants}</h3>
                 </div>
-                <div className="h-9 w-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                <div className="h-9 w-9 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
                   <Building2 size={18} />
                 </div>
               </div>
               <div className="flex items-center justify-between mt-3">
-                <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-0.5">
+                <span className="text-sm text-emerald-400 font-bold flex items-center gap-0.5">
                   <ArrowUpRight size={12} /> +2 this wk
                 </span>
                 <Sparkline points={[5, 8, 12, 10, 15, 18, 25]} color="#3b82f6" />
@@ -463,10 +463,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             </div>
 
             {/* Active Users */}
-            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between h-36">
+            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 flex flex-col justify-between h-36">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Users</p>
+                  <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Users</p>
                   <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{metrics.active_users}</h3>
                 </div>
                 <div className="h-9 w-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
@@ -474,7 +474,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 </div>
               </div>
               <div className="flex items-center justify-between mt-3">
-                <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-0.5">
+                <span className="text-sm text-emerald-400 font-bold flex items-center gap-0.5">
                   <ArrowUpRight size={12} /> +12.4%
                 </span>
                 <Sparkline points={[150, 200, 280, 250, 310, 390, 430]} color="#10b981" />
@@ -482,18 +482,18 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             </div>
 
             {/* Monthly Revenue */}
-            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between h-36">
+            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 flex flex-col justify-between h-36">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Monthly Revenue</p>
+                  <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Monthly Revenue</p>
                   <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">${metrics.revenue_this_month?.toLocaleString()}</h3>
                 </div>
-                <div className="h-9 w-9 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-500">
+                <div className="h-9 w-9 rounded-xl bg-teal-500/10 flex items-center justify-center text-teal-500">
                   <CreditCard size={18} />
                 </div>
               </div>
               <div className="flex items-center justify-between mt-3">
-                <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-0.5">
+                <span className="text-sm text-emerald-400 font-bold flex items-center gap-0.5">
                   <ArrowUpRight size={12} /> +8.5%
                 </span>
                 <Sparkline points={[1200, 1400, 1800, 1600, 2100, 2250, 2450]} color="#8b5cf6" />
@@ -501,10 +501,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             </div>
 
             {/* API Requests */}
-            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between h-36">
+            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 flex flex-col justify-between h-36">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">API Requests</p>
+                  <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">API Requests</p>
                   <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{(metrics.api_calls_today || 0).toLocaleString()}</h3>
                 </div>
                 <div className="h-9 w-9 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-500">
@@ -512,7 +512,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 </div>
               </div>
               <div className="flex items-center justify-between mt-3">
-                <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-0.5">
+                <span className="text-sm text-emerald-400 font-bold flex items-center gap-0.5">
                   <ArrowUpRight size={12} /> +20%
                 </span>
                 <Sparkline points={[25000, 31000, 29000, 35000, 38000, 41000, 42000]} color="#06b6d4" />
@@ -523,16 +523,16 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           {/* Health & Consumed resources Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Provider Health Panel */}
-            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-4">
+            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 space-y-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Server size={14} className="text-blue-500" />
+                <Server size={14} className="text-teal-500" />
                 Provider Health Status
               </h3>
               <div className="space-y-2.5">
                 {metrics.provider_health?.map((prov: any) => (
-                  <div key={prov.provider} className="flex items-center justify-between p-3 rounded-xl bg-slate-100/50 dark:bg-slate-100/50 dark:bg-slate-100 dark:bg-slate-950/30 border border-slate-200 dark:border-white/5">
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-800 dark:text-slate-200">{prov.provider}</span>
-                    <span className={`flex items-center gap-1.5 text-[11px] font-black ${
+                  <div key={prov.provider} className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-white dark:bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-white/5">
+                    <span className="text-base font-bold text-slate-800 dark:text-slate-800 dark:text-slate-200">{prov.provider}</span>
+                    <span className={`flex items-center gap-1.5 text-sm font-black ${
                       prov.status_code === 'warning' ? 'text-amber-500' : 'text-emerald-500'
                     }`}>
                       <span className={`h-2 w-2 rounded-full ${prov.status_code === 'warning' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
@@ -544,35 +544,35 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             </div>
 
             {/* Resources usage progress bars */}
-            <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-5">
+            <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 space-y-5">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Ingested Resources</h3>
               <div className="space-y-4">
                 <div>
-                  <div className="flex justify-between text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                  <div className="flex justify-between text-base font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
                     <span>Audio Transcriptions</span>
-                    <span className="font-bold text-blue-500 dark:text-blue-400">{metrics.metrics?.transcription_minutes} mins consumed</span>
+                    <span className="font-bold text-teal-500 dark:text-teal-400">{metrics.metrics?.transcription_minutes} mins consumed</span>
                   </div>
-                  <div className="w-full h-2 bg-slate-200 dark:bg-slate-100 dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-slate-200 dark:border-white/5">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: "35%" }} />
+                  <div className="w-full h-2 bg-slate-200 dark:bg-white dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-slate-200 dark:border-white/5">
+                    <div className="h-full bg-teal-500 rounded-full" style={{ width: "35%" }} />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                  <div className="flex justify-between text-base font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
                     <span>Text Translation</span>
                     <span className="font-bold text-emerald-500 dark:text-emerald-400">{(metrics.metrics?.translation_characters || 0).toLocaleString()} chars</span>
                   </div>
-                  <div className="w-full h-2 bg-slate-200 dark:bg-slate-100 dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-slate-200 dark:border-white/5">
+                  <div className="w-full h-2 bg-slate-200 dark:bg-white dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-slate-200 dark:border-white/5">
                     <div className="h-full bg-emerald-500 rounded-full" style={{ width: "65%" }} />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                  <div className="flex justify-between text-base font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
                     <span>TTS Audio Synthesis</span>
                     <span className="font-bold text-amber-500 dark:text-amber-400">{(metrics.metrics?.tts_characters || 0).toLocaleString()} chars</span>
                   </div>
-                  <div className="w-full h-2 bg-slate-200 dark:bg-slate-100 dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-slate-200 dark:border-white/5">
+                  <div className="w-full h-2 bg-slate-200 dark:bg-white dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-slate-200 dark:border-white/5">
                     <div className="h-full bg-amber-500 rounded-full" style={{ width: "45%" }} />
                   </div>
                 </div>
@@ -590,23 +590,23 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   </div>
                   <div>
                     <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Expiring Subscriptions</h4>
-                    <p className="text-[10px] text-amber-600 dark:text-amber-400/80 font-bold">Billing renewals soon</p>
+                    <p className="text-sm text-amber-600 dark:text-amber-400/80 font-bold">Billing renewals soon</p>
                   </div>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pt-2">
+                <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed pt-2">
                   There are <span className="text-slate-900 dark:text-slate-800 dark:text-white font-bold">{metrics.expiring_plans_count || 0}</span> workspace subscriptions renewing within the next 7 days.
                 </p>
               </div>
             </div>
 
             {metrics.top_usage_tenants && (
-              <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-4">
+              <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 space-y-4">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <TrendingUp size={14} className="text-blue-500" />
+                  <TrendingUp size={14} className="text-teal-500" />
                   Top Resource Ingested Tenants
                 </h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
+                  <table className="w-full text-left text-base border-collapse">
                     <thead>
                       <tr className="border-b border-slate-200 dark:border-white/5 text-slate-500">
                         <th className="py-2">Workspace</th>
@@ -618,13 +618,13 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     </thead>
                     <tbody>
                       {metrics.top_usage_tenants.slice(0, 3).map((ten: any, idx: number) => (
-                        <tr key={ten.slug} className="border-b border-slate-200 dark:border-white/5 hover:bg-slate-100/50 dark:hover:bg-white/5 transition-colors">
+                        <tr key={ten.slug} className="border-b border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-white/5 transition-colors">
                           <td className="py-2.5 font-semibold text-slate-800 dark:text-white flex items-center gap-2">
-                            <span className="text-slate-400 text-[10px] font-mono">#{idx+1}</span>
+                            <span className="text-slate-400 text-sm font-mono">#{idx+1}</span>
                             {ten.name}
                           </td>
                           <td className="py-2.5">
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                            <span className="px-1.5 py-0.5 rounded text-sm font-bold bg-teal-500/10 text-teal-600 dark:text-teal-400">
                               {ten.plan}
                             </span>
                           </td>
@@ -646,14 +646,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       {activeTab === 'tenants' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
           {/* Provision Form */}
-          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40 h-fit space-y-4">
+          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 h-fit space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Sparkles className="text-blue-500" size={16} />
+              <Sparkles className="text-teal-500" size={16} />
               Provision Tenant Workspace
             </h3>
             <form onSubmit={handleProvisionTenant} className="space-y-3.5">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Company Name</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Company Name</label>
                 <input
                   type="text"
                   required
@@ -663,65 +663,65 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-"));
                   }}
                   placeholder="ABC School"
-                  className="w-full px-3.5 py-2.5 mt-1 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+                  className="w-full px-3.5 py-2.5 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none focus:border-teal-500/50 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Workspace Slug</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Workspace Slug</label>
                 <input
                   type="text"
                   required
                   value={newSlug}
                   onChange={(e) => setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
                   placeholder="abc-school"
-                  className="w-full px-3.5 py-2.5 mt-1 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500/50 transition-colors"
+                  className="w-full px-3.5 py-2.5 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none focus:border-teal-500/50 transition-colors"
                 />
               </div>
 
-              <div className="p-4 bg-slate-100/50 dark:bg-slate-100 dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 space-y-3">
-                <p className="text-[10px] font-black uppercase text-blue-400 tracking-wider">Tenant Admin Settings</p>
+              <div className="p-4 bg-white dark:bg-white dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 space-y-3">
+                <p className="text-sm font-black uppercase text-teal-400 tracking-wider">Tenant Admin Settings</p>
                 <div>
-                  <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400">Full Name</label>
+                  <label className="text-sm font-bold text-slate-500 dark:text-slate-400">Full Name</label>
                   <input
                     type="text"
                     required
                     value={newAdminName}
                     onChange={(e) => setNewAdminName(e.target.value)}
                     placeholder="Admin Name"
-                    className="w-full px-2.5 py-2 mt-0.5 rounded-lg text-xs bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                    className="w-full px-2.5 py-2 mt-0.5 rounded-lg text-base bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400">Admin Email</label>
+                  <label className="text-sm font-bold text-slate-500 dark:text-slate-400">Admin Email</label>
                   <input
                     type="email"
                     required
                     value={newAdminEmail}
                     onChange={(e) => setNewAdminEmail(e.target.value)}
                     placeholder="admin@abcschool.com"
-                    className="w-full px-2.5 py-2 mt-0.5 rounded-lg text-xs bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                    className="w-full px-2.5 py-2 mt-0.5 rounded-lg text-base bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400">Admin Password</label>
+                  <label className="text-sm font-bold text-slate-500 dark:text-slate-400">Admin Password</label>
                   <input
                     type="password"
                     required
                     value={newAdminPassword}
                     onChange={(e) => setNewAdminPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-2.5 py-2 mt-0.5 rounded-lg text-xs bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                    className="w-full px-2.5 py-2 mt-0.5 rounded-lg text-base bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Billing Plan</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Billing Plan</label>
                 <select
                   value={selectedPlanId}
                   onChange={(e) => setSelectedPlanId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 mt-1 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-100 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
+                  className="w-full px-3.5 py-2.5 mt-1 rounded-xl text-base bg-white dark:bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
                   style={{ background: 'var(--bg-subtle)' }}
                 >
                   <option value="" className="text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950">Select Plan...</option>
@@ -733,7 +733,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-slate-800 dark:text-white text-xs font-bold cursor-pointer transition-colors shadow-lg"
+                className="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-slate-800 dark:text-white text-base font-bold cursor-pointer transition-colors shadow-lg"
               >
                 Provision Tenant Workspace
               </button>
@@ -741,14 +741,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           </div>
 
           {/* Tenants Table */}
-          <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40 space-y-4">
+          <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-white/5 pb-3">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Active Tenants</h3>
               <div className="flex gap-2">
                 <select
                   value={planFilter}
                   onChange={(e) => setPlanFilter(e.target.value)}
-                  className="px-2 py-1 rounded bg-slate-100 dark:bg-[#0B1020] border border-slate-200 dark:border-white/5 text-[10px] font-bold text-slate-700 dark:text-slate-300 outline-none"
+                  className="px-2 py-1 rounded bg-white dark:bg-[#0B1020] border border-slate-200 dark:border-white/5 text-sm font-bold text-slate-700 dark:text-slate-300 outline-none"
                 >
                   <option value="">All Plans</option>
                   {plans.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
@@ -756,7 +756,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-2 py-1 rounded bg-slate-100 dark:bg-[#0B1020] border border-slate-200 dark:border-white/5 text-[10px] font-bold text-slate-700 dark:text-slate-300 outline-none"
+                  className="px-2 py-1 rounded bg-white dark:bg-[#0B1020] border border-slate-200 dark:border-white/5 text-sm font-bold text-slate-700 dark:text-slate-300 outline-none"
                 >
                   <option value="">All Status</option>
                   <option value="active">Active</option>
@@ -766,7 +766,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-base border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-white/5 text-slate-500">
                     <th className="py-2.5">Workspace</th>
@@ -786,20 +786,20 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                       <tr key={tenant.id} className="border-b border-slate-200 dark:border-white/5 hover:bg-white/5 transition-colors">
                         <td className="py-3 font-semibold text-slate-800 dark:text-white">
                           <div>{tenant.tenant_name}</div>
-                          <div className="text-[10px] font-mono text-slate-500">/{tenant.slug}</div>
+                          <div className="text-sm font-mono text-slate-500">/{tenant.slug}</div>
                         </td>
                         <td className="py-3">
                           <div className="text-slate-700 dark:text-slate-300">{tenant.owner_name}</div>
-                          <div className="text-[10px] text-slate-500">{tenant.owner_email}</div>
+                          <div className="text-sm text-slate-500">{tenant.owner_email}</div>
                         </td>
                         <td className="py-3 font-bold text-slate-800 dark:text-white">{tenant.users_count || 1}</td>
                         <td className="py-3">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                          <span className="px-2 py-0.5 rounded text-sm font-bold bg-teal-500/10 text-teal-400 border border-teal-500/20">
                             {tenant.plan?.name || "Free"}
                           </span>
                         </td>
                         <td className="py-3">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold tracking-wide uppercase ${
+                          <span className={`px-2 py-0.5 rounded text-sm font-extrabold tracking-wide uppercase ${
                             tenant.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
                           }`}>
                             {tenant.status}
@@ -809,7 +809,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => setViewingTenant(tenant)}
-                              className="bg-blue-600/15 hover:bg-blue-600/25 text-blue-400 px-2 py-1 rounded text-[9px] font-bold cursor-pointer"
+                              className="bg-teal-600/15 hover:bg-teal-600/25 text-teal-400 px-2 py-1 rounded text-sm font-bold cursor-pointer"
                             >
                               View
                             </button>
@@ -826,14 +826,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                               {tenant.status === 'active' ? (
                                 <button
                                   onClick={() => handleUpdateTenantStatus(tenant.id, 'suspended')}
-                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold text-amber-500 hover:bg-amber-500/10"
+                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-amber-500 hover:bg-amber-500/10"
                                 >
                                   <Ban size={12} /> Suspend
                                 </button>
                               ) : (
                                 <button
                                   onClick={() => handleUpdateTenantStatus(tenant.id, 'active')}
-                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold text-emerald-400 hover:bg-emerald-500/10"
+                                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-emerald-400 hover:bg-emerald-500/10"
                                 >
                                   <CheckCircle2 size={12} /> Activate
                                 </button>
@@ -845,14 +845,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                                   setEditTenantPlanId(tenant.plan?.id || '');
                                   setActiveMenuId(null);
                                 }}
-                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold text-blue-400 hover:bg-blue-600/10"
+                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-teal-400 hover:bg-teal-600/10"
                               >
                                 <Settings2 size={12} /> Edit Plan
                               </button>
                               <div className="h-[1px] bg-white/5 my-1" />
                               <button
                                 onClick={() => handleUpdateTenantStatus(tenant.id, 'deleted')}
-                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold text-red-500 hover:bg-red-500/10"
+                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-red-500 hover:bg-red-500/10"
                               >
                                 <Trash2 size={12} /> Delete
                               </button>
@@ -873,32 +873,32 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         <div className="space-y-6 animate-fadeIn">
           {/* Counters row */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40">
-              <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Total Users</p>
+            <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40">
+              <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Total Users</p>
               <h4 className="text-xl font-extrabold text-slate-900 dark:text-white mt-1">{usersList.length}</h4>
             </div>
-            <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40">
-              <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Active Users</p>
+            <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40">
+              <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Active Users</p>
               <h4 className="text-xl font-extrabold text-emerald-400 mt-1">
                 {usersList.filter(u => u.status === 'active').length}
               </h4>
             </div>
-            <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40">
-              <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Admins</p>
-              <h4 className="text-xl font-extrabold text-blue-400 mt-1">
+            <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40">
+              <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Admins</p>
+              <h4 className="text-xl font-extrabold text-teal-400 mt-1">
                 {usersList.filter(u => u.role === 'tenant_admin' || u.role === 'super_admin').length}
               </h4>
             </div>
-            <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40">
-              <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Managers</p>
-              <h4 className="text-xl font-extrabold text-violet-400 mt-1">
+            <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40">
+              <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Managers</p>
+              <h4 className="text-xl font-extrabold text-teal-400 mt-1">
                 {usersList.filter(u => u.role === 'manager').length}
               </h4>
             </div>
           </div>
 
           {/* Table */}
-          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40 space-y-4">
+          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-3">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Platform Users</h3>
               <div className="flex items-center gap-2">
@@ -908,13 +908,13 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   placeholder="Search email, name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none placeholder-slate-500"
+                  className="px-3 py-1.5 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none placeholder-slate-500"
                 />
               </div>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-base border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-white/5 text-slate-500">
                     <th className="py-2.5">User</th>
@@ -931,19 +931,19 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     .map((user: any) => (
                       <tr key={user.id} className="border-b border-slate-200 dark:border-white/5 hover:bg-white/5 transition-colors">
                         <td className="py-3 font-semibold text-slate-800 dark:text-white flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-blue-600/20 text-blue-400 border border-blue-500/20 flex items-center justify-center font-bold text-xs uppercase">
+                          <div className="h-8 w-8 rounded-full bg-teal-600/20 text-teal-400 border border-teal-500/20 flex items-center justify-center font-bold text-base uppercase">
                             {user.name.substring(0, 2)}
                           </div>
                           <span>{user.name}</span>
                         </td>
                         <td className="py-3 text-slate-700 dark:text-slate-300 font-mono">{user.email}</td>
                         <td className="py-3">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-violet-500/10 text-violet-400 border border-violet-500/20 uppercase">
+                          <span className="px-2 py-0.5 rounded text-sm font-bold bg-teal-500/10 text-teal-400 border border-teal-500/20 uppercase">
                             {user.role}
                           </span>
                         </td>
                         <td className="py-3">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${
+                          <span className={`px-2 py-0.5 rounded text-sm font-extrabold uppercase ${
                             user.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-500'
                           }`}>
                             {user.status}
@@ -955,19 +955,19 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         <td className="py-3 text-right space-x-1">
                           <button
                             onClick={() => handleUpdateUserStatus(user.id, user.status)}
-                            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 px-2 py-1 rounded text-[9px] font-bold cursor-pointer"
+                            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 px-2 py-1 rounded text-sm font-bold cursor-pointer"
                           >
                             {user.status === 'active' ? 'Disable' : 'Enable'}
                           </button>
                           <button
                             onClick={() => handleResetUserPassword(user.id)}
-                            className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-2 py-1 rounded text-[9px] font-bold cursor-pointer"
+                            className="bg-teal-600/10 hover:bg-teal-600/20 text-teal-400 px-2 py-1 rounded text-sm font-bold cursor-pointer"
                           >
                             Reset Password
                           </button>
                           <button
                             onClick={() => handleForceLogoutUser(user.id)}
-                            className="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-2 py-1 rounded text-[9px] font-bold cursor-pointer"
+                            className="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-2 py-1 rounded text-sm font-bold cursor-pointer"
                           >
                             Force Logout
                           </button>
@@ -983,7 +983,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
       {/* ── 4. SUBSCRIPTION PLANS TAB ── */}
       {activeTab === 'plans' && (
-        <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40 animate-fadeIn space-y-6">
+        <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 animate-fadeIn space-y-6">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-3">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">Subscription Limit Catalog</h3>
           </div>
@@ -995,20 +995,20 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               return (
                 <div 
                   key={p.id}
-                  className="p-5 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-slate-100 dark:bg-slate-950/40 flex flex-col justify-between hover:border-white/10 transition-colors"
+                  className="p-5 rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-slate-950/40 flex flex-col justify-between hover:border-white/10 transition-colors"
                 >
                   <div>
                     <div className="flex justify-between items-center">
                       <h4 className="text-base font-extrabold text-slate-900 dark:text-white">{p.name}</h4>
-                      <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${
+                      <span className={`px-2 py-0.5 rounded text-sm font-black uppercase ${
                         p.active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
                       }`}>
                         {p.active ? 'Active' : 'Disabled'}
                       </span>
                     </div>
-                    <div className="mt-2 text-2xl font-black text-blue-400">${p.price} <span className="text-[10px] font-bold text-slate-500">/ mo</span></div>
+                    <div className="mt-2 text-2xl font-black text-teal-400">${p.price} <span className="text-sm font-bold text-slate-500">/ mo</span></div>
                     
-                    <ul className="mt-4 space-y-2 text-[10px] font-semibold text-slate-400 border-t border-slate-200 dark:border-white/5 pt-3">
+                    <ul className="mt-4 space-y-2 text-sm font-semibold text-slate-400 border-t border-slate-200 dark:border-white/5 pt-3">
                       <li className="flex justify-between">
                         <span>Audio Limits:</span>
                         <span className="text-slate-800 dark:text-white font-bold">{p.transcription_limit} mins</span>
@@ -1027,7 +1027,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                       </li>
                     </ul>
 
-                    <div className="mt-3.5 p-3 rounded-xl bg-slate-100/60 dark:bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 space-y-1 text-[9px] font-bold text-slate-400">
+                    <div className="mt-3.5 p-3 rounded-xl bg-white/60 dark:bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 space-y-1 text-sm font-bold text-slate-400">
                       <div className="flex justify-between">
                         <span>Active Workspaces:</span>
                         <span className="text-white">{activeCustomers}</span>
@@ -1042,19 +1042,19 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   <div className="mt-5 grid grid-cols-3 gap-1 pt-3 border-t border-slate-200 dark:border-white/5">
                     <button 
                       onClick={() => alert(`Modify limits configuration for plan: ${p.name}`)}
-                      className="bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white py-1.5 rounded-lg text-[9px] font-bold cursor-pointer border border-slate-300 dark:border-white/5"
+                      className="bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white py-1.5 rounded-lg text-sm font-bold cursor-pointer border border-slate-300 dark:border-white/5"
                     >
                       Edit Plan
                     </button>
                     <button 
                       onClick={() => handleClonePlan(p.id)}
-                      className="bg-blue-600/10 hover:bg-blue-600/25 text-blue-400 py-1.5 rounded-lg text-[9px] font-bold cursor-pointer"
+                      className="bg-teal-600/10 hover:bg-teal-600/25 text-teal-400 py-1.5 rounded-lg text-sm font-bold cursor-pointer"
                     >
                       Duplicate
                     </button>
                     <button 
                       onClick={() => handleTogglePlanActive(p.id)}
-                      className={`py-1.5 rounded-lg text-[9px] font-bold cursor-pointer ${
+                      className={`py-1.5 rounded-lg text-sm font-bold cursor-pointer ${
                         p.active ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
                       }`}
                     >
@@ -1072,18 +1072,18 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       {activeTab === 'providers' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
           {/* Configure form */}
-          <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40 h-fit space-y-4">
+          <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 h-fit space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Cpu className="text-blue-500" size={16} />
+              <Cpu className="text-teal-500" size={16} />
               Configure AI Providers
             </h3>
             <form onSubmit={handleConfigureProvider} className="space-y-4">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Select Provider</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Select Provider</label>
                 <select
                   value={selectedProvider}
                   onChange={(e) => setSelectedProvider(e.target.value)}
-                  className="w-full px-3 py-2 mt-1 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-100 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
+                  className="w-full px-3 py-2 mt-1 rounded-xl text-base bg-white dark:bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
                   style={{ background: 'var(--bg-subtle)' }}
                 >
                   <option value="openai" className="text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950">OpenAI (Whisper/TTS)</option>
@@ -1096,31 +1096,31 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">API Access Secret Key</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">API Access Secret Key</label>
                 <input
                   type="password"
                   value={providerKey}
                   onChange={(e) => setProviderKey(e.target.value)}
                   placeholder="sk-••••••••••••••••••••"
-                  className="w-full px-3 py-2 mt-1 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                  className="w-full px-3 py-2 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Route Priority</label>
+                  <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Route Priority</label>
                   <input
                     type="number"
                     value={providerPriority}
                     onChange={(e) => setProviderPriority(Number(e.target.value))}
-                    className="w-full px-3 py-2 mt-1 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                    className="w-full px-3 py-2 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                   />
                 </div>
                 <div className="flex flex-col justify-end">
                   <button
                     type="button"
                     onClick={() => setProviderEnabled(!providerEnabled)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-white/5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer h-9 transition-colors hover:bg-white/5"
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-white/5 text-base text-slate-700 dark:text-slate-300 cursor-pointer h-9 transition-colors hover:bg-white/5"
                   >
                     {providerEnabled ? <Check className="text-emerald-500" size={14} /> : null}
                     Active Globally
@@ -1130,7 +1130,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-slate-800 dark:text-white text-xs font-bold cursor-pointer transition-colors shadow-lg"
+                className="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-slate-800 dark:text-white text-base font-bold cursor-pointer transition-colors shadow-lg"
               >
                 Save Configuration
               </button>
@@ -1138,7 +1138,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           </div>
 
           {/* Providers list */}
-          <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40 space-y-4">
+          <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">Active Global AI Systems</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {providers.map((prov) => {
@@ -1146,21 +1146,21 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 return (
                   <div 
                     key={prov.provider_name}
-                    className="p-4 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-slate-100 dark:bg-slate-950/40 flex flex-col justify-between hover:border-white/10 transition-colors"
+                    className="p-4 rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-slate-950/40 flex flex-col justify-between hover:border-white/10 transition-colors"
                   >
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="text-sm font-extrabold text-white capitalize">{prov.provider_name.replace("-", " ")}</h4>
-                        <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 mt-1">Priority Order: {prov.priority}</p>
+                        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mt-1">Priority Order: {prov.priority}</p>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${
+                      <span className={`px-2 py-0.5 rounded text-sm font-extrabold uppercase ${
                         prov.is_enabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-500'
                       }`}>
                         {prov.is_enabled ? 'Enabled' : 'Disabled'}
                       </span>
                     </div>
                     
-                    <div className="mt-3.5 space-y-2 border-t border-slate-200 dark:border-white/5 pt-3 text-[10px] font-bold text-slate-400">
+                    <div className="mt-3.5 space-y-2 border-t border-slate-200 dark:border-white/5 pt-3 text-sm font-bold text-slate-400">
                       <div className="flex justify-between">
                         <span>Requests MTD:</span>
                         <span className="text-white">{prov.usage_calls.toLocaleString()}</span>
@@ -1176,14 +1176,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 flex justify-between items-center">
-                      <span className={`text-[10px] font-black flex items-center gap-1 ${
+                      <span className={`text-sm font-black flex items-center gap-1 ${
                         prov.status === 'High CPU' ? 'text-amber-400' : prov.status === 'Offline' ? 'text-red-500' : 'text-emerald-400'
                       }`}>
                         {prov.status === 'Healthy' ? '✅' : prov.status === 'High CPU' ? '⚠' : '❌'} {prov.status}
                       </span>
                       <button
                         onClick={() => handleTestProviderConnection(prov.provider_name)}
-                        className="bg-white/5 hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-white px-2 py-1 rounded text-[9px] font-bold cursor-pointer"
+                        className="bg-white/5 hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-white px-2 py-1 rounded text-sm font-bold cursor-pointer"
                       >
                         Test Connection
                       </button>
@@ -1198,16 +1198,16 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
       {/* ── 6. USAGE ANALYTICS TAB ── */}
       {activeTab === 'usage_analytics' && (
-        <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40 animate-fadeIn space-y-6">
+        <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 animate-fadeIn space-y-6">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-3">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <TrendingUp className="text-blue-500" size={16} />
+              <TrendingUp className="text-teal-500" size={16} />
               Operational Usage Analytics
             </h3>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left text-base border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/5 text-slate-500">
                   <th className="py-2.5">Workspace Tenant</th>
@@ -1222,7 +1222,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   <tr key={u.slug} className="border-b border-slate-200 dark:border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-3 font-semibold text-slate-800 dark:text-white">
                       <div>{u.tenant_name}</div>
-                      <div className="text-[10px] text-slate-500">/{u.slug}</div>
+                      <div className="text-sm text-slate-500">/{u.slug}</div>
                     </td>
                     <td className="py-3 text-slate-800 dark:text-slate-200 font-bold font-mono">{u.speech_minutes} mins</td>
                     <td className="py-3 text-slate-800 dark:text-slate-200 font-mono">{u.translation_chars.toLocaleString()} chars</td>
@@ -1242,9 +1242,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           <div className="flex border-b border-slate-200 dark:border-white/5 pb-2 gap-4">
             <button
               onClick={() => setBillingSubTab('analytics')}
-              className={`text-xs font-bold pb-2 transition-all cursor-pointer ${
+              className={`text-base font-bold pb-2 transition-all cursor-pointer ${
                 billingSubTab === 'analytics' 
-                  ? 'text-blue-500 dark:text-blue-400 border-b-2 border-blue-500' 
+                  ? 'text-teal-500 dark:text-teal-400 border-b-2 border-teal-500' 
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
@@ -1252,9 +1252,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             </button>
             <button
               onClick={() => setBillingSubTab('invoices')}
-              className={`text-xs font-bold pb-2 transition-all cursor-pointer ${
+              className={`text-base font-bold pb-2 transition-all cursor-pointer ${
                 billingSubTab === 'invoices' 
-                  ? 'text-blue-500 dark:text-blue-400 border-b-2 border-blue-500' 
+                  ? 'text-teal-500 dark:text-teal-400 border-b-2 border-teal-500' 
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
@@ -1262,9 +1262,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             </button>
             <button
               onClick={() => setBillingSubTab('payments')}
-              className={`text-xs font-bold pb-2 transition-all cursor-pointer ${
+              className={`text-base font-bold pb-2 transition-all cursor-pointer ${
                 billingSubTab === 'payments' 
-                  ? 'text-blue-500 dark:text-blue-400 border-b-2 border-blue-500' 
+                  ? 'text-teal-500 dark:text-teal-400 border-b-2 border-teal-500' 
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
@@ -1272,9 +1272,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             </button>
             <button
               onClick={() => setBillingSubTab('subscriptions')}
-              className={`text-xs font-bold pb-2 transition-all cursor-pointer ${
+              className={`text-base font-bold pb-2 transition-all cursor-pointer ${
                 billingSubTab === 'subscriptions' 
-                  ? 'text-blue-500 dark:text-blue-400 border-b-2 border-blue-500' 
+                  ? 'text-teal-500 dark:text-teal-400 border-b-2 border-teal-500' 
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
@@ -1287,28 +1287,28 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             <div className="space-y-6">
               {/* Metrics Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Today's Revenue</p>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+                  <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Today's Revenue</p>
                   <h3 className="text-2xl font-black text-emerald-400 mt-1">${(billingOverview.today_revenue || 0).toLocaleString()}</h3>
                 </div>
 
-                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">MRR</p>
-                  <h3 className="text-2xl font-black text-blue-400 mt-1">${billingOverview.mrr.toLocaleString()}</h3>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+                  <p className="text-sm font-black uppercase text-slate-500 tracking-wider">MRR</p>
+                  <h3 className="text-2xl font-black text-teal-400 mt-1">${billingOverview.mrr.toLocaleString()}</h3>
                 </div>
 
-                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">ARR (Projected)</p>
-                  <h3 className="text-2xl font-black text-purple-400 mt-1">${(billingOverview.arr || billingOverview.mrr * 12).toLocaleString()}</h3>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+                  <p className="text-sm font-black uppercase text-slate-500 tracking-wider">ARR (Projected)</p>
+                  <h3 className="text-2xl font-black text-emerald-400 mt-1">${(billingOverview.arr || billingOverview.mrr * 12).toLocaleString()}</h3>
                 </div>
 
-                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Cumulative Revenue</p>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+                  <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Cumulative Revenue</p>
                   <h3 className="text-2xl font-black text-white mt-1">${billingOverview.total_revenue.toLocaleString()}</h3>
                 </div>
 
-                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Payment Success Rate</p>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+                  <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Payment Success Rate</p>
                   <h3 className="text-2xl font-black text-amber-400 mt-1">{(billingOverview.success_ratio || 95).toFixed(1)}%</h3>
                 </div>
               </div>
@@ -1316,10 +1316,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               {/* Graphic Charts Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Revenue Trend Line Chart */}
-                <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-4">
+                <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 space-y-4">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">Revenue Projections & Trends</h4>
-                    <span className="text-[9px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold">Past 7 Days</span>
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white">Revenue Projections & Trends</h4>
+                    <span className="text-sm px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 font-bold">Past 7 Days</span>
                   </div>
                   <div className="w-full relative">
                     {(() => {
@@ -1371,9 +1371,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 </div>
 
                 {/* Gateway spreads & success ratios */}
-                <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-6 flex flex-col justify-between">
+                <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 space-y-6 flex flex-col justify-between">
                   <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">Gateway Distribution</h4>
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white">Gateway Distribution</h4>
                     <div className="space-y-3">
                       {(() => {
                         const spread = billingOverview.gateway_spread || [];
@@ -1382,12 +1382,12 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                           const pct = (item.value / maxSpread) * 100;
                           return (
                             <div key={i} className="space-y-1">
-                              <div className="flex justify-between text-[10px] font-bold">
+                              <div className="flex justify-between text-sm font-bold">
                                 <span className="text-slate-400 uppercase">{item.name}</span>
                                 <span className="text-white">${item.value.toLocaleString()}</span>
                               </div>
                               <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct}%` }} />
+                                <div className="h-full bg-teal-500 rounded-full" style={{ width: `${pct}%` }} />
                               </div>
                             </div>
                           );
@@ -1398,7 +1398,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
                   {/* Circular success ratio representation */}
                   <div className="pt-4 border-t border-white/5 text-center space-y-2">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gateway Checkout Health</span>
+                    <span className="text-sm text-slate-400 font-bold uppercase tracking-wider">Gateway Checkout Health</span>
                     <div className="flex justify-center items-center gap-4">
                       {(() => {
                         const ratio = billingOverview.success_ratio || 95;
@@ -1422,11 +1422,11 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                                 transform="rotate(-90 40 40)" 
                               />
                             </svg>
-                            <span className="absolute text-[11px] font-black text-white">{ratio.toFixed(0)}%</span>
+                            <span className="absolute text-sm font-black text-white">{ratio.toFixed(0)}%</span>
                           </div>
                         );
                       })()}
-                      <div className="text-left text-[10px] font-semibold text-slate-400">
+                      <div className="text-left text-sm font-semibold text-slate-400">
                         <div className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Success checkouts</div>
                         <div className="flex items-center gap-1 mt-1"><span className="h-2 w-2 rounded-full bg-red-500" /> Declines/Failures</div>
                       </div>
@@ -1439,13 +1439,13 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
           {/* TAB 2: INVOICES LOG */}
           {billingSubTab === 'invoices' && (
-            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-4">
+            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 space-y-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <CreditCard size={14} className="text-emerald-400" />
                 Invoices Log
               </h3>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full text-left text-base border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 font-bold font-sans">
                       <th className="py-2.5">Invoice #</th>
@@ -1467,7 +1467,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         <td className="py-3 text-slate-550 dark:text-slate-400">{inv.plan}</td>
                         <td className="py-3 font-bold text-emerald-400">${inv.amount}</td>
                         <td className="py-3">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                          <span className={`px-2 py-0.5 rounded text-sm font-black uppercase ${
                             inv.status.toLowerCase() === 'paid' 
                               ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
                               : inv.status.toLowerCase() === 'failed' 
@@ -1483,19 +1483,19 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                             href={`http://127.0.0.1:8000/api/billing/invoices/${inv.id}/download`}
                             target="_blank"
                             rel="noreferrer"
-                            className="bg-white/5 hover:bg-white/10 text-slate-700 dark:text-slate-350 hover:text-white px-2.5 py-1 rounded text-[9px] inline-flex items-center gap-0.5"
+                            className="bg-white/5 hover:bg-white/10 text-slate-700 dark:text-slate-350 hover:text-white px-2.5 py-1 rounded text-sm inline-flex items-center gap-0.5"
                           >
                             PDF
                           </a>
                           <button
                             onClick={() => handleEmailInvoice(inv.id)}
-                            className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded text-[9px]"
+                            className="bg-teal-600/10 hover:bg-teal-600/20 text-teal-400 px-2 py-0.5 rounded text-sm"
                           >
                             Email
                           </button>
                           <button
                             onClick={() => handleRegenerateInvoice(inv.id)}
-                            className="bg-white/5 hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-white px-2 py-0.5 rounded text-[9px]"
+                            className="bg-white/5 hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-white px-2 py-0.5 rounded text-sm"
                           >
                             Regen
                           </button>
@@ -1515,21 +1515,21 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
           {/* TAB 3: PAYMENTS TAB */}
           {billingSubTab === 'payments' && (
-            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-4">
+            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 space-y-4">
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-3">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <TrendingUp size={14} className="text-blue-400" />
+                  <TrendingUp size={14} className="text-teal-400" />
                   Payments Tracking
                 </h3>
                 <button
                   onClick={exportPaymentsToCSV}
-                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold transition-all cursor-pointer"
+                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-bold transition-all cursor-pointer"
                 >
                   Export CSV
                 </button>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full text-left text-base border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 font-bold font-sans">
                       <th className="py-2.5">Transaction ID</th>
@@ -1557,7 +1557,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         <td className="py-3 text-slate-550 dark:text-slate-400 capitalize font-bold">{p.gateway}</td>
                         <td className="py-3 text-emerald-400 font-extrabold">${p.amount}</td>
                         <td className="py-3">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                          <span className={`px-2 py-0.5 rounded text-sm font-black uppercase ${
                             p.status.toLowerCase() === 'success' 
                               ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
                               : p.status.toLowerCase() === 'failed' 
@@ -1571,7 +1571,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         <td className="py-3 text-right space-x-1.5 font-semibold">
                           <button
                             onClick={() => setViewingPaymentDetails(p)}
-                            className="bg-white/5 hover:bg-white/10 text-slate-700 dark:text-slate-300 px-2 py-1 rounded text-[9px]"
+                            className="bg-white/5 hover:bg-white/10 text-slate-700 dark:text-slate-300 px-2 py-1 rounded text-sm"
                           >
                             Details
                           </button>
@@ -1580,7 +1580,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                               href={`http://127.0.0.1:8000${p.receipt_url}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 px-2 py-1 rounded text-[9px] inline-flex items-center gap-0.5"
+                              className="bg-teal-600/10 hover:bg-teal-600/20 text-teal-400 px-2 py-1 rounded text-sm inline-flex items-center gap-0.5"
                             >
                               Receipt
                             </a>
@@ -1601,33 +1601,33 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
           {/* TAB 4: SUBSCRIPTIONS */}
           {billingSubTab === 'subscriptions' && (
-            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-4">
+            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 space-y-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-                <CheckCircle2 size={14} className="text-blue-400" />
+                <CheckCircle2 size={14} className="text-teal-400" />
                 Subscription Management
               </h3>
 
               {/* Cards Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Total Revenue</p>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+                  <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Total Revenue</p>
                   <h3 className="text-2xl font-black text-white mt-1">${(billingOverview.total_revenue || 0).toLocaleString()}</h3>
                 </div>
-                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Active Subscriptions</p>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+                  <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Active Subscriptions</p>
                   <h3 className="text-2xl font-black text-emerald-400 mt-1">{billingOverview.active_subscriptions || 0}</h3>
                 </div>
-                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Expired Subscriptions</p>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+                  <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Expired Subscriptions</p>
                   <h3 className="text-2xl font-black text-red-500 mt-1">{billingOverview.expired_subscriptions || 0}</h3>
                 </div>
-                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Monthly Revenue</p>
-                  <h3 className="text-2xl font-black text-blue-400 mt-1">${(billingOverview.mrr || 0).toLocaleString()}</h3>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+                  <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Monthly Revenue</p>
+                  <h3 className="text-2xl font-black text-teal-400 mt-1">${(billingOverview.mrr || 0).toLocaleString()}</h3>
                 </div>
-                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40">
-                  <p className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Yearly Revenue</p>
-                  <h3 className="text-2xl font-black text-purple-400 mt-1">${(billingOverview.arr || 0).toLocaleString()}</h3>
+                <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+                  <p className="text-sm font-black uppercase text-slate-500 tracking-wider">Yearly Revenue</p>
+                  <h3 className="text-2xl font-black text-emerald-400 mt-1">${(billingOverview.arr || 0).toLocaleString()}</h3>
                 </div>
               </div>
 
@@ -1640,14 +1640,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     placeholder="Search user, email, plan..."
                     value={subSearchTerm}
                     onChange={(e) => setSubSearchTerm(e.target.value)}
-                    className="px-3 py-1.5 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                    className="px-3 py-1.5 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                   />
                 </div>
                 <div className="flex gap-2">
                   <select
                     value={subStatusFilter}
                     onChange={(e) => setSubStatusFilter(e.target.value)}
-                    className="px-2 py-1 rounded bg-slate-100 dark:bg-[#0B1020] border border-slate-200 dark:border-white/5 text-[10px] font-bold text-slate-700 dark:text-slate-300 outline-none"
+                    className="px-2 py-1 rounded bg-white dark:bg-[#0B1020] border border-slate-200 dark:border-white/5 text-sm font-bold text-slate-700 dark:text-slate-300 outline-none"
                     style={{ background: 'var(--bg-subtle)' }}
                   >
                     <option value="">All Statuses</option>
@@ -1658,7 +1658,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   <select
                     value={subCycleFilter}
                     onChange={(e) => setSubCycleFilter(e.target.value)}
-                    className="px-2 py-1 rounded bg-slate-100 dark:bg-[#0B1020] border border-slate-200 dark:border-white/5 text-[10px] font-bold text-slate-700 dark:text-slate-300 outline-none"
+                    className="px-2 py-1 rounded bg-white dark:bg-[#0B1020] border border-slate-200 dark:border-white/5 text-sm font-bold text-slate-700 dark:text-slate-300 outline-none"
                     style={{ background: 'var(--bg-subtle)' }}
                   >
                     <option value="">All Cycles</option>
@@ -1667,7 +1667,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   </select>
                   <button
                     onClick={exportSubscriptionsToCSV}
-                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold transition-all cursor-pointer"
+                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-bold transition-all cursor-pointer"
                   >
                     Export CSV
                   </button>
@@ -1675,7 +1675,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full text-left text-base border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 font-bold font-sans">
                       <th className="py-2.5">User Name</th>
@@ -1703,14 +1703,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         <td className="py-3 font-semibold text-slate-700 dark:text-white">{sub.user_name || 'N/A'}</td>
                         <td className="py-3 font-mono text-slate-500 dark:text-slate-450">{sub.email || 'N/A'}</td>
                         <td className="py-3">
-                          <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 capitalize">
+                          <span className="px-2 py-0.5 rounded text-sm font-bold bg-teal-500/10 text-teal-400 border border-teal-500/20 capitalize">
                             {sub.plan}
                           </span>
                         </td>
                         <td className="py-3 text-white font-bold">${sub.amount || 0}</td>
                         <td className="py-3 text-slate-400">{sub.payment_status || 'N/A'}</td>
                         <td className="py-3">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold border uppercase ${
+                          <span className={`px-2 py-0.5 rounded text-sm font-bold border uppercase ${
                             sub.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
                             sub.status === 'Expired' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
                             'bg-amber-500/10 text-amber-500 border-amber-500/20'
@@ -1720,11 +1720,11 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         </td>
                         <td className="py-3 text-slate-500 font-mono">{sub.started || '-'}</td>
                         <td className="py-3 text-slate-500 font-mono font-bold">{sub.expires}</td>
-                        <td className="py-3 font-mono text-[10px] text-slate-400">{sub.payment_id || 'N/A'}</td>
+                        <td className="py-3 font-mono text-sm text-slate-400">{sub.payment_id || 'N/A'}</td>
                         <td className="py-3 text-right">
                           <button
                             onClick={() => handleRenewPlan(sub.tenant_name)}
-                            className="bg-blue-600/15 hover:bg-blue-600/25 text-blue-400 px-2.5 py-1 rounded text-[9px] font-bold cursor-pointer"
+                            className="bg-teal-600/15 hover:bg-teal-600/25 text-teal-400 px-2.5 py-1 rounded text-sm font-bold cursor-pointer"
                           >
                             Renew Plan
                           </button>
@@ -1744,80 +1744,80 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
           {/* Billing & Gateway Configurations Form */}
           {gatewaySettings && (
-            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-4">
+            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 space-y-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Settings size={14} className="text-blue-500" />
+                <Settings size={14} className="text-teal-500" />
                 Global Gateway & Invoicing Settings (Super Admin)
               </h3>
-              <form onSubmit={handleSaveBillingSettings} className="space-y-4 text-xs">
+              <form onSubmit={handleSaveBillingSettings} className="space-y-4 text-base">
                 
                 {/* Invoice Customization Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-white/5 pb-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Company Name</label>
+                    <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Company Name</label>
                     <input
                       type="text"
                       value={gatewaySettings.company_name}
                       onChange={(e) => setGatewaySettings({ ...gatewaySettings, company_name: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Company Email</label>
+                    <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Company Email</label>
                     <input
                       type="email"
                       value={gatewaySettings.company_email}
                       onChange={(e) => setGatewaySettings({ ...gatewaySettings, company_email: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Company Address</label>
+                    <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Company Address</label>
                     <input
                       type="text"
                       value={gatewaySettings.company_address}
                       onChange={(e) => setGatewaySettings({ ...gatewaySettings, company_address: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-b border-white/5 pb-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Currency</label>
+                    <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Currency</label>
                     <select
                       value={gatewaySettings.currency}
                       onChange={(e) => setGatewaySettings({ ...gatewaySettings, currency: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                     >
                       <option value="USD">USD ($)</option>
                       <option value="INR">INR (₹)</option>
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">GST Percentage (%)</label>
+                    <label className="text-sm font-bold uppercase tracking-wider text-slate-400">GST Percentage (%)</label>
                     <input
                       type="number"
                       value={gatewaySettings.gst_percentage}
                       onChange={(e) => setGatewaySettings({ ...gatewaySettings, gst_percentage: Number(e.target.value) })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Invoice Number Prefix</label>
+                    <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Invoice Number Prefix</label>
                     <input
                       type="text"
                       value={gatewaySettings.invoice_prefix}
                       onChange={(e) => setGatewaySettings({ ...gatewaySettings, invoice_prefix: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Default Gateway</label>
+                    <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Default Gateway</label>
                     <select
                       value={gatewaySettings.default_gateway}
                       onChange={(e) => setGatewaySettings({ ...gatewaySettings, default_gateway: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
                     >
                       <option value="stripe">Stripe</option>
                       <option value="razorpay">Razorpay</option>
@@ -1827,12 +1827,12 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 </div>
 
                 <div className="space-y-1 border-b border-white/5 pb-4">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Invoice Footer Note</label>
+                  <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Invoice Footer Note</label>
                   <textarea
                     rows={2}
                     value={gatewaySettings.invoice_footer}
                     onChange={(e) => setGatewaySettings({ ...gatewaySettings, invoice_footer: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none font-sans"
+                    className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none font-sans"
                   />
                 </div>
 
@@ -1848,7 +1848,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         onChange={(e) => setGatewaySettings({ ...gatewaySettings, stripe_enabled: e.target.checked })}
                       />
                     </div>
-                    <div className="space-y-2 text-[10px]">
+                    <div className="space-y-2 text-sm">
                       <div className="space-y-1">
                         <label className="text-slate-400 font-bold uppercase">Publishable Key</label>
                         <input
@@ -1881,7 +1881,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         onChange={(e) => setGatewaySettings({ ...gatewaySettings, razorpay_enabled: e.target.checked })}
                       />
                     </div>
-                    <div className="space-y-2 text-[10px]">
+                    <div className="space-y-2 text-sm">
                       <div className="space-y-1">
                         <label className="text-slate-400 font-bold uppercase">Key ID</label>
                         <input
@@ -1914,7 +1914,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         onChange={(e) => setGatewaySettings({ ...gatewaySettings, upi_enabled: e.target.checked })}
                       />
                     </div>
-                    <div className="space-y-2 text-[10px] h-full">
+                    <div className="space-y-2 text-sm h-full">
                       <div className="space-y-1">
                         <label className="text-slate-400 font-bold uppercase">VPA Address (UPI ID)</label>
                         <input
@@ -1924,7 +1924,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                           className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950/40 border border-white/5 text-slate-200 outline-none font-mono"
                         />
                       </div>
-                      <p className="text-[9px] text-slate-500 leading-relaxed font-semibold pt-1">QR Code generator will render payment intents pointing to this merchant address automatically.</p>
+                      <p className="text-sm text-slate-500 leading-relaxed font-semibold pt-1">QR Code generator will render payment intents pointing to this merchant address automatically.</p>
                     </div>
                   </div>
                 </div>
@@ -1932,7 +1932,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 <div className="flex justify-end pt-4">
                   <button
                     type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl transition-all cursor-pointer shadow-lg shadow-blue-600/10"
+                    className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-6 rounded-xl transition-all cursor-pointer shadow-lg shadow-teal-600/10"
                   >
                     Save Configuration Keys
                   </button>
@@ -1945,10 +1945,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
       {/* ── 8. AI LOGS TAB ── */}
       {activeTab === 'ai_logs' && (
-        <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40 animate-fadeIn space-y-4">
+        <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 animate-fadeIn space-y-4">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-3">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Activity size={14} className="text-blue-400" />
+              <Activity size={14} className="text-teal-400" />
               Unified AI Activity Logs
             </h3>
             <div className="flex items-center gap-2">
@@ -1958,13 +1958,13 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 placeholder="Filter logs..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1.5 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none placeholder-slate-500"
+                className="px-3 py-1.5 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none placeholder-slate-500"
               />
             </div>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left text-base border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/5 text-slate-500">
                   <th className="py-2.5">Time</th>
@@ -1992,7 +1992,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         <td className="py-3 text-slate-600 dark:text-slate-400 font-mono">{duration}</td>
                         <td className="py-3 font-mono text-emerald-400">{log.cost}</td>
                         <td className="py-3">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/10 text-emerald-400">
+                          <span className="px-2 py-0.5 rounded text-sm font-extrabold bg-emerald-500/10 text-emerald-400">
                             {log.status}
                           </span>
                         </td>
@@ -2007,28 +2007,28 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
       {/* ── 9. AUDIT LOGS TAB ── */}
       {activeTab === 'audit_logs' && (
-        <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40 animate-fadeIn space-y-6">
+        <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 animate-fadeIn space-y-6">
           <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <ShieldCheck className="text-blue-500" size={16} />
+            <ShieldCheck className="text-teal-500" size={16} />
             Platform Administration Audit Trails
           </h3>
           
           <div className="relative border-l border-slate-200 dark:border-white/5 ml-4 pl-6 space-y-6">
             {auditLogs.map((log: any, idx: number) => (
               <div key={idx} className="relative group">
-                <div className="absolute -left-9 top-0.5 h-6 w-6 rounded-full bg-slate-100 dark:bg-[#0B1020] border border-blue-500/40 text-blue-400 flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
+                <div className="absolute -left-9 top-0.5 h-6 w-6 rounded-full bg-white dark:bg-[#0B1020] border border-teal-500/40 text-teal-400 flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
                   <ShieldCheck size={12} />
                 </div>
                 
                 <div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold text-slate-800 dark:text-white">{log.actor}</span>
-                    <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <span className="text-base font-bold text-slate-800 dark:text-white">{log.actor}</span>
+                    <span className="px-2.5 py-0.5 rounded text-sm font-bold bg-teal-500/10 text-teal-400 border border-teal-500/20">
                       {log.action}
                     </span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-600 dark:text-slate-400 font-mono">{log.time}</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-600 dark:text-slate-400 font-mono">{log.time}</span>
                   </div>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 font-bold mt-1">{log.target}</p>
+                  <p className="text-base text-slate-700 dark:text-slate-300 font-bold mt-1">{log.target}</p>
                 </div>
               </div>
             ))}
@@ -2041,28 +2041,28 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         <div className="space-y-6 animate-fadeIn">
           {/* Resource Usage Gauges */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40">
-              <p className="text-[10px] uppercase font-bold text-slate-500">CPU LOAD</p>
+            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40">
+              <p className="text-sm uppercase font-bold text-slate-500">CPU LOAD</p>
               <div className="flex items-center justify-between mt-2.5">
                 <h4 className="text-3xl font-black text-white">{systemHealth.cpu}</h4>
                 <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden border border-slate-200 dark:border-white/5">
-                  <div className="h-full bg-blue-500" style={{ width: systemHealth.cpu }} />
+                  <div className="h-full bg-teal-500" style={{ width: systemHealth.cpu }} />
                 </div>
               </div>
             </div>
 
-            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40">
-              <p className="text-[10px] uppercase font-bold text-slate-500">RAM USAGE</p>
+            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40">
+              <p className="text-sm uppercase font-bold text-slate-500">RAM USAGE</p>
               <div className="flex items-center justify-between mt-2.5">
                 <h4 className="text-3xl font-black text-white">{systemHealth.ram}</h4>
                 <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden border border-slate-200 dark:border-white/5">
-                  <div className="h-full bg-violet-500" style={{ width: systemHealth.ram }} />
+                  <div className="h-full bg-teal-500" style={{ width: systemHealth.ram }} />
                 </div>
               </div>
             </div>
 
-            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40">
-              <p className="text-[10px] uppercase font-bold text-slate-500">DISK SPACE USED</p>
+            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40">
+              <p className="text-sm uppercase font-bold text-slate-500">DISK SPACE USED</p>
               <div className="flex items-center justify-between mt-2.5">
                 <h4 className="text-3xl font-black text-white">{systemHealth.disk}</h4>
                 <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden border border-slate-200 dark:border-white/5">
@@ -2073,17 +2073,17 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           </div>
 
           {/* Microservices Checklist */}
-          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-white dark:bg-[#111827]/40 space-y-4">
+          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Server size={14} className="text-blue-400" />
+              <Server size={14} className="text-teal-400" />
               Service Health
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {Object.entries(systemHealth.services).map(([service, status]: any) => (
-                <div key={service} className="p-4 rounded-xl bg-slate-100/50 dark:bg-slate-100 dark:bg-slate-950/30 border border-slate-200 dark:border-white/5 flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800 dark:text-white">{service}</span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-black ${
+                <div key={service} className="p-4 rounded-xl bg-white dark:bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-white/5 flex items-center justify-between">
+                  <span className="text-base font-bold text-slate-800 dark:text-white">{service}</span>
+                  <span className={`px-2 py-0.5 rounded text-sm font-black ${
                     status === 'Healthy' ? 'bg-emerald-500/10 text-emerald-400' :
                     status === 'Warning' ? 'bg-amber-500/10 text-amber-400' : 'bg-red-500/10 text-red-500'
                   }`}>
@@ -2110,7 +2110,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               <button onClick={() => setViewingTenant(null)} className="text-slate-400 hover:text-white">✕</button>
             </div>
             
-            <div className="space-y-2 text-xs">
+            <div className="space-y-2 text-base">
               <div className="flex justify-between py-2 border-b border-slate-200 dark:border-white/5">
                 <span className="text-slate-400">Owner</span>
                 <span className="text-slate-800 dark:text-white font-bold">{viewingTenant.owner_name} ({viewingTenant.owner_email})</span>
@@ -2121,7 +2121,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               </div>
               <div className="flex justify-between py-2 border-b border-slate-200 dark:border-white/5">
                 <span className="text-slate-400">Active Plan</span>
-                <span className="text-blue-400 font-bold">{viewingTenant.plan?.name} (${viewingTenant.plan?.price}/mo)</span>
+                <span className="text-teal-400 font-bold">{viewingTenant.plan?.name} (${viewingTenant.plan?.price}/mo)</span>
               </div>
               <div className="flex justify-between py-2 border-b border-slate-200 dark:border-white/5">
                 <span className="text-slate-400">Workspace Status</span>
@@ -2129,23 +2129,23 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               </div>
               
               <div className="pt-3">
-                <p className="text-[10px] font-black uppercase text-blue-400 mb-2 tracking-wider">Resource Ingestion levels (MTD)</p>
-                <div className="grid grid-cols-2 gap-3 p-3 bg-slate-100/50 dark:bg-slate-100 dark:bg-slate-950/40 rounded-xl border border-slate-200 dark:border-white/5">
+                <p className="text-sm font-black uppercase text-teal-400 mb-2 tracking-wider">Resource Ingestion levels (MTD)</p>
+                <div className="grid grid-cols-2 gap-3 p-3 bg-white dark:bg-white dark:bg-slate-950/40 rounded-xl border border-slate-200 dark:border-white/5">
                   <div>
-                    <span className="text-[10px] text-slate-500">Speech Audio:</span>
-                    <p className="text-xs font-bold text-slate-800 dark:text-white mt-0.5">{viewingTenant.usage?.transcription_minutes} mins</p>
+                    <span className="text-sm text-slate-500">Speech Audio:</span>
+                    <p className="text-base font-bold text-slate-800 dark:text-white mt-0.5">{viewingTenant.usage?.transcription_minutes} mins</p>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500">Translation:</span>
-                    <p className="text-xs font-bold text-slate-800 dark:text-white mt-0.5">{(viewingTenant.usage?.translation_characters || 0).toLocaleString()} chars</p>
+                    <span className="text-sm text-slate-500">Translation:</span>
+                    <p className="text-base font-bold text-slate-800 dark:text-white mt-0.5">{(viewingTenant.usage?.translation_characters || 0).toLocaleString()} chars</p>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500">TTS Audio:</span>
-                    <p className="text-xs font-bold text-slate-800 dark:text-white mt-0.5">{(viewingTenant.usage?.tts_characters || 0).toLocaleString()} chars</p>
+                    <span className="text-sm text-slate-500">TTS Audio:</span>
+                    <p className="text-base font-bold text-slate-800 dark:text-white mt-0.5">{(viewingTenant.usage?.tts_characters || 0).toLocaleString()} chars</p>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500">API Logs today:</span>
-                    <p className="text-xs font-bold text-slate-800 dark:text-white mt-0.5">{(viewingTenant.usage?.api_calls || 0).toLocaleString()}</p>
+                    <span className="text-sm text-slate-500">API Logs today:</span>
+                    <p className="text-base font-bold text-slate-800 dark:text-white mt-0.5">{(viewingTenant.usage?.api_calls || 0).toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -2159,13 +2159,13 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   setEditTenantPlanId(viewingTenant.plan?.id || '');
                   setViewingTenant(null);
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-slate-800 dark:text-white text-xs font-bold transition-all text-center cursor-pointer shadow-md"
+                className="flex-1 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-slate-800 dark:text-white text-base font-bold transition-all text-center cursor-pointer shadow-md"
               >
                 Upgrade Plan limits
               </button>
               <button
                 onClick={() => setViewingTenant(null)}
-                className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-800 dark:text-white text-xs font-bold transition-all text-center cursor-pointer border border-slate-200 dark:border-white/5"
+                className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-800 dark:text-white text-base font-bold transition-all text-center cursor-pointer border border-slate-200 dark:border-white/5"
               >
                 Close details
               </button>
@@ -2185,21 +2185,21 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Workspace</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Workspace</label>
                 <input
                   type="text"
                   disabled
                   value={editTenantName}
-                  className="w-full px-3 py-2 mt-1 rounded-xl text-xs bg-slate-100 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5 text-slate-500 outline-none"
+                  className="w-full px-3 py-2 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/20 border border-slate-200 dark:border-white/5 text-slate-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Billing Plan Tier</label>
+                <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Billing Plan Tier</label>
                 <select
                   value={editTenantPlanId}
                   onChange={(e) => setEditTenantPlanId(e.target.value)}
-                  className="w-full px-3 py-2 mt-1 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-100 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
+                  className="w-full px-3 py-2 mt-1 rounded-xl text-base bg-white dark:bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
                   style={{ background: 'var(--bg-subtle)' }}
                 >
                   <option value="" className="text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950">Select plan tier...</option>
@@ -2213,13 +2213,13 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             <div className="pt-4 flex gap-3">
               <button
                 onClick={() => handleUpgradeTenant(editingTenant.id, editTenantPlanId)}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-slate-800 dark:text-white text-xs font-bold cursor-pointer shadow-md"
+                className="flex-1 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-slate-800 dark:text-white text-base font-bold cursor-pointer shadow-md"
               >
                 Upgrade limits
               </button>
               <button
                 onClick={() => setEditingTenant(null)}
-                className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-800 dark:text-white text-xs font-bold cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-800 dark:text-white text-base font-bold cursor-pointer"
               >
                 Cancel
               </button>
@@ -2235,10 +2235,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             <div className="flex justify-between items-start border-b border-slate-250 dark:border-white/5 pb-3">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <CreditCard className="text-blue-500" size={16} />
+                  <CreditCard className="text-teal-500" size={16} />
                   Payment Transaction Details
                 </h3>
-                <p className="text-[10px] text-slate-500 mt-1">Detailed transaction receipt and gateway verification payload.</p>
+                <p className="text-sm text-slate-500 mt-1">Detailed transaction receipt and gateway verification payload.</p>
               </div>
               <button 
                 onClick={() => setViewingPaymentDetails(null)} 
@@ -2248,41 +2248,41 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-3 text-base">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase">Transaction ID</span>
+                  <span className="block text-sm font-bold text-slate-400 uppercase">Transaction ID</span>
                   <strong className="text-slate-800 dark:text-white font-mono">{viewingPaymentDetails.transaction_id}</strong>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase">Invoice Number</span>
+                  <span className="block text-sm font-bold text-slate-400 uppercase">Invoice Number</span>
                   <strong className="text-slate-800 dark:text-white font-mono">{viewingPaymentDetails.invoice_number}</strong>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase">Tenant Name</span>
+                  <span className="block text-sm font-bold text-slate-400 uppercase">Tenant Name</span>
                   <strong className="text-slate-800 dark:text-white">{viewingPaymentDetails.tenant_name}</strong>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase">Workspace slug</span>
+                  <span className="block text-sm font-bold text-slate-400 uppercase">Workspace slug</span>
                   <strong className="text-slate-800 dark:text-white font-mono">{viewingPaymentDetails.workspace}</strong>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase">Amount</span>
+                  <span className="block text-sm font-bold text-slate-400 uppercase">Amount</span>
                   <strong className="text-emerald-500 font-extrabold">${viewingPaymentDetails.amount}</strong>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase">Gateway</span>
+                  <span className="block text-sm font-bold text-slate-400 uppercase">Gateway</span>
                   <strong className="text-slate-800 dark:text-white capitalize">{viewingPaymentDetails.gateway}</strong>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase">Status</span>
-                  <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
+                  <span className="block text-sm font-bold text-slate-400 uppercase">Status</span>
+                  <span className={`inline-block px-1.5 py-0.5 rounded text-sm font-black uppercase ${
                     viewingPaymentDetails.status.toLowerCase() === 'success' 
                       ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
                       : 'bg-red-500/10 text-red-500 border border-red-500/20'
@@ -2293,8 +2293,8 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               </div>
 
               <div className="space-y-1 pt-2 border-t border-slate-200 dark:border-white/5">
-                <span className="block text-[10px] font-bold text-slate-400 uppercase">Raw Gateway Response JSON</span>
-                <pre className="w-full max-h-40 overflow-y-auto p-3 rounded-lg bg-slate-950 text-[10px] font-mono text-slate-300 border border-white/5 leading-relaxed whitespace-pre-wrap">
+                <span className="block text-sm font-bold text-slate-400 uppercase">Raw Gateway Response JSON</span>
+                <pre className="w-full max-h-40 overflow-y-auto p-3 rounded-lg bg-slate-950 text-sm font-mono text-slate-300 border border-white/5 leading-relaxed whitespace-pre-wrap">
                   {(() => {
                     const mockPayload = {
                       transaction_id: viewingPaymentDetails.transaction_id,
@@ -2319,7 +2319,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             <div className="pt-2">
               <button
                 onClick={() => setViewingPaymentDetails(null)}
-                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white text-xs font-bold cursor-pointer transition-all"
+                className="w-full py-2.5 rounded-xl bg-white hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white text-base font-bold cursor-pointer transition-all"
               >
                 Close Details
               </button>

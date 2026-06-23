@@ -294,12 +294,12 @@ export const AudioToText: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto animate-fadeIn">
+    <div className="space-y-6 w-full animate-fadeIn">
       {/* Header with Provider Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5">
         <div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-            <FileAudio className="text-amber-500" size={20} />
+            <FileAudio className="text-teal-500" size={20} />
             Audio to Text
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
@@ -314,7 +314,7 @@ export const AudioToText: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer"
             style={{ background: 'var(--bg-card)' }}
           >
-            <Cpu size={14} className="text-amber-500" />
+            <Cpu size={14} className="text-teal-500" />
             <span>AI Provider: {audioSttProvider === 'openai' ? 'OpenAI Whisper' : 'Deepgram STT'}</span>
             <ChevronDown size={14} className={`text-slate-400 transition-transform ${providerDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -338,7 +338,7 @@ export const AudioToText: React.FC = () => {
                     }}
                     className={`w-full flex flex-col items-start gap-0.5 px-3 py-2 text-left rounded-xl transition-all cursor-pointer ${
                       audioSttProvider === p.id
-                        ? 'bg-gradient-to-r from-blue-600/10 to-amber-500/10 text-slate-900 dark:text-white border border-blue-500/20'
+                        ? 'bg-gradient-to-r from-teal-600/10 to-teal-500/10 text-slate-900 dark:text-white border border-teal-500/20'
                         : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-350 border border-transparent'
                     }`}
                   >
@@ -399,15 +399,15 @@ export const AudioToText: React.FC = () => {
         <div className="lg:col-span-3 space-y-6">
           {/* Info Banner */}
           <div 
-            className="relative overflow-hidden rounded-3xl p-6 md:p-8 flex items-center justify-between min-h-[140px] border border-amber-100 dark:border-white/5 shadow-sm"
+            className="relative overflow-hidden rounded-3xl p-6 md:p-8 flex items-center justify-between min-h-[140px] border border-teal-100 dark:border-white/5 shadow-sm"
             style={{
-              background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)',
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 via-emerald-500/5 to-transparent pointer-events-none" />
             
             <div className="flex items-center gap-5 relative z-10 max-w-[70%] text-left">
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 shadow-md shadow-amber-500/20 text-white">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-teal-500 to-emerald-500 shadow-md shadow-teal-500/20 text-white">
                 <FileAudio size={24} />
               </div>
               <div>
@@ -425,7 +425,7 @@ export const AudioToText: React.FC = () => {
               <img 
                 src="/banner_illustration.png" 
                 alt="Transcription illustration" 
-                className="h-[120%] object-contain mt-2 opacity-95 filter drop-shadow-md dark:brightness-95 dark:contrast-105"
+                className="h-[120%] object-contain mt-2 opacity-95 filter drop-shadow-md hue-rotate-[250deg] dark:brightness-95 dark:contrast-105"
               />
             </div>
           </div>
@@ -450,7 +450,7 @@ export const AudioToText: React.FC = () => {
                 <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                   Model Size
                   {backendStatus !== 'connected' && (
-                    <span className="ml-2 text-amber-500 normal-case font-medium">(Server only)</span>
+                    <span className="ml-2 text-teal-500 normal-case font-medium">(Server only)</span>
                   )}
                 </label>
                 <div className="relative">
@@ -557,7 +557,7 @@ export const AudioToText: React.FC = () => {
                       <span>{backendStatus === 'connected' ? uploadProgress : modelProgress}%</span>
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--border-base)' }}>
-                      <div className="h-full rounded-full bg-blue-500 transition-all duration-300"
+                      <div className="h-full rounded-full bg-teal-500 transition-all duration-300"
                         style={{ width: `${backendStatus === 'connected' ? uploadProgress : modelProgress}%` }} />
                     </div>
                   </div>
@@ -788,7 +788,7 @@ export const AudioToText: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Files Transcribed</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{attHistory.length}</h4>
                   </div>
-                  <div className="h-7 w-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 flex-shrink-0">
+                  <div className="h-7 w-7 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0">
                     <FileAudio size={14} />
                   </div>
                 </div>
@@ -804,7 +804,7 @@ export const AudioToText: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Minutes Transcribed</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{(billingOverview?.usage?.audio_minutes_used || 0).toFixed(1)} mins</h4>
                   </div>
-                  <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 flex-shrink-0">
+                  <div className="h-7 w-7 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0">
                     <Clock size={14} />
                   </div>
                 </div>
@@ -836,7 +836,7 @@ export const AudioToText: React.FC = () => {
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Engine</span>
                     <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{audioSttProvider.toUpperCase()}</h4>
                   </div>
-                  <div className="h-7 w-7 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 flex-shrink-0">
+                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
                     <Award size={14} />
                   </div>
                 </div>
@@ -851,23 +851,23 @@ export const AudioToText: React.FC = () => {
         {/* Right Column - Banners & Recent Activity */}
         <div className="lg:col-span-1 space-y-6">
           {/* Upload Banner */}
-          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-gradient-to-br from-amber-600/10 to-orange-500/10 dark:from-amber-600/5 dark:to-orange-500/5 min-h-[120px] flex flex-col justify-center text-left">
+          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-gradient-to-br from-teal-600/10 to-emerald-500/10 dark:from-teal-600/5 dark:to-emerald-500/5 min-h-[120px] flex flex-col justify-center text-left">
             <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
             <div className="relative z-10">
-              <span className="text-[8px] font-black uppercase text-amber-500 dark:text-amber-400 tracking-wider">STT Engine</span>
+              <span className="text-[8px] font-black uppercase text-teal-500 dark:text-teal-400 tracking-wider">STT Engine</span>
               <h4 className="font-display text-sm font-black text-slate-950 dark:text-white mt-1 leading-snug">Instant Multi-format</h4>
               <p className="mt-1 text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
                 High-accuracy local and cloud speech transcription.
               </p>
             </div>
-            <FileAudio size={52} className="absolute right-[-10px] bottom-[-10px] opacity-10 text-amber-500" />
+            <FileAudio size={52} className="absolute right-[-10px] bottom-[-10px] opacity-10 text-teal-500" />
           </div>
 
           {/* Recent Transcriptions Card */}
           <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-3 text-left">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
               <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Recent files</h4>
-              <span className="text-[9px] text-blue-500 dark:text-blue-400 font-bold cursor-pointer hover:underline" onClick={() => fetchBillingOverview()}>Refresh</span>
+              <span className="text-[9px] text-teal-500 dark:text-teal-400 font-bold cursor-pointer hover:underline" onClick={() => fetchBillingOverview()}>Refresh</span>
             </div>
 
             <div className="space-y-2">
@@ -878,7 +878,7 @@ export const AudioToText: React.FC = () => {
               ) : (
                 attHistory.slice(0, 4).map(item => (
                   <div key={item.id} className="p-2.5 rounded-xl bg-slate-100/50 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5 flex items-start gap-3 hover:border-slate-300 dark:hover:border-white/10 transition-colors">
-                    <span className="text-[9px] font-black text-amber-600 bg-amber-500/10 rounded px-1.5 py-0.5 mt-0.5">{getFileExt(item.title)}</span>
+                    <span className="text-[9px] font-black text-teal-600 bg-teal-500/10 rounded px-1.5 py-0.5 mt-0.5">{getFileExt(item.title)}</span>
                     <div className="flex-1 min-w-0 text-left font-sans">
                       <p className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">{item.title}</p>
                       <span className="text-[8px] text-slate-500 font-medium">{item.details} · {item.timestamp}</span>
@@ -900,7 +900,7 @@ export const AudioToText: React.FC = () => {
               ) : (
                 attHistory.slice(0, 3).map(item => (
                   <div key={item.id} className="relative text-left">
-                    <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full bg-slate-50 dark:bg-[#0B1020] border-2 border-amber-500 flex items-center justify-center z-10" />
+                    <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full bg-slate-50 dark:bg-[#0B1020] border-2 border-teal-500 flex items-center justify-center z-10" />
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-slate-900 dark:text-white block font-bold truncate max-w-[120px]">{item.title}</span>
