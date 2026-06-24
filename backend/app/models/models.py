@@ -88,6 +88,7 @@ class ProviderConfiguration(Base):
     is_enabled = Column(Boolean, default=True)
     credentials_encrypted = Column(Text, nullable=True)  # AES-256 encrypted API key / endpoint
     priority = Column(Integer, default=1)  # lower number means higher priority
+    config_json = Column(Text, nullable=True) # Web search configs etc.
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
@@ -148,6 +149,18 @@ class AuditLog(Base):
     details = Column(Text, nullable=True)
     ip_address = Column(String(45), nullable=True)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+class FeatureProviderMapping(Base):
+    __tablename__ = "feature_provider_mapping"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    feature_name = Column(String(100), nullable=False)
+    provider_name = Column(String(50), nullable=False)
+    priority = Column(Integer, default=1)
+    is_enabled = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
 
 
 # --- NEW WHITE-LABEL SAAS MODELS ---

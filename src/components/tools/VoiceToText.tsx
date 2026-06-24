@@ -52,8 +52,6 @@ export const VoiceToText: React.FC = () => {
     billingOverview,
     addHistoryItem,
     setDetectedLang,
-    transcriptionProvider,
-    setTranscriptionProvider,
     openAiApiKey,
     setNotification,
     fetchBillingOverview
@@ -69,29 +67,11 @@ export const VoiceToText: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('en-US');
   const [isInsecureOrigin, setIsInsecureOrigin] = useState(false);
 
-  const [providerDropdownOpen, setProviderDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setProviderDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const isManuallyStoppedRef = useRef(false);
   const liveTranscriptRef = useRef('');
-
-  const PROVIDERS = [
-    { id: 'openai', label: 'OpenAI Whisper', description: 'Deep voice recognition engine' },
-    { id: 'deepgram', label: 'Deepgram Nova-2', description: 'Sub-second real-time speech' },
-  ];
 
   useEffect(() => {
     // Check if loaded on a secure origin (SpeechRecognition is disabled on HTTP except localhost)
@@ -209,7 +189,6 @@ export const VoiceToText: React.FC = () => {
         try {
           const result = await providerManager.transcribeVoice(
             audioFile,
-            transcriptionProvider,
             openAiApiKey,
             '', // deepgram key
             selectedLanguage,
@@ -362,54 +341,10 @@ export const VoiceToText: React.FC = () => {
           </p>
         </div>
         
-        {/* Provider Switcher Dropdown */}
-        <div className="relative inline-block text-left" ref={dropdownRef}>
-          <button
-            onClick={() => setProviderDropdownOpen(!providerDropdownOpen)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer"
-            style={{ background: 'var(--bg-card)' }}
-          >
-            <Cpu size={14} className="text-teal-500" />
-            <span>AI Provider: {
-              transcriptionProvider === 'openai' ? 'OpenAI Whisper' :
-              transcriptionProvider === 'deepgram' ? 'Deepgram Nova-2' : 'AssemblyAI'
-            }</span>
-            <ChevronDown size={14} className={`text-slate-400 transition-transform ${providerDropdownOpen ? 'rotate-180' : ''}`} />
-          </button>
-          
-          <AnimatePresence>
-            {providerDropdownOpen && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 8 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                transition={{ duration: 0.15 }}
-                className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl p-1.5 z-30"
-                style={{ background: 'var(--bg-elevated, var(--bg-card))' }}
-              >
-                {PROVIDERS.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => {
-                      setTranscriptionProvider(p.id);
-                      setProviderDropdownOpen(false);
-                    }}
-                    className={`w-full flex flex-col items-start gap-0.5 px-3 py-2 text-left rounded-xl transition-all cursor-pointer ${
-                      transcriptionProvider === p.id
-                        ? 'bg-gradient-to-r from-teal-600/10 to-teal-500/10 text-slate-900 dark:text-white border border-teal-500/20'
-                        : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-350 border border-transparent'
-                    }`}
-                  >
-                    <span className="text-xs font-bold flex items-center gap-1.5">
-                      {p.label}
-                      {transcriptionProvider === p.id && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
-                    </span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{p.description}</span>
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Managed Provider Badge */}
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-200" style={{ background: 'var(--bg-card)' }}>
+          <Cpu size={14} className="text-teal-500" />
+          <span>Managed by Platform Administrator</span>
         </div>
       </div>
 

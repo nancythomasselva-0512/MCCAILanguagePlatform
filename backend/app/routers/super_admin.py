@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.dependencies.auth import get_current_user, super_admin_only
 from app.models.models import User, Tenant, SubscriptionPlan, UsageTracking, ProviderConfiguration, AuditLog, TranscriptionHistory, TranslationHistory, TtsHistory
-from app.schemas.schemas import SubscriptionPlanCreate, SubscriptionPlanResponse, TenantCreate, TenantResponse, UserResponse, ProviderConfigCreate, ProviderConfigResponse, SubscriptionPlanUpdate, TenantRegistration
-from app.core.security import encrypt_data, decrypt_data
+from app.schemas.schemas import SubscriptionPlanCreate, SubscriptionPlanResponse, TenantCreate, TenantResponse, UserResponse, ProviderConfigCreate, ProviderConfigResponse, SubscriptionPlanUpdate, TenantRegistration, FeatureProviderMappingResponse, FeatureProviderMappingCreate
+from app.models.models import FeatureProviderMapping
 from typing import List
 import datetime
 
@@ -274,6 +274,8 @@ def configure_global_provider(config: ProviderConfigCreate, db: Session = Depend
         existing.priority = config.priority
         if encrypted_key:
             existing.credentials_encrypted = encrypted_key
+        if config.config_json is not None:
+            existing.config_json = config.config_json
         db_config = existing
     else:
         db_config = ProviderConfiguration(
@@ -281,9 +283,11 @@ def configure_global_provider(config: ProviderConfigCreate, db: Session = Depend
             provider_name=config.provider_name,
             is_enabled=config.is_enabled,
             priority=config.priority,
-            credentials_encrypted=encrypted_key
+            credentials_encrypted=encrypted_key,
+            config_json=config.config_json
         )
         db.add(db_config)
+
         
     db.commit()
     db.refresh(db_config)
@@ -336,6 +340,29 @@ def test_provider_connection(provider_name: str, db: Session = Depends(get_db)):
     if provider_name == "local-whisper":
         return {"status": "warning", "message": "Connection warning: High CPU latency detected."}
     return {"status": "ok", "message": f"Connection to {provider_name.capitalize()} verified successfully."}
+
+@router.get("/providers/mappings", response_model=List[FeatureProviderMappingResponse])
+def get_feature_provider_mappings(db: Session = Depends(get_db)):
+    return db.query(FeatureProviderMapping).all()
+
+@router.post("/providers/mappings", response_model=FeatureProviderMappingResponse)
+def set_feature_provider_mapping(mapping: FeatureProviderMappingCreate, db: Session = Depends(get_db)):
+    existing = db.query(FeatureProviderMapping).filter(
+        FeatureProviderMapping.feature_name == mapping.feature_name,
+        FeatureProviderMapping.provider_name == mapping.provider_name
+    ).first()
+    
+    if existing:
+        existing.priority = mapping.priority
+        existing.is_enabled = mapping.is_enabled
+        db_mapping = existing
+    else:
+        db_mapping = FeatureProviderMapping(**mapping.model_dump())
+        db.add(db_mapping)
+    
+    db.commit()
+    db.refresh(db_mapping)
+    return db_mapping
 
 # --- USER MONITORING & ACTIONS ---
 @router.get("/users", response_model=List[UserResponse])

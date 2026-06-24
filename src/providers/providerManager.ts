@@ -4,17 +4,27 @@ export const providerManager = {
   /**
    * Synthesize text to speech via FastAPI SaaS tool proxy
    */
+  async getActiveProviders(): Promise<Record<string, string>> {
+    try {
+      const data = await apiRequest("/tools/active-providers");
+      return data || {};
+    } catch (e) {
+      return {};
+    }
+  },
+
+  /**
+   * Synthesize text to speech via FastAPI SaaS tool proxy
+   */
   async synthesizeSpeech(
     text: string,
     voice: string,
-    provider: string,
     _openAiKey?: string,
     _elevenLabsKey?: string
   ): Promise<string> {
     const formData = new FormData();
     formData.append("text", text);
     formData.append("voice", voice);
-    formData.append("provider", provider);
 
     const data = await apiRequest("/tools/synthesize", {
       method: "POST",
@@ -30,14 +40,12 @@ export const providerManager = {
    */
   async transcribeAudio(
     file: File,
-    provider: string,
     _openAiKey?: string,
     _deepgramKey?: string,
     language = 'en'
   ): Promise<string> {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("provider", provider);
     formData.append("language", language);
 
     const data = await apiRequest("/tools/transcribe", {
@@ -53,7 +61,6 @@ export const providerManager = {
    */
   async transcribeVoice(
     file: File,
-    provider: string,
     _openAiKey?: string,
     _deepgramKey?: string,
     language = 'en-US',
@@ -63,7 +70,6 @@ export const providerManager = {
     
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("provider", provider);
     formData.append("language", langCode);
 
     const data = await apiRequest("/tools/transcribe", {
@@ -84,7 +90,6 @@ export const providerManager = {
     text: string,
     sourceLang: string,
     targetLang: string,
-    provider: string,
     _openAiKey?: string,
     _deepLKey?: string
   ): Promise<{ text: string; detectedLang?: string }> {
@@ -92,7 +97,6 @@ export const providerManager = {
     formData.append("text", text);
     formData.append("source_lang", sourceLang);
     formData.append("target_lang", targetLang);
-    formData.append("provider", provider);
 
     const data = await apiRequest("/tools/translate", {
       method: "POST",

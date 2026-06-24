@@ -22,7 +22,7 @@ const TARGET_LANGUAGES = LANGUAGES.filter(l => l !== 'Auto Detect');
 type TranslateState = 'idle' | 'translating' | 'done' | 'error';
 
 export const TextTranslation: React.FC = () => {
-  const { history, billingOverview, addHistoryItem, translationProvider, setTranslationProvider, openAiApiKey, fetchBillingOverview } = useApp();
+  const { history, billingOverview, addHistoryItem, openAiApiKey, fetchBillingOverview } = useApp();
   const [sourceText, setSourceText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [sourceLang, setSourceLang] = useState('Auto Detect');
@@ -34,26 +34,7 @@ export const TextTranslation: React.FC = () => {
   const [detectedLang, setDetectedLang] = useState('');
   const [charCount, setCharCount] = useState(0);
   
-  const [providerDropdownOpen, setProviderDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setProviderDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const PROVIDERS = [
-    { id: 'openai', label: 'OpenAI Translation', description: 'Context-aware GPT-4o-mini translation' },
-    { id: 'google', label: 'Google Translate', description: 'Fast, multi-language translation' },
-    { id: 'deepl', label: 'DeepL Translate', description: 'Highly accurate, nuance-preserving' },
-  ];
 
   const translate = (text: string, target: string) => {
     if (!text.trim()) { setTranslatedText(''); setState('idle'); return; }
@@ -66,7 +47,6 @@ export const TextTranslation: React.FC = () => {
           text,
           sourceLang,
           target,
-          translationProvider,
           openAiApiKey
         );
         setTranslatedText(result.text);
@@ -84,12 +64,6 @@ export const TextTranslation: React.FC = () => {
       }
     }, 700);
   };
-
-  useEffect(() => {
-    if (sourceText.trim()) {
-      translate(sourceText, targetLang);
-    }
-  }, [translationProvider]);
 
   const handleSourceChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value.slice(0, 5000);
@@ -158,54 +132,10 @@ export const TextTranslation: React.FC = () => {
           </p>
         </div>
         
-        {/* Provider Switcher Dropdown */}
-        <div className="relative inline-block text-left" ref={dropdownRef}>
-          <button
-            onClick={() => setProviderDropdownOpen(!providerDropdownOpen)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer"
-            style={{ background: 'var(--bg-card)' }}
-          >
-            <Cpu size={14} className="text-emerald-500" />
-            <span>AI Provider: {
-              translationProvider === 'openai' ? 'OpenAI Translation' :
-              translationProvider === 'google' ? 'Google Translate' : 'DeepL Translate'
-            }</span>
-            <ChevronDown size={14} className={`text-slate-400 transition-transform ${providerDropdownOpen ? 'rotate-180' : ''}`} />
-          </button>
-          
-          <AnimatePresence>
-            {providerDropdownOpen && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 8 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                transition={{ duration: 0.15 }}
-                className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl p-1.5 z-30"
-                style={{ background: 'var(--bg-elevated, var(--bg-card))' }}
-              >
-                {PROVIDERS.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => {
-                      setTranslationProvider(p.id);
-                      setProviderDropdownOpen(false);
-                    }}
-                    className={`w-full flex flex-col items-start gap-0.5 px-3 py-2 text-left rounded-xl transition-all cursor-pointer ${
-                      translationProvider === p.id
-                        ? 'bg-gradient-to-r from-teal-600/10 to-emerald-500/10 text-slate-900 dark:text-white border border-teal-500/20'
-                        : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-350 border border-transparent'
-                    }`}
-                  >
-                    <span className="text-xs font-bold flex items-center gap-1.5">
-                      {p.label}
-                      {translationProvider === p.id && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
-                    </span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{p.description}</span>
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Managed Provider Badge */}
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-200" style={{ background: 'var(--bg-card)' }}>
+          <Cpu size={14} className="text-emerald-500" />
+          <span>Managed by Platform Administrator</span>
         </div>
       </div>
 
@@ -426,14 +356,14 @@ export const TextTranslation: React.FC = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Engine</span>
-                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{translationProvider.toUpperCase()}</h4>
+                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">Platform AI</h4>
                   </div>
                   <div className="h-7 w-7 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0">
                     <Award size={14} />
                   </div>
                 </div>
                 <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
-                  Current translation provider
+                  Centrally managed provider
                 </div>
               </div>
             </div>

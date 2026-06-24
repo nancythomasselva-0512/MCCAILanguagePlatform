@@ -13,7 +13,7 @@ type PlayState = 'idle' | 'playing' | 'paused' | 'done' | 'loading' | 'error';
 const SAMPLE_TEXT = "Welcome to MCC AI Language Platform. This tool converts your text into natural-sounding speech using advanced AI voice synthesis technology.";
 
 export const TextToVoice: React.FC = () => {
-  const { history, billingOverview, addHistoryItem, theme, ttsProvider, setTtsProvider, openAiApiKey, fetchBillingOverview } = useApp();
+  const { history, billingOverview, addHistoryItem, theme, openAiApiKey, fetchBillingOverview } = useApp();
   const [text, setText] = useState('');
   const [localVoices, setLocalVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedLocalVoice, setSelectedLocalVoice] = useState('');
@@ -24,27 +24,8 @@ export const TextToVoice: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [charCount, setCharCount] = useState(0);
   
-  const [providerDropdownOpen, setProviderDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setProviderDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressIntervalRef = useRef<any>(null);
-
-  const PROVIDERS = [
-    { id: 'browser', label: 'Web Speech API (Free)', description: 'Convert text to voice locally using browser engine' },
-    { id: 'openai', label: 'OpenAI TTS', description: 'High-quality realistic voices' },
-    { id: 'elevenlabs', label: 'ElevenLabs TTS', description: 'Ultra-realistic emotional voices' },
-  ];
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -98,60 +79,11 @@ export const TextToVoice: React.FC = () => {
 
     setPlayState('loading');
 
-    // If explicitly using browser local Web Speech API provider
-    if (ttsProvider === 'browser') {
-      try {
-        if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-          throw new Error('Web Speech API is not supported in this browser.');
-        }
-
-        const utterance = new SpeechSynthesisUtterance(inputText);
-        const voice = window.speechSynthesis.getVoices().find(v => v.name === selectedLocalVoice);
-        if (voice) {
-          utterance.voice = voice;
-        }
-        utterance.rate = speed;
-        utterance.pitch = pitch;
-
-        utterance.onstart = () => {
-          setPlayState('playing');
-        };
-
-        let progressVal = 0;
-        const totalChars = inputText.length;
-        utterance.onboundary = (event) => {
-          if (event.charIndex) {
-            progressVal = (event.charIndex / totalChars) * 100;
-            setProgress(Math.min(99, progressVal));
-          }
-        };
-
-        utterance.onend = () => {
-          setProgress(100);
-          setPlayState('done');
-          addHistoryItem('text-to-speech', inputText, `${selectedLocalVoice || 'Browser Voice'} (Web Speech) • ${inputText.split(' ').filter(Boolean).length} words`);
-        };
-
-        utterance.onerror = (e) => {
-          console.error("Speech synthesis error:", e);
-          setPlayState('error');
-          setErrorMsg('Failed to synthesize speech using Web Speech API.');
-        };
-
-        window.speechSynthesis.speak(utterance);
-      } catch (err: any) {
-        setErrorMsg(err.message || 'Browser speech synthesis failed.');
-        setPlayState('error');
-      }
-      return;
-    }
-
-    // OpenAI and ElevenLabs providers
+    // Call backend endpoint which uses global provider mapping
     try {
       const audioUrl = await providerManager.synthesizeSpeech(
         inputText,
         selectedLocalVoice,
-        ttsProvider,
         openAiApiKey,
         ''
       );
@@ -339,16 +271,7 @@ export const TextToVoice: React.FC = () => {
   };
 
   const pauseResume = () => {
-    if (ttsProvider === 'browser' || !audioRef.current) {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        if (playState === 'playing') {
-          window.speechSynthesis.pause();
-          setPlayState('paused');
-        } else if (playState === 'paused') {
-          window.speechSynthesis.resume();
-          setPlayState('playing');
-        }
-      }
+    if (!audioRef.current) {
       return;
     }
 
@@ -440,51 +363,10 @@ export const TextToVoice: React.FC = () => {
           </p>
         </div>
         
-        {/* Provider Switcher Dropdown */}
-        <div className="relative inline-block text-left" ref={dropdownRef}>
-          <button
-            onClick={() => setProviderDropdownOpen(!providerDropdownOpen)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer"
-            style={{ background: 'var(--bg-card)' }}
-          >
-            <Cpu size={14} className="text-teal-500" />
-            <span>AI Provider: {ttsProvider === 'browser' ? 'Web Speech API (Free)' : ttsProvider === 'openai' ? 'OpenAI TTS' : 'ElevenLabs TTS'}</span>
-            <ChevronDown size={14} className={`text-slate-400 transition-transform ${providerDropdownOpen ? 'rotate-180' : ''}`} />
-          </button>
-          
-          <AnimatePresence>
-            {providerDropdownOpen && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 8 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                transition={{ duration: 0.15 }}
-                className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl p-1.5 z-30"
-                style={{ background: 'var(--bg-elevated, var(--bg-card))' }}
-              >
-                {PROVIDERS.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => {
-                      setTtsProvider(p.id);
-                      setProviderDropdownOpen(false);
-                    }}
-                    className={`w-full flex flex-col items-start gap-0.5 px-3 py-2 text-left rounded-xl transition-all cursor-pointer ${
-                      ttsProvider === p.id
-                        ? 'bg-gradient-to-r from-teal-600/10 to-teal-500/10 text-slate-900 dark:text-white border border-teal-500/20'
-                        : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-350 border border-transparent'
-                    }`}
-                  >
-                    <span className="text-xs font-bold flex items-center gap-1.5">
-                      {p.label}
-                      {ttsProvider === p.id && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
-                    </span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{p.description}</span>
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Managed Provider Badge */}
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-200" style={{ background: 'var(--bg-card)' }}>
+          <Cpu size={14} className="text-teal-500" />
+          <span>Managed by Platform Administrator</span>
         </div>
       </div>
 

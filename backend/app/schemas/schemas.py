@@ -129,6 +129,7 @@ class ProviderConfigBase(BaseModel):
     provider_name: str
     is_enabled: bool = True
     priority: int = 1
+    config_json: Optional[str] = None
 
 class ProviderConfigCreate(ProviderConfigBase):
     api_key: Optional[str] = None
@@ -189,3 +190,24 @@ class AuditLogResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Feature Provider Mapping Schemas
+class FeatureProviderMappingBase(BaseModel):
+    feature_name: str
+    provider_name: str
+    priority: int = 1
+    is_enabled: bool = True
+
+class FeatureProviderMappingCreate(FeatureProviderMappingBase):
+    pass
+
+class FeatureProviderMappingResponse(FeatureProviderMappingBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class FeatureProviderBulkUpdate(BaseModel):
+    mappings: List[FeatureProviderMappingBase]

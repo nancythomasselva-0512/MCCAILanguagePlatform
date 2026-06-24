@@ -6,7 +6,7 @@ import {
   AlertTriangle, Activity, Search,
   Ban, CheckCircle2,
   TrendingUp, Settings, MoreVertical,
-  ArrowUpRight, Settings2
+  ArrowUpRight, Settings2, Edit, Copy, PowerOff, PlayCircle, Lock, Unlock, Mail, Download, RefreshCw, Eye, ToggleLeft, ToggleRight
 } from 'lucide-react';
 
 import { PlatformBuilder } from './PlatformBuilder';
@@ -46,6 +46,18 @@ interface SuperAdminDashboardProps {
 export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab }) => {
   const [activeTab, setActiveTab] = useState<TabType>(subTab || 'overview');
 
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage(message);
+    setToastType(type);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
+
+
   // Sync internal tab when the global activeTab changes (e.g. after refresh)
   useEffect(() => {
     if (subTab && subTab !== activeTab) {
@@ -61,6 +73,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   // Custom SaaS States
   const [usageAnalytics, setUsageAnalytics] = useState<any[]>([]);
   const [billingOverview, setBillingOverview] = useState<any>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [billingSubTab, setBillingSubTab] = useState<'analytics' | 'invoices' | 'payments' | 'subscriptions'>('analytics');
   const [viewingPaymentDetails, setViewingPaymentDetails] = useState<any>(null);
   const [gatewaySettings, setGatewaySettings] = useState<any>(null);
@@ -117,41 +130,33 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   const loadData = async () => {
     setLoading(true);
     try {
-      const metricsData = await apiRequest("/super-admin/metrics");
-      setMetrics(metricsData);
-      
-      const tenantsData = await apiRequest("/super-admin/tenants");
-      setTenants(tenantsData);
-      
-      const providersData = await apiRequest("/super-admin/providers");
-      setProviders(providersData);
-      
-      const plansData = await apiRequest("/super-admin/plans");
-      setPlans(plansData);
+      const safeApiRequest = async (url: string, setter: (data: any) => void) => {
+        try {
+          const data = await apiRequest(url);
+          setter(data);
+        } catch (e: any) {
+          console.error(`Failed to load ${url}:`, e);
+          setLoadError(prev => (prev ? prev + ' | ' : '') + `${url} failed: ${e.message}`);
+        }
+      };
 
-      const usersData = await apiRequest("/super-admin/users");
-      setUsersList(usersData);
+      await Promise.all([
+        safeApiRequest("/super-admin/metrics", setMetrics),
+        safeApiRequest("/super-admin/tenants", setTenants),
+        safeApiRequest("/super-admin/providers", setProviders),
+        safeApiRequest("/super-admin/plans", setPlans),
+        safeApiRequest("/super-admin/users", setUsersList),
+        safeApiRequest("/super-admin/analytics/usage", setUsageAnalytics),
+        safeApiRequest("/billing/admin/overview", setBillingOverview),
+        safeApiRequest("/billing/settings", setGatewaySettings),
+        safeApiRequest("/super-admin/logs/ai", setAiLogs),
+        safeApiRequest("/super-admin/logs/audit", setAuditLogs),
+        safeApiRequest("/super-admin/health/system", setSystemHealth)
+      ]);
 
-      const usageData = await apiRequest("/super-admin/analytics/usage");
-      setUsageAnalytics(usageData);
- 
-      const billData = await apiRequest("/billing/admin/overview");
-      setBillingOverview(billData);
-
-      const settingsData = await apiRequest("/billing/settings");
-      setGatewaySettings(settingsData);
- 
-      const aiLogData = await apiRequest("/super-admin/logs/ai");
-      setAiLogs(aiLogData);
- 
-      const auditLogData = await apiRequest("/super-admin/logs/audit");
-      setAuditLogs(auditLogData);
- 
-      const healthData = await apiRequest("/super-admin/health/system");
-      setSystemHealth(healthData);
-
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to load super admin dashboard data:", err);
+      setLoadError(err.message || String(err));
     } finally {
       setLoading(false);
     }
@@ -169,9 +174,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         method: "PATCH"
       });
       loadData();
-      alert(`Workspace status updated successfully to ${status}.`);
+      showToast(`Workspace status updated successfully to ${status}.`, 'success');
     } catch (err) {
-      alert("Error updating tenant status.");
+      showToast("Error updating tenant status.", 'error');
     } finally {
       // setActionLoading(null);
       setActiveMenuId(null);
@@ -186,16 +191,16 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       });
       setEditingTenant(null);
       loadData();
-      alert("Workspace billing plan upgraded successfully!");
+      showToast("Workspace billing plan upgraded successfully!", 'success');
     } catch (err) {
-      alert("Error upgrading tenant plan.");
+      showToast("Error upgrading tenant plan.", 'error');
     }
   };
 
   const handleProvisionTenant = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCompany || !newSlug || !newAdminEmail || !newAdminPassword || !newAdminName) {
-      alert("Please fill in all tenant creation fields.");
+      showToast("Please fill in all tenant creation fields.", 'success');
       return;
     }
     
@@ -217,10 +222,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       setNewAdminName('');
       setNewAdminEmail('');
       setNewAdminPassword('');
-      alert("Tenant workspace and admin user generated successfully!");
+      showToast("Tenant workspace and admin user generated successfully!", 'success');
       loadData();
     } catch (err: any) {
-      alert(err.message || "Failed to provision workspace.");
+      showToast(err.message || "Failed to provision workspace.", 'error');
     }
   };
 
@@ -238,10 +243,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         })
       });
       setProviderKey('');
-      alert("AI Provider updated successfully!");
+      showToast("AI Provider updated successfully!", 'success');
       loadData();
     } catch (err) {
-      alert("Failed to update provider configuration.");
+      showToast("Failed to update provider configuration.", 'error');
     }
   };
 
@@ -250,9 +255,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       const res = await apiRequest(`/super-admin/providers/${provName}/test-connection`, {
         method: "POST"
       });
-      alert(res.message || "Connection verified successfully!");
+      showToast(res.message || "Connection verified successfully!", 'success');
     } catch (err) {
-      alert("Failed to verify connection.");
+      showToast("Failed to verify connection.", 'error');
     }
   };
 
@@ -263,9 +268,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         method: "POST"
       });
       loadData();
-      alert("Billing plan duplicated successfully!");
+      showToast("Billing plan duplicated successfully!", 'success');
     } catch (err) {
-      alert("Failed to duplicate plan.");
+      showToast("Failed to duplicate plan.", 'error');
     }
   };
 
@@ -275,9 +280,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         method: "PATCH"
       });
       loadData();
-      alert("Plan status updated.");
+      showToast("Plan status updated.", 'success');
     } catch (err) {
-      alert("Failed to toggle plan status.");
+      showToast("Failed to toggle plan status.", 'error');
     }
   };
 
@@ -289,9 +294,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         method: "PATCH"
       });
       loadData();
-      alert(`User status updated to ${nextStatus}.`);
+      showToast(`User status updated to ${nextStatus}.`, 'success');
     } catch (err) {
-      alert("Failed to update user status.");
+      showToast("Failed to update user status.", 'error');
     }
   };
 
@@ -300,9 +305,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       const res = await apiRequest(`/super-admin/users/${userId}/reset-password`, {
         method: "POST"
       });
-      alert(res.message || "Password reset successfully.");
+      showToast(res.message || "Password reset successfully.", 'success');
     } catch (err) {
-      alert("Failed to reset password.");
+      showToast("Failed to reset password.", 'error');
     }
   };
 
@@ -311,9 +316,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       const res = await apiRequest(`/super-admin/users/${userId}/force-logout`, {
         method: "POST"
       });
-      alert(res.message || "User session terminated.");
+      showToast(res.message || "User session terminated.", 'success');
     } catch (err) {
-      alert("Failed to force logout user.");
+      showToast("Failed to force logout user.", 'error');
     }
   };
 
@@ -323,10 +328,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       const res = await apiRequest(`/billing/invoices/${invId}/regenerate`, {
         method: "POST"
       });
-      alert(res.message || "Invoice PDF regenerated successfully.");
+      showToast(res.message || "Invoice PDF regenerated successfully.", 'success');
       loadData();
     } catch (err) {
-      alert("Failed to regenerate invoice PDF.");
+      showToast("Failed to regenerate invoice PDF.", 'error');
     }
   };
 
@@ -335,26 +340,26 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       const res = await apiRequest(`/billing/invoices/${invId}/email`, {
         method: "POST"
       });
-      alert(res.message || "Invoice email sent successfully.");
+      showToast(res.message || "Invoice email sent successfully.", 'success');
     } catch (err) {
-      alert("Failed to send invoice email.");
+      showToast("Failed to send invoice email.", 'error');
     }
   };
 
   const handleRenewPlan = async (tenantName: string) => {
     const t = tenants.find(x => x.tenant_name === tenantName);
     if (!t) {
-      alert("Tenant workspace details missing.");
+      showToast("Tenant workspace details missing.", 'error');
       return;
     }
     try {
       const res = await apiRequest(`/billing/subscriptions/renew?tenant_id=${t.id}`, {
         method: "POST"
       });
-      alert(res.message || "Subscription renewed successfully.");
+      showToast(res.message || "Subscription renewed successfully.", 'success');
       loadData();
     } catch (err) {
-      alert("Failed to renew plan.");
+      showToast("Failed to renew plan.", 'error');
     }
   };
 
@@ -365,10 +370,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         method: "PATCH",
         body: JSON.stringify(gatewaySettings)
       });
-      alert("Global billing and gateway configuration saved successfully!");
+      showToast("Global billing and gateway configuration saved successfully!", 'success');
       loadData();
     } catch (err: any) {
-      alert(err.message || "Failed to update global billing configurations.");
+      showToast(err.message || "Failed to update global billing configurations.", 'error');
     }
   };
 
@@ -810,9 +815,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                             <button
                               onClick={() => setViewingTenant(tenant)}
                               className="bg-teal-600/15 hover:bg-teal-600/25 text-teal-400 px-2 py-1 rounded text-sm font-bold cursor-pointer"
-                            >
-                              View
-                            </button>
+                             title="View"><Eye size={16} /></button>
                             <button
                               onClick={() => setActiveMenuId(activeMenuId === tenant.id ? null : tenant.id)}
                               className="p-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white"
@@ -827,15 +830,17 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                                 <button
                                   onClick={() => handleUpdateTenantStatus(tenant.id, 'suspended')}
                                   className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-amber-500 hover:bg-amber-500/10"
+                                  title="Suspend"
                                 >
-                                  <Ban size={12} /> Suspend
+                                  <Ban size={16} />
                                 </button>
                               ) : (
                                 <button
                                   onClick={() => handleUpdateTenantStatus(tenant.id, 'active')}
                                   className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-emerald-400 hover:bg-emerald-500/10"
+                                  title="Activate"
                                 >
-                                  <CheckCircle2 size={12} /> Activate
+                                  <CheckCircle2 size={16} />
                                 </button>
                               )}
                               <button
@@ -846,15 +851,17 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                                   setActiveMenuId(null);
                                 }}
                                 className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-teal-400 hover:bg-teal-600/10"
+                                title="Edit Plan"
                               >
-                                <Settings2 size={12} /> Edit Plan
+                                <Edit size={16} />
                               </button>
                               <div className="h-[1px] bg-white/5 my-1" />
                               <button
                                 onClick={() => handleUpdateTenantStatus(tenant.id, 'deleted')}
                                 className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-red-500 hover:bg-red-500/10"
+                                title="Delete"
                               >
-                                <Trash2 size={12} /> Delete
+                                <Trash2 size={16} />
                               </button>
                             </div>
                           )}
@@ -968,9 +975,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                           <button
                             onClick={() => handleForceLogoutUser(user.id)}
                             className="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-2 py-1 rounded text-sm font-bold cursor-pointer"
-                          >
-                            Force Logout
-                          </button>
+                           title="Force Logout"><PowerOff size={16} /></button>
                         </td>
                       </tr>
                     ))}
@@ -1041,24 +1046,27 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   
                   <div className="mt-5 grid grid-cols-3 gap-1 pt-3 border-t border-slate-200 dark:border-white/5">
                     <button 
-                      onClick={() => alert(`Modify limits configuration for plan: ${p.name}`)}
-                      className="bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white py-1.5 rounded-lg text-sm font-bold cursor-pointer border border-slate-300 dark:border-white/5"
-                    >
-                      Edit Plan
-                    </button>
+                      onClick={() => showToast(`Modify limits configuration for plan: ${p.name}`, 'success')}
+                      className="bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white py-1.5 rounded-lg text-sm font-bold cursor-pointer border border-slate-300 dark:border-white/5 flex justify-center items-center"
+                     title="Edit Plan"><Edit size={18} /></button>
                     <button 
                       onClick={() => handleClonePlan(p.id)}
-                      className="bg-teal-600/10 hover:bg-teal-600/25 text-teal-400 py-1.5 rounded-lg text-sm font-bold cursor-pointer"
-                    >
-                      Duplicate
-                    </button>
+                      className="bg-teal-600/10 hover:bg-teal-600/25 text-teal-400 py-1.5 rounded-lg text-sm font-bold cursor-pointer flex justify-center items-center"
+                     title="Duplicate"><Copy size={18} /></button>
                     <button 
                       onClick={() => handleTogglePlanActive(p.id)}
-                      className={`py-1.5 rounded-lg text-sm font-bold cursor-pointer ${
-                        p.active ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out place-self-center ${
+                        p.active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
                       }`}
+                     title={p.active ? "Disable" : "Enable"}
                     >
-                      {p.active ? 'Disable' : 'Enable'}
+                      <span className="sr-only">Toggle Plan</span>
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          p.active ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
                     </button>
                   </div>
                 </div>
@@ -1490,9 +1498,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                           <button
                             onClick={() => handleEmailInvoice(inv.id)}
                             className="bg-teal-600/10 hover:bg-teal-600/20 text-teal-400 px-2 py-0.5 rounded text-sm"
-                          >
-                            Email
-                          </button>
+                           title="Email"><Mail size={16} /></button>
                           <button
                             onClick={() => handleRegenerateInvoice(inv.id)}
                             className="bg-white/5 hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-white px-2 py-0.5 rounded text-sm"

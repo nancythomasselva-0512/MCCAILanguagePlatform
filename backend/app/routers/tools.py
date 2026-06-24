@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.dependencies.auth import get_current_user, get_current_tenant_context, check_tenant_access
-from app.models.models import User, Tenant, UsageTracking, ProviderConfiguration, TranscriptionHistory, TranslationHistory, TtsHistory, SubscriptionPlan
+from app.models.models import User, Tenant, UsageTracking, ProviderConfiguration, TranscriptionHistory, TranslationHistory, TtsHistory, SubscriptionPlan, FeatureProviderMapping
 from app.schemas.schemas import TranscriptionResponse, TranslationResponse, TtsResponse
 from app.core.security import decrypt_data
 import datetime
@@ -12,6 +12,31 @@ import os
 from typing import List
 
 router = APIRouter(prefix="/tools", tags=["AI Processing Tools"], dependencies=[Depends(check_tenant_access)])
+
+# Endpoint to fetch the currently active provider for a given feature (used by frontend badge)
+@router.get("/active-providers")
+def get_active_providers(db: Session = Depends(get_db)):
+    # Returns a map of feature_name -> active provider_name
+    mappings = db.query(FeatureProviderMapping).filter(FeatureProviderMapping.is_enabled == True).order_by(FeatureProviderMapping.priority.asc()).all()
+    
+    result = {}
+    for m in mappings:
+        if m.feature_name not in result:
+            result[m.feature_name] = m.provider_name
+    return result
+
+def get_global_provider_for_feature(db: Session, tenant: Tenant, feature_name: str) -> tuple[str, str]:
+    mappings = db.query(FeatureProviderMapping).filter(
+        FeatureProviderMapping.feature_name == feature_name,
+        FeatureProviderMapping.is_enabled == True
+    ).order_by(FeatureProviderMapping.priority.asc()).all()
+    
+    for mapping in mappings:
+        api_key = resolve_api_key(db, tenant, mapping.provider_name)
+        # Assuming if there's an api_key or if it's a provider that doesn't need an API key
+        return mapping.provider_name, api_key
+        
+    return "openai", resolve_api_key(db, tenant, "openai") # Safe fallback
 
 # Helper to check usage limit
 def verify_limit(db: Session, tenant: Tenant, metric: str, incremental_amount: float):
@@ -97,7 +122,6 @@ def translate_text(
     text: str = Form(...),
     source_lang: str = Form("Auto Detect"),
     target_lang: str = Form("English"),
-    provider: str = Form("openai"),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant_context)
@@ -105,8 +129,9 @@ def translate_text(
     char_len = len(text)
     verify_limit(db, tenant, "translation", char_len)
     
-    # Resolve API Key
-    api_key = resolve_api_key(db, tenant, provider)
+    # Resolve Provider and API Key via Global Mapping
+    provider, api_key = get_global_provider_for_feature(db, tenant, "Text Translation")
+
     
     # Perform Translation Action (simulate if no keys available)
     translated_text = ""
@@ -198,7 +223,6 @@ async def transcribe_audio(
     file: UploadFile = File(...),
     model: str = Form("base"),
     language: str = Form("en"),
-    provider: str = Form("openai"),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant_context)
@@ -212,7 +236,7 @@ async def transcribe_audio(
         
     verify_limit(db, tenant, "transcription", estimated_minutes)
     
-    api_key = resolve_api_key(db, tenant, provider)
+    provider, api_key = get_global_provider_for_feature(db, tenant, "Audio To Text")
     transcript_text = ""
     
     # 1. Local Whisper engine call
@@ -276,7 +300,6 @@ async def transcribe_audio(
 def synthesize_speech(
     text: str = Form(...),
     voice: str = Form("alloy"),
-    provider: str = Form("openai"),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant_context)
@@ -284,7 +307,7 @@ def synthesize_speech(
     char_len = len(text)
     verify_limit(db, tenant, "tts", char_len)
     
-    api_key = resolve_api_key(db, tenant, provider)
+    provider, api_key = get_global_provider_for_feature(db, tenant, "Text To Speech")
     
     # Record TTS request log (simulate audio generation path)
     history = TtsHistory(
