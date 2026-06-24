@@ -16,6 +16,7 @@ export const TextToVoice: React.FC = () => {
   const { history, billingOverview, addHistoryItem, theme, openAiApiKey, fetchBillingOverview } = useApp();
   const [text, setText] = useState('');
   const [localVoices, setLocalVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [activeProvider, setActiveProvider] = useState<string>('Managed by Platform');
   const [selectedLocalVoice, setSelectedLocalVoice] = useState('');
   const [speed, setSpeed] = useState(1.0);
   const [pitch, setPitch] = useState(1.0);
@@ -27,7 +28,15 @@ export const TextToVoice: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressIntervalRef = useRef<any>(null);
 
+  
   useEffect(() => {
+    providerManager.getActiveProviders().then(res => {
+      if (res["Text To Speech"]) {
+        setActiveProvider(res["Text To Speech"].toUpperCase());
+      }
+    });
+  }, []);
+useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       const updateVoices = () => {
         const voices = window.speechSynthesis.getVoices();
@@ -146,7 +155,7 @@ export const TextToVoice: React.FC = () => {
               clearInterval(progressIntervalRef.current);
               setPlayState('done');
               setProgress(100);
-              addHistoryItem('text-to-speech', inputText, `${selectedLocalVoice || 'Voice Synthesis'} (${ttsProvider.toUpperCase()}) • ${inputText.split(' ').filter(Boolean).length} words`);
+              addHistoryItem('text-to-speech', inputText, `${selectedLocalVoice || 'Voice Synthesis'} (${activeProvider}) • ${inputText.split(' ').filter(Boolean).length} words`);
             } else {
               setProgress(currentProgress);
             }
@@ -163,7 +172,7 @@ export const TextToVoice: React.FC = () => {
       audio.onended = () => {
         setProgress(100);
         setPlayState('done');
-        addHistoryItem('text-to-speech', inputText, `${selectedLocalVoice || 'Voice Synthesis'} (${ttsProvider.toUpperCase()}) • ${inputText.split(' ').filter(Boolean).length} words`);
+        addHistoryItem('text-to-speech', inputText, `${selectedLocalVoice || 'Voice Synthesis'} (${activeProvider}) • ${inputText.split(' ').filter(Boolean).length} words`);
       };
 
       audio.onerror = () => {
@@ -209,7 +218,7 @@ export const TextToVoice: React.FC = () => {
       };
 
       await audio.play().catch(() => {
-        if (ttsProvider === 'elevenlabs') {
+        if (activeProvider.toLowerCase() === 'elevenlabs') {
           setPlayState('playing');
           let currentProgress = 0;
           progressIntervalRef.current = setInterval(() => {

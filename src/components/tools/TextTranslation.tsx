@@ -28,6 +28,7 @@ export const TextTranslation: React.FC = () => {
   const [sourceLang, setSourceLang] = useState('Auto Detect');
   const [targetLang, setTargetLang] = useState('Tamil');
   const [state, setState] = useState<TranslateState>('idle');
+  const [activeProvider, setActiveProvider] = useState<string>('Managed by Platform');
   const [errorMsg, setErrorMsg] = useState('');
   const [copiedSrc, setCopiedSrc] = useState(false);
   const [copiedTgt, setCopiedTgt] = useState(false);

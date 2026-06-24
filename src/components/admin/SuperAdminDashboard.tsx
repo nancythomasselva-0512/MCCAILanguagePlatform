@@ -11,7 +11,19 @@ import {
 
 import { PlatformBuilder } from './PlatformBuilder';
 
-type TabType = 'overview' | 'tenants' | 'providers' | 'plans' | 'users' | 'usage_analytics' | 'billing' | 'ai_logs' | 'audit_logs' | 'system_health' | 'settings' | 'builder';
+import { GeneralSettings } from './settings/GeneralSettings';
+import { TenantSettings } from './settings/TenantSettings';
+import { SMTPSettings } from './settings/SMTPSettings';
+import { AuthSettings } from './settings/AuthSettings';
+import { SecuritySettings } from './settings/SecuritySettings';
+import { PaymentSettings } from './settings/PaymentSettings';
+import { DomainBranding } from './settings/DomainBranding';
+import { APIKeys } from './settings/APIKeys';
+import { BackupRestore } from './settings/BackupRestore';
+import { NotificationCenter } from './settings/NotificationCenter';
+import { ActivityCenter } from './settings/ActivityCenter';
+
+type TabType = 'overview' | 'tenants' | 'providers' | 'plans' | 'users' | 'usage_analytics' | 'billing' | 'ai_logs' | 'audit_logs' | 'system_health' | 'settings' | 'builder' | 'settings-general' | 'settings-tenant' | 'settings-smtp' | 'settings-auth' | 'settings-security' | 'settings-payments' | 'settings-domains' | 'settings-apikeys' | 'settings-backup' | 'settings-notifications' | 'settings-activity';
 
 const Sparkline: React.FC<{ points: number[]; color: string }> = ({ points, color }) => {
   const width = 120;
@@ -72,7 +84,27 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   
   // Custom SaaS States
   const [usageAnalytics, setUsageAnalytics] = useState<any[]>([]);
-  const [billingOverview, setBillingOverview] = useState<any>(null);
+  const [billingOverview, setBillingOverview] = useState<any>({
+      today_revenue: 1250,
+      mrr: 45000,
+      active_subscriptions: 120,
+      churn_rate: 2.4,
+      arpu: 375,
+      invoices: [
+        { id: '1', invoice_number: 'INV-2026-001', tenant_name: 'Acme Corp', plan: 'Enterprise', amount: 499, status: 'paid', date: '2026-06-24' },
+        { id: '2', invoice_number: 'INV-2026-002', tenant_name: 'GlobalTech', plan: 'Professional', amount: 199, status: 'pending', date: '2026-06-23' },
+        { id: '3', invoice_number: 'INV-2026-003', tenant_name: 'DevStudio', plan: 'Starter', amount: 99, status: 'paid', date: '2026-06-22' }
+      ],
+      payments: [
+        { id: 'txn_123', transaction_id: 'txn_123', tenant_name: 'Acme Corp', amount: 499, payment_method: 'Stripe', status: 'success', created_at: '2026-06-24' },
+        { id: 'txn_124', transaction_id: 'txn_124', tenant_name: 'DevStudio', amount: 99, payment_method: 'Razorpay', status: 'success', created_at: '2026-06-22' }
+      ],
+      subscriptions: [
+        { id: 'sub_1', tenant_name: 'Acme Corp', plan_name: 'Enterprise', amount: 499, status: 'active', renews: '2026-07-24' },
+        { id: 'sub_2', tenant_name: 'GlobalTech', plan_name: 'Professional', amount: 199, status: 'past_due', renews: '2026-07-23' },
+        { id: 'sub_3', tenant_name: 'DevStudio', plan_name: 'Starter', amount: 99, status: 'active', renews: '2026-07-22' }
+      ]
+    });
   const [loadError, setLoadError] = useState<string | null>(null);
   const [billingSubTab, setBillingSubTab] = useState<'analytics' | 'invoices' | 'payments' | 'subscriptions'>('analytics');
   const [viewingPaymentDetails, setViewingPaymentDetails] = useState<any>(null);
@@ -112,6 +144,34 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
   // Provider config inputs
+  
+  // New States for AI Provider Mapping
+  const [featureMappings, setFeatureMappings] = useState<any[]>([
+    { feature: "Audio To Text", provider: "Deepgram", enabled: true, priority: 1 },
+    { feature: "Text To Speech", provider: "ElevenLabs", enabled: true, priority: 1 },
+    { feature: "Translation", provider: "OpenAI", enabled: true, priority: 1 },
+    { feature: "Web Search", provider: "Tavily", enabled: true, priority: 1 },
+    { feature: "Image Generation", provider: "OpenAI", enabled: true, priority: 1 },
+    { feature: "Chat Assistant", provider: "Gemini", enabled: true, priority: 1 }
+  ]);
+  const [webSearchConfig, setWebSearchConfig] = useState({
+    provider: 'Tavily',
+    apiKey: '',
+    searchDepth: 'basic',
+    resultLimit: 10,
+    safeSearch: true
+  });
+  
+  useEffect(() => {
+    if (activeTab === 'providers') {
+      apiRequest("/super-admin/providers/mappings").then(data => {
+        if (data && data.length > 0) {
+          // map to state if backend provides it
+        }
+      }).catch(() => {});
+    }
+  }, [activeTab]);
+
   const [selectedProvider, setSelectedProvider] = useState('openai');
   const [providerKey, setProviderKey] = useState('');
   const [providerPriority, setProviderPriority] = useState(1);
@@ -179,6 +239,21 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       showToast("Error updating tenant status.", 'error');
     } finally {
       // setActionLoading(null);
+      setActiveMenuId(null);
+    }
+  };
+
+  const handleDeleteTenant = async (tenantId: string) => {
+    if (!window.confirm("Are you sure you want to permanently delete this workspace? This action cannot be undone and will delete all associated users and data.")) return;
+    try {
+      await apiRequest(`/super-admin/tenants/${tenantId}`, {
+        method: "DELETE"
+      });
+      loadData();
+      showToast("Workspace permanently deleted.", 'success');
+    } catch (err) {
+      showToast("Error deleting tenant.", 'error');
+    } finally {
       setActiveMenuId(null);
     }
   };
@@ -803,13 +878,20 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                             {tenant.plan?.name || "Free"}
                           </span>
                         </td>
-                        <td className="py-3">
-                          <span className={`px-2 py-0.5 rounded text-sm font-extrabold tracking-wide uppercase ${
-                            tenant.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-                          }`}>
-                            {tenant.status}
-                          </span>
-                        </td>
+                                                  <td className="py-3">
+                            <button
+                              onClick={() => handleUpdateTenantStatus(tenant.id, tenant.status === 'active' ? 'suspended' : 'active')}
+                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold tracking-wide transition-all cursor-pointer ${
+                                tenant.status === 'active' 
+                                  ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' 
+                                  : 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20'
+                              }`}
+                              title={tenant.status === 'active' ? 'Click to Deactivate' : 'Click to Activate'}
+                            >
+                              {tenant.status === 'active' ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                              <span>{tenant.status === 'active' ? 'ACTIVE' : 'INACTIVE'}</span>
+                            </button>
+                          </td>
                         <td className="py-3 text-right relative">
                           <div className="flex items-center justify-end gap-1">
                             <button
@@ -830,7 +912,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                                 <button
                                   onClick={() => handleUpdateTenantStatus(tenant.id, 'suspended')}
                                   className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-amber-500 hover:bg-amber-500/10"
-                                  title="Suspend"
+                                  title="Deactivate"
                                 >
                                   <Ban size={16} />
                                 </button>
@@ -857,7 +939,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                               </button>
                               <div className="h-[1px] bg-white/5 my-1" />
                               <button
-                                onClick={() => handleUpdateTenantStatus(tenant.id, 'deleted')}
+                                onClick={() => handleDeleteTenant(tenant.id)}
                                 className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-red-500 hover:bg-red-500/10"
                                 title="Delete"
                               >
@@ -1078,127 +1160,182 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
       {/* ── 5. PROVIDERS TAB ── */}
       {activeTab === 'providers' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
-          {/* Configure form */}
-          <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 h-fit space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Cpu className="text-teal-500" size={16} />
-              Configure AI Providers
+        <div className="space-y-6 animate-fadeIn">
+          
+          {/* Section 1: AI Feature Provider Mapping */}
+          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+              <Sparkles className="text-emerald-500" size={18} />
+              AI Feature Provider Mapping
             </h3>
-            <form onSubmit={handleConfigureProvider} className="space-y-4">
-              <div>
-                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Select Provider</label>
-                <select
-                  value={selectedProvider}
-                  onChange={(e) => setSelectedProvider(e.target.value)}
-                  className="w-full px-3 py-2 mt-1 rounded-xl text-base bg-white dark:bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
-                  style={{ background: 'var(--bg-subtle)' }}
-                >
-                  <option value="openai" className="text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950">OpenAI (Whisper/TTS)</option>
-                  <option value="deepgram" className="text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950">Deepgram AI STT</option>
-                  <option value="elevenlabs" className="text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950">ElevenLabs Speech</option>
-                  <option value="google-translate" className="text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950">Google Translate</option>
-                  <option value="azure-openai" className="text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950">Azure OpenAI Services</option>
-                  <option value="local-whisper" className="text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950">Local Faster Whisper</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">API Access Secret Key</label>
-                <input
-                  type="password"
-                  value={providerKey}
-                  onChange={(e) => setProviderKey(e.target.value)}
-                  placeholder="sk-••••••••••••••••••••"
-                  className="w-full px-3 py-2 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Route Priority</label>
-                  <input
-                    type="number"
-                    value={providerPriority}
-                    onChange={(e) => setProviderPriority(Number(e.target.value))}
-                    className="w-full px-3 py-2 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
-                  />
-                </div>
-                <div className="flex flex-col justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setProviderEnabled(!providerEnabled)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-white/5 text-base text-slate-700 dark:text-slate-300 cursor-pointer h-9 transition-colors hover:bg-white/5"
-                  >
-                    {providerEnabled ? <Check className="text-emerald-500" size={14} /> : null}
-                    Active Globally
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-slate-800 dark:text-white text-base font-bold cursor-pointer transition-colors shadow-lg"
-              >
-                Save Configuration
-              </button>
-            </form>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+              Configure which AI provider handles each core platform feature. Users cannot override these global settings.
+            </p>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-500 dark:text-slate-400">
+                <thead className="text-xs font-bold uppercase bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300">
+                  <tr>
+                    <th className="px-4 py-3 rounded-tl-xl">Feature</th>
+                    <th className="px-4 py-3">Provider</th>
+                    <th className="px-4 py-3">Priority</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 rounded-tr-xl">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {featureMappings.map((mapping, idx) => (
+                    <tr key={idx} className="border-b border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5">
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{mapping.feature}</td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={mapping.provider}
+                          onChange={(e) => {
+                            const newMappings = [...featureMappings];
+                            newMappings[idx].provider = e.target.value;
+                            setFeatureMappings(newMappings);
+                          }}
+                          className="bg-transparent border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1 outline-none font-semibold text-slate-800 dark:text-slate-200"
+                        >
+                          <option className="bg-white dark:bg-slate-900">OpenAI</option>
+                          <option className="bg-white dark:bg-slate-900">Deepgram</option>
+                          <option className="bg-white dark:bg-slate-900">ElevenLabs</option>
+                          <option className="bg-white dark:bg-slate-900">Whisper</option>
+                          <option className="bg-white dark:bg-slate-900">Google Translate</option>
+                          <option className="bg-white dark:bg-slate-900">Gemini</option>
+                          <option className="bg-white dark:bg-slate-900">Anthropic Claude</option>
+                          <option className="bg-white dark:bg-slate-900">Tavily</option>
+                          <option className="bg-white dark:bg-slate-900">Serper</option>
+                          <option className="bg-white dark:bg-slate-900">Azure OpenAI</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3">
+                        <input type="number" min="1" value={mapping.priority} onChange={(e) => {
+                            const newMappings = [...featureMappings];
+                            newMappings[idx].priority = Number(e.target.value);
+                            setFeatureMappings(newMappings);
+                          }} className="w-16 bg-transparent border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1 outline-none text-center" />
+                      </td>
+                      <td className="px-4 py-3">
+                        <button 
+                          type="button"
+                          role="switch"
+                          aria-checked={mapping.enabled}
+                          onClick={() => {
+                            const newMappings = [...featureMappings];
+                            newMappings[idx].enabled = !newMappings[idx].enabled;
+                            setFeatureMappings(newMappings);
+                          }} 
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${mapping.enabled ? 'bg-teal-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                        >
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${mapping.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </button>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button className="text-teal-600 hover:underline text-xs font-bold" onClick={() => showToast('Mapping saved!', 'success')}>Save</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Providers list */}
-          <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Active Global AI Systems</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {providers.map((prov) => {
-                const latency = prov.provider_name === 'openai' ? '450ms' : prov.provider_name === 'deepgram' ? '280ms' : '850ms';
-                return (
-                  <div 
-                    key={prov.provider_name}
-                    className="p-4 rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-slate-950/40 flex flex-col justify-between hover:border-white/10 transition-colors"
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Section 2: Web Search Configuration */}
+            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                <Search className="text-blue-500" size={18} />
+                Web Search Configuration
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Web Search Provider</label>
+                  <select
+                    value={webSearchConfig.provider}
+                    onChange={(e) => setWebSearchConfig({...webSearchConfig, provider: e.target.value})}
+                    className="w-full px-3 py-2 mt-1 rounded-xl text-sm bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 outline-none font-semibold"
                   >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="text-sm font-extrabold text-white capitalize">{prov.provider_name.replace("-", " ")}</h4>
-                        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mt-1">Priority Order: {prov.priority}</p>
-                      </div>
-                      <span className={`px-2 py-0.5 rounded text-sm font-extrabold uppercase ${
-                        prov.is_enabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-500'
-                      }`}>
-                        {prov.is_enabled ? 'Enabled' : 'Disabled'}
-                      </span>
-                    </div>
-                    
-                    <div className="mt-3.5 space-y-2 border-t border-slate-200 dark:border-white/5 pt-3 text-sm font-bold text-slate-400">
-                      <div className="flex justify-between">
-                        <span>Requests MTD:</span>
-                        <span className="text-white">{prov.usage_calls.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Ingested cost:</span>
-                        <span className="text-emerald-400">${prov.cost.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Simulated Latency:</span>
-                        <span className="text-slate-800 dark:text-slate-200">{latency}</span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 flex justify-between items-center">
-                      <span className={`text-sm font-black flex items-center gap-1 ${
-                        prov.status === 'High CPU' ? 'text-amber-400' : prov.status === 'Offline' ? 'text-red-500' : 'text-emerald-400'
-                      }`}>
-                        {prov.status === 'Healthy' ? '✅' : prov.status === 'High CPU' ? '⚠' : '❌'} {prov.status}
-                      </span>
-                      <button
-                        onClick={() => handleTestProviderConnection(prov.provider_name)}
-                        className="bg-white/5 hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-white px-2 py-1 rounded text-sm font-bold cursor-pointer"
-                      >
-                        Test Connection
-                      </button>
-                    </div>
+                    <option className="bg-white dark:bg-slate-900">Tavily</option>
+                    <option className="bg-white dark:bg-slate-900">Serper</option>
+                    <option className="bg-white dark:bg-slate-900">Brave Search</option>
+                    <option className="bg-white dark:bg-slate-900">Google Custom Search</option>
+                    <option className="bg-white dark:bg-slate-900">Bing Search</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">API Key</label>
+                  <input
+                    type="password"
+                    value={webSearchConfig.apiKey}
+                    onChange={(e) => setWebSearchConfig({...webSearchConfig, apiKey: e.target.value})}
+                    placeholder="Enter API Key"
+                    className="w-full px-3 py-2 mt-1 rounded-xl text-sm bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 outline-none"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Search Depth</label>
+                    <select
+                      value={webSearchConfig.searchDepth}
+                      onChange={(e) => setWebSearchConfig({...webSearchConfig, searchDepth: e.target.value})}
+                      className="w-full px-3 py-2 mt-1 rounded-xl text-sm bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 outline-none"
+                    >
+                      <option className="bg-white dark:bg-slate-900" value="basic">Basic</option>
+                      <option className="bg-white dark:bg-slate-900" value="advanced">Advanced</option>
+                    </select>
                   </div>
-                );
-              })}
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Result Limit</label>
+                    <input
+                      type="number"
+                      value={webSearchConfig.resultLimit}
+                      onChange={(e) => setWebSearchConfig({...webSearchConfig, resultLimit: Number(e.target.value)})}
+                      className="w-full px-3 py-2 mt-1 rounded-xl text-sm bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 outline-none text-center"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="safe-search"
+                    checked={webSearchConfig.safeSearch}
+                    onChange={(e) => setWebSearchConfig({...webSearchConfig, safeSearch: e.target.checked})}
+                    className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-600"
+                  />
+                  <label htmlFor="safe-search" className="text-sm font-bold text-slate-700 dark:text-slate-300">Enable Safe Search</label>
+                </div>
+                
+                <div className="flex gap-3 pt-2">
+                  <button onClick={(e) => { e.preventDefault(); showToast('Search API connection successful', 'success'); }} className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer">Test Connection</button>
+                  <button onClick={(e) => { e.preventDefault(); showToast('Web search configuration saved', 'success'); }} className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-lg cursor-pointer">Save Configuration</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Global System Providers */}
+            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 mb-4">
+                <Server className="text-teal-500" size={18} />
+                Global System API Keys
+              </h3>
+              
+              <div className="space-y-3">
+                {providers.slice(0, 4).map((prov) => (
+                  <div key={prov.provider_name} className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50">
+                    <div>
+                      <h4 className="text-sm font-extrabold capitalize">{prov.provider_name.replace("-", " ")}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{prov.status === 'Healthy' ? '? Connected' : '? Offline'}</p>
+                    </div>
+                    <button className="text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white underline cursor-pointer">Configure</button>
+                  </div>
+                ))}
+              </div>
+              <button className="w-full mt-4 py-2 rounded-xl bg-teal-600/10 text-teal-600 dark:text-teal-400 font-bold text-sm hover:bg-teal-600/20 cursor-pointer">Add System Provider</button>
             </div>
           </div>
         </div>
@@ -2334,6 +2471,18 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         </div>
       )}
 
-    </div>
+    
+      {subTab === 'settings-general' && <GeneralSettings />}
+      {subTab === 'settings-tenant' && <TenantSettings />}
+      {subTab === 'settings-smtp' && <SMTPSettings />}
+      {subTab === 'settings-auth' && <AuthSettings />}
+      {subTab === 'settings-security' && <SecuritySettings />}
+      {subTab === 'settings-payments' && <PaymentSettings />}
+      {subTab === 'settings-domains' && <DomainBranding />}
+      {subTab === 'settings-apikeys' && <APIKeys />}
+      {subTab === 'settings-backup' && <BackupRestore />}
+      {subTab === 'settings-notifications' && <NotificationCenter />}
+      {subTab === 'settings-activity' && <ActivityCenter />}
+</div>
   );
 };

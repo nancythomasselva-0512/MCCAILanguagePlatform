@@ -53,13 +53,13 @@ export const Header: React.FC = () => {
       else if (query.includes('translate') || query.includes('language')) targetTab = 'text-translation';
       else if ((query.includes('audio') || query.includes('mp3')) && query.includes('text')) targetTab = 'audio-to-text';
       else if (query.includes('voice') && query.includes('text')) targetTab = 'voice-to-text';
-      else if (query.includes('text') && query.includes('voice')) targetTab = 'text-to-voice';
-      else if (query.includes('tts') || query.includes('speech') || query.includes('read')) targetTab = 'text-to-voice';
+      else if (query.includes('text') && query.includes('voice')) targetTab = 'text-to-speech';
+      else if (query.includes('tts') || query.includes('speech') || query.includes('read')) targetTab = 'text-to-speech';
       else if (query.includes('stt') || query.includes('transcrib')) targetTab = 'voice-to-text';
       else if (query.includes('admin') || query.includes('super')) targetTab = 'sa-overview';
 
       if (targetTab) {
-        if (setActiveTab) setActiveTab(targetTab);
+        if (setActiveTab) setActiveTab(targetTab as any);
         setSearchQuery('');
         (e.target as HTMLInputElement).blur();
       }

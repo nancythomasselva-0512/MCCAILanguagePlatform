@@ -5,7 +5,7 @@ import {
   History, Trash2, Clock, X, Settings, ShieldCheck, Key, Menu, ArrowLeft, LogOut,
   Activity, Building2, Users, Layers, Server, TrendingUp, CreditCard, Cpu, ShieldAlert, Settings2,
   ArrowUpRight
-} from 'lucide-react';
+, Mail, Globe, Database, Bell, LayoutGrid, ChevronDown} from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { VoiceToText } from '../tools/VoiceToText';
 import { TextToVoice } from '../tools/TextToVoice';
@@ -17,6 +17,8 @@ import { TenantBilling } from './TenantBilling';
 import { Header } from '../common/Header';
 import { SidebarMenuNode } from './SidebarMenuNode';
 import type { SidebarMenuItem } from './SidebarMenuNode';
+import { storage } from "../../utils/storage";
+
 
 const TYPE_LABELS: Record<string, string> = {
   'voice-to-text': 'Voice to Text',
@@ -37,6 +39,18 @@ const TYPE_LABELS: Record<string, string> = {
   'sa-audit-logs': 'Audit Logs',
   'sa-health': 'System Health',
   'sa-builder': 'Platform Builder',
+
+  'sa-settings-general': 'General Settings',
+  'sa-settings-tenant': 'Tenant Settings',
+  'sa-settings-smtp': 'SMTP & Email',
+  'sa-settings-auth': 'Authentication',
+  'sa-settings-security': 'Security',
+  'sa-settings-payments': 'Payment Gateways',
+  'sa-settings-domains': 'Domains & Branding',
+  'sa-settings-apikeys': 'API Keys',
+  'sa-settings-backup': 'Backup & Restore',
+  'sa-settings-notifications': 'Notification Center',
+  'sa-settings-activity': 'Activity Center',
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -58,6 +72,18 @@ const TYPE_COLORS: Record<string, string> = {
   'sa-audit-logs': '#3b82f6',
   'sa-health': '#3b82f6',
   'sa-builder': '#3b82f6',
+
+  'sa-settings-general': '#ef4444',
+  'sa-settings-tenant': '#ef4444',
+  'sa-settings-smtp': '#ef4444',
+  'sa-settings-auth': '#ef4444',
+  'sa-settings-security': '#ef4444',
+  'sa-settings-payments': '#ef4444',
+  'sa-settings-domains': '#ef4444',
+  'sa-settings-apikeys': '#ef4444',
+  'sa-settings-backup': '#ef4444',
+  'sa-settings-notifications': '#ef4444',
+  'sa-settings-activity': '#ef4444',
 };
 
 export const WorkspacePage: React.FC = () => {
@@ -93,19 +119,60 @@ export const WorkspacePage: React.FC = () => {
     if (user?.role === 'super_admin') {
       return [
         {
-          title: 'Administration',
+          title: 'Dashboard',
           items: [
             { id: 'sa-overview', label: 'Dashboard', icon: 'Activity', action: 'tab', tabId: 'sa-overview' },
+          ]
+        },
+        {
+          title: 'Management',
+          items: [
             { id: 'sa-tenants', label: 'Tenants', icon: 'Building2', action: 'tab', tabId: 'sa-tenants' },
             { id: 'sa-users', label: 'Users', icon: 'Users', action: 'tab', tabId: 'sa-users' },
             { id: 'sa-plans', label: 'Plans', icon: 'Layers', action: 'tab', tabId: 'sa-plans' },
+          ]
+        },
+        {
+          title: 'AI & Analytics',
+          items: [
             { id: 'sa-providers', label: 'AI Providers', icon: 'Server', action: 'tab', tabId: 'sa-providers' },
             { id: 'sa-usage', label: 'Usage Analytics', icon: 'TrendingUp', action: 'tab', tabId: 'sa-usage' },
+            { id: 'sa-ai-logs', label: 'AI Logs', icon: 'Cpu', action: 'tab', tabId: 'sa-ai-logs' },
+          ]
+        },
+        {
+          title: 'Finance',
+          items: [
             { id: 'sa-billing', label: 'Billing', icon: 'CreditCard', action: 'tab', tabId: 'sa-billing' },
-            { id: 'sa-ai-logs', label: 'AI Logs', icon: 'Clock', action: 'tab', tabId: 'sa-ai-logs' },
+          ]
+        },
+        {
+          title: 'Monitoring',
+          items: [
             { id: 'sa-audit-logs', label: 'Audit Logs', icon: 'ShieldAlert', action: 'tab', tabId: 'sa-audit-logs' },
-            { id: 'sa-health', label: 'System Health', icon: 'Cpu', action: 'tab', tabId: 'sa-health' },
-            { id: 'sa-builder', label: 'Platform Builder', icon: 'Settings2', action: 'tab', tabId: 'sa-builder' }
+            { id: 'sa-health', label: 'System Health', icon: 'Activity', action: 'tab', tabId: 'sa-health' },
+          ]
+        },
+        {
+          title: 'Platform',
+          items: [
+            { id: 'sa-builder', label: 'Platform Builder', icon: 'Settings2', action: 'tab', tabId: 'sa-builder' },
+          ]
+        },
+        {
+          title: 'Settings',
+          items: [
+            { id: 'sa-settings-general', label: 'General Settings', icon: 'Settings', action: 'tab', tabId: 'sa-settings-general' },
+            { id: 'sa-settings-tenant', label: 'Tenant Settings', icon: 'Building2', action: 'tab', tabId: 'sa-settings-tenant' },
+            { id: 'sa-settings-smtp', label: 'SMTP & Email', icon: 'Mail', action: 'tab', tabId: 'sa-settings-smtp' },
+            { id: 'sa-settings-auth', label: 'Authentication', icon: 'Key', action: 'tab', tabId: 'sa-settings-auth' },
+            { id: 'sa-settings-security', label: 'Security', icon: 'ShieldCheck', action: 'tab', tabId: 'sa-settings-security' },
+            { id: 'sa-settings-payments', label: 'Payment Gateways', icon: 'CreditCard', action: 'tab', tabId: 'sa-settings-payments' },
+            { id: 'sa-settings-domains', label: 'Domains & Branding', icon: 'Globe', action: 'tab', tabId: 'sa-settings-domains' },
+            { id: 'sa-settings-apikeys', label: 'API Keys', icon: 'Key', action: 'tab', tabId: 'sa-settings-apikeys' },
+            { id: 'sa-settings-backup', label: 'Backup & Restore', icon: 'Database', action: 'tab', tabId: 'sa-settings-backup' },
+            { id: 'sa-settings-notifications', label: 'Notification Center', icon: 'Bell', action: 'tab', tabId: 'sa-settings-notifications' },
+            { id: 'sa-settings-activity', label: 'Activity Center', icon: 'Activity', action: 'tab', tabId: 'sa-settings-activity' },
           ]
         }
       ];
@@ -156,14 +223,14 @@ export const WorkspacePage: React.FC = () => {
   const SIDEBAR_CONFIG = getSidebarConfig();
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
-    const saved = localStorage.getItem('mcc-ai-sidebar-expanded');
+    const saved = storage.getItem('mcc-ai-sidebar-expanded');
     return saved ? JSON.parse(saved) : { 'speech-tools': true };
   });
 
   const toggleExpanded = (nodeId: string) => {
     setExpanded((prev) => {
       const next = { ...prev, [nodeId]: !prev[nodeId] };
-      localStorage.setItem('mcc-ai-sidebar-expanded', JSON.stringify(next));
+      storage.setItem('mcc-ai-sidebar-expanded', JSON.stringify(next));
       return next;
     });
   };
@@ -212,6 +279,18 @@ export const WorkspacePage: React.FC = () => {
     if (activeTab === 'sa-audit-logs') return { label: 'Audit Logs', icon: <ShieldAlert size={16} />, activeColor: '#3b82f6' };
     if (activeTab === 'sa-health') return { label: 'System Health', icon: <Cpu size={16} />, activeColor: '#3b82f6' };
     if (activeTab === 'sa-builder') return { label: 'Platform Builder', icon: <Settings2 size={16} />, activeColor: '#3b82f6' };
+    if (activeTab === 'sa-settings-general') return { label: 'General Settings', icon: <Settings size={16} />, activeColor: '#ef4444' };
+    if (activeTab === 'sa-settings-tenant') return { label: 'Tenant Settings', icon: <Building2 size={16} />, activeColor: '#ef4444' };
+    if (activeTab === 'sa-settings-smtp') return { label: 'SMTP & Email', icon: <Mail size={16} />, activeColor: '#ef4444' };
+    if (activeTab === 'sa-settings-auth') return { label: 'Authentication', icon: <Key size={16} />, activeColor: '#ef4444' };
+    if (activeTab === 'sa-settings-security') return { label: 'Security', icon: <ShieldCheck size={16} />, activeColor: '#ef4444' };
+    if (activeTab === 'sa-settings-payments') return { label: 'Payment Gateways', icon: <CreditCard size={16} />, activeColor: '#ef4444' };
+    if (activeTab === 'sa-settings-domains') return { label: 'Domains & Branding', icon: <Globe size={16} />, activeColor: '#ef4444' };
+    if (activeTab === 'sa-settings-apikeys') return { label: 'API Keys', icon: <Key size={16} />, activeColor: '#ef4444' };
+    if (activeTab === 'sa-settings-backup') return { label: 'Backup & Restore', icon: <Database size={16} />, activeColor: '#ef4444' };
+    if (activeTab === 'sa-settings-notifications') return { label: 'Notification Center', icon: <Bell size={16} />, activeColor: '#ef4444' };
+    if (activeTab === 'sa-settings-activity') return { label: 'Activity Center', icon: <Activity size={16} />, activeColor: '#ef4444' };
+
 
     return {
       'voice-to-text': { label: 'Transcription', icon: <Mic size={16} />, activeColor: '#3b82f6' },
@@ -392,24 +471,49 @@ export const WorkspacePage: React.FC = () => {
               </div>
 
               <nav className="flex-1 overflow-y-auto p-3 space-y-2.5">
-                {SIDEBAR_CONFIG.map((section) => (
-                  <div key={section.title} className="space-y-1">
-                    <h4 className="px-4 text-xs font-bold tracking-[0.1em] text-teal-800 uppercase mb-1 mt-1.5 select-none">
-                      {section.title}
-                    </h4>
-                    {section.items.map((item) => (
-                      <SidebarMenuNode
-                        key={item.id}
-                        node={item}
-                        expanded={expanded}
-                        toggleExpanded={toggleExpanded}
-                        onSettingsOpen={() => setSettingsOpen(true)}
-                        onSidebarClose={() => setSidebarOpen(false)}
-                        onHistoryOpen={() => setHistoryOpen(true)}
-                      />
-                    ))}
-                  </div>
-                ))}
+                {SIDEBAR_CONFIG.map((section) => {
+                  const sectionId = `section-${section.title}`;
+                  const isSectionOpen = expanded[sectionId] ?? true;
+                  return (
+                    <div key={section.title} className="space-y-0.5 mb-2">
+                      <div 
+                        className="flex items-center justify-between px-4 mt-2 mb-1 cursor-pointer group select-none"
+                        onClick={() => toggleExpanded(sectionId)}
+                      >
+                        <h4 className="text-[11px] font-bold tracking-[0.1em] text-teal-800 dark:text-teal-500 uppercase group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                          {section.title}
+                        </h4>
+                        <ChevronDown 
+                          size={14} 
+                          className={`text-teal-800/50 dark:text-teal-500/50 transition-transform duration-200 ${isSectionOpen ? 'rotate-180' : ''}`}
+                        />
+                      </div>
+                      <AnimatePresence initial={false}>
+                        {isSectionOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden space-y-1"
+                          >
+                            {section.items.map((item) => (
+                              <SidebarMenuNode
+                                key={item.id}
+                                node={item}
+                                expanded={expanded}
+                                toggleExpanded={toggleExpanded}
+                                onSettingsOpen={() => setSettingsOpen(true)}
+                                onSidebarClose={() => setSidebarOpen(false)}
+                                onHistoryOpen={() => setHistoryOpen(true)}
+                              />
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
               </nav>
             </motion.div>
           </>
@@ -452,23 +556,48 @@ export const WorkspacePage: React.FC = () => {
           </div>
 
           <nav className="space-y-2.5 flex-1 overflow-y-auto min-h-0 pr-2 mb-2 custom-scrollbar" aria-label="Tool navigation">
-            {SIDEBAR_CONFIG.map((section) => (
-              <div key={section.title} className="space-y-1">
-                <h4 className="px-4 text-xs font-bold tracking-[0.1em] text-teal-800 uppercase mb-1 mt-1.5 select-none">
-                  {section.title}
-                </h4>
-                {section.items.map((item) => (
-                  <SidebarMenuNode
-                    key={item.id}
-                    node={item}
-                    expanded={expanded}
-                    toggleExpanded={toggleExpanded}
-                    onSettingsOpen={() => setSettingsOpen(true)}
-                    onHistoryOpen={() => setHistoryOpen(true)}
-                  />
-                ))}
-              </div>
-            ))}
+            {SIDEBAR_CONFIG.map((section) => {
+              const sectionId = `section-${section.title}`;
+              const isSectionOpen = expanded[sectionId] ?? true;
+              return (
+                <div key={section.title} className="space-y-0.5 mb-2">
+                  <div 
+                    className="flex items-center justify-between px-4 mt-2 mb-1 cursor-pointer group select-none"
+                    onClick={() => toggleExpanded(sectionId)}
+                  >
+                    <h4 className="text-[11px] font-bold tracking-[0.1em] text-teal-800 dark:text-teal-500 uppercase group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                      {section.title}
+                    </h4>
+                    <ChevronDown 
+                      size={14} 
+                      className={`text-teal-800/50 dark:text-teal-500/50 transition-transform duration-200 ${isSectionOpen ? 'rotate-180' : ''}`}
+                    />
+                  </div>
+                  <AnimatePresence initial={false}>
+                    {isSectionOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden space-y-1"
+                      >
+                        {section.items.map((item) => (
+                          <SidebarMenuNode
+                            key={item.id}
+                            node={item}
+                            expanded={expanded}
+                            toggleExpanded={toggleExpanded}
+                            onSettingsOpen={() => setSettingsOpen(true)}
+                            onHistoryOpen={() => setHistoryOpen(true)}
+                          />
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
           </nav>
 
           {user?.role !== 'super_admin' && (() => {

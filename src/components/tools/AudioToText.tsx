@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { providerManager } from '../../providers/providerManager';
+import { storage } from "../../utils/storage";
+
 
 type ProcessState = 'idle' | 'decoding' | 'downloading' | 'processing' | 'done' | 'error';
 
@@ -57,6 +59,7 @@ export const AudioToText: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [copied, setCopied] = useState(false);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  const [activeProvider, setActiveProvider] = useState<string>('Managed by Platform');
   const [selectedLanguage, setSelectedLanguage] = useState('auto');
   const [modelSize, setModelSize] = useState('base');
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -84,6 +87,15 @@ export const AudioToText: React.FC = () => {
 
   useEffect(() => { checkBackend(); }, []);
 
+  useEffect(() => {
+    providerManager.getActiveProviders().then(res => {
+      if (res["Audio To Text"]) {
+        setActiveProvider(res["Audio To Text"].toUpperCase());
+      }
+    });
+  }, []);
+
+
   const processFile = async (file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
     if (!file.type.startsWith('audio/') && !['mp3', 'wav', 'm4a', 'aac', 'ogg', 'webm', 'flac'].includes(ext)) {
@@ -97,7 +109,7 @@ export const AudioToText: React.FC = () => {
     setTranscribeProgress(0);
     setUploadProgress(0);
 
-    const token = localStorage.getItem("mcc-ai-token");
+    const token = storage.getItem("mcc-ai-token");
     // If local Faster-Whisper server is active and we are in single-tenant mode (no token), use direct upload
     if (backendStatus === 'connected' && !token) {
       try {
@@ -774,7 +786,7 @@ export const AudioToText: React.FC = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Engine</span>
-                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{audioSttProvider.toUpperCase()}</h4>
+                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{activeProvider}</h4>
                   </div>
                   <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
                     <Award size={14} />

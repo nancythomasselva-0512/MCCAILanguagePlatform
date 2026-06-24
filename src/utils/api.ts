@@ -1,11 +1,13 @@
+import { storage } from "../utils/storage";
+
 const API_BASE = "http://127.0.0.1:8000/api";
 
 export async function apiRequest(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<any> {
-  const token = localStorage.getItem("mcc-ai-token");
-  const tenantSlug = localStorage.getItem("mcc-ai-tenant-slug");
+  const token = storage.getItem("mcc-ai-token");
+  const tenantSlug = storage.getItem("mcc-ai-tenant-slug");
 
   const headers = new Headers(options.headers || {});
   

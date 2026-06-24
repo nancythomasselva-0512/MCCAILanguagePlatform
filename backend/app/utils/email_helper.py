@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 from sqlalchemy.orm import Session
-from app.models.models import AuditLog, Tenant, User, Payment
+from app.models.models import AuditLog, Tenant, User, Payment, SMTPSettings
 
 logger = logging.getLogger("mcc-ai-saas-emails")
 
@@ -43,13 +43,24 @@ def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str, 
 
     logger.info(f"Attempting to send real SMTP email to: {recipient_email}")
 
-    # Load SMTP settings from core configuration settings
-    from app.core.config import settings
-    smtp_host = settings.SMTP_HOST
-    smtp_port = settings.SMTP_PORT
-    smtp_user = settings.SMTP_USER
-    smtp_password = settings.SMTP_PASSWORD
-    sender_email = settings.SMTP_SENDER or smtp_user or "noreply@mcc-ai.com"
+    # Load SMTP settings from database first
+    db_smtp = db.query(SMTPSettings).first()
+    
+    if db_smtp and db_smtp.smtp_host:
+        smtp_host = db_smtp.smtp_host
+        smtp_port = db_smtp.smtp_port
+        smtp_user = db_smtp.smtp_username
+        smtp_password = db_smtp.smtp_password
+        sender_email = db_smtp.from_email or smtp_user or "noreply@mcc-ai.com"
+    else:
+        # Fallback to environment variables
+        from app.core.config import settings
+        smtp_host = settings.SMTP_HOST
+        smtp_port = settings.SMTP_PORT
+        smtp_user = settings.SMTP_USER
+        smtp_password = settings.SMTP_PASSWORD
+        sender_email = settings.SMTP_SENDER or smtp_user or "noreply@mcc-ai.com"
+
 
     if not smtp_host:
         logger.info("SMTP_HOST not configured. Email will only be simulated in logs.")
@@ -239,3 +250,23 @@ def send_upgrade_confirmation_email(db: Session, tenant: Tenant, old_plan_name: 
     subject = f"Subscription Upgraded to {new_plan_name}!"
     body = f"Hello {tenant.tenant_name},\n\nYour workspace subscription has been upgraded from {old_plan_name} to {new_plan_name}. Your resource limits have been instantly updated. Thank you!\n\nThe MCC AI Team"
     log_email_action(db, tenant.id, subject, body)
+
+
+def send_superadmin_new_tenant_notification_email(db: Session, tenant: Tenant, admin_email: str, plan_name: str):
+    super_admin = db.query(User).filter(User.role == "super_admin").first()
+    recipient_email = super_admin.email if super_admin and super_admin.email else "admin@mcc-ai.com"
+    
+    subject = f"New Workspace Registered: {tenant.tenant_name}"
+    body = (
+        f"Hello Super Admin,\n\n"
+        f"A new tenant workspace has just registered on the MCC AI Platform!\n\n"
+        f"Details:\n"
+        f"- Workspace Name: {tenant.tenant_name}\n"
+        f"- Workspace Slug: {tenant.slug}\n"
+        f"- Admin Email: {admin_email}\n"
+        f"- Selected Plan: {plan_name}\n\n"
+        f"You can review this workspace in the Super Admin Dashboard.\n\n"
+        f"System Notification"
+    )
+    
+    log_email_action(db, tenant.id, subject, body, recipient_email=recipient_email)

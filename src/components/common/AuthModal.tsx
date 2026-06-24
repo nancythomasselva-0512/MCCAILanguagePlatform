@@ -28,7 +28,7 @@ export const AuthModal: React.FC = () => {
 
   if (!isAuthModalOpen) return null;
 
-  const handleClose = () => {
+  const handleClose = (isSuccessLogin = false) => {
     setIsAuthModalOpen(false);
     setError('');
     setEmail('');
@@ -38,7 +38,7 @@ export const AuthModal: React.FC = () => {
     setTenantSlug('');
     setIsSuccess(false);
     setIsLoading(false);
-    if (window.location.pathname === '/admin') {
+    if (!isSuccessLogin && window.location.pathname === '/controller') {
       window.location.href = '/';
     }
   };
@@ -99,7 +99,7 @@ export const AuthModal: React.FC = () => {
 
         // Enforce role separation checks based on route path
         const role = data.role;
-        const isAdminRoute = window.location.pathname === '/admin';
+        const isAdminRoute = window.location.pathname === '/controller';
         if (isAdminRoute) {
           if (role !== 'super_admin') {
             throw new Error("This login is reserved for the Platform Super Administrator.");
@@ -114,7 +114,7 @@ export const AuthModal: React.FC = () => {
         setTimeout(() => {
           saveLoginSession(data.name, email, data.role, data.access_token, data.refresh_token, data.tenant_slug);
           setViewMode('workspace');
-          handleClose();
+          handleClose(true);
         }, 1500);
       }
     } catch (err: any) {
@@ -131,7 +131,7 @@ export const AuthModal: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={handleClose}
+          onClick={() => handleClose(false)}
           className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
         />
 
@@ -153,7 +153,7 @@ export const AuthModal: React.FC = () => {
           )}
 
           <button
-            onClick={handleClose}
+            onClick={() => handleClose(false)}
             className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all cursor-pointer"
           >
             <X size={18} />
@@ -195,14 +195,14 @@ export const AuthModal: React.FC = () => {
               >
                 <div className="mb-6 flex flex-col items-center text-center select-none">
                   <h2 className="text-2xl md:text-3xl font-display font-black tracking-tight leading-tight">
-                    {window.location.pathname === '/admin'
+                    {window.location.pathname === '/controller'
                       ? 'Admin Sign In'
                       : authModalMode === 'tenant-signup'
                         ? 'Register Workspace'
                         : `Sign in to ${globalConfig?.branding?.platform_name || 'platform'}`}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {window.location.pathname === '/admin'
+                    {window.location.pathname === '/controller'
                       ? 'Configure tenant workspace parameters or platform options.'
                       : authModalMode === 'tenant-signup'
                         ? 'Provision a custom isolated tenant domain.'
@@ -210,7 +210,7 @@ export const AuthModal: React.FC = () => {
                   </p>
                 </div>
 
-                {window.location.pathname !== '/admin' && (
+                {window.location.pathname !== '/controller' && (
                   <div className="relative flex rounded-xl bg-slate-100 dark:bg-white/5 p-1 mb-6">
                     <button
                       type="button"
@@ -316,7 +316,7 @@ export const AuthModal: React.FC = () => {
 
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      {window.location.pathname === '/admin' ? 'Admin Email Address' : 'Email Address'}
+                      {window.location.pathname === '/controller' ? 'Admin Email Address' : 'Email Address'}
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={16} />
@@ -325,7 +325,7 @@ export const AuthModal: React.FC = () => {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder={window.location.pathname === '/admin' ? 'admin@company.com' : 'you@example.com'}
+                        placeholder={window.location.pathname === '/controller' ? 'admin@company.com' : 'you@example.com'}
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-emerald-600 dark:focus:border-emerald-500"
                       />
                     </div>
@@ -371,7 +371,7 @@ export const AuthModal: React.FC = () => {
                     ) : (
                       <>
                         <span>
-                          {window.location.pathname === '/admin'
+                          {window.location.pathname === '/controller'
                             ? 'Admin Sign In'
                             : authModalMode === 'tenant-signup'
                               ? 'Register Workspace'

@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { storage } from "../utils/storage";
 
-export type ActiveTabType = 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription' | 'super-admin-dashboard' | 'tenant-dashboard' | 'tenant-billing' | 'sa-overview' | 'sa-tenants' | 'sa-users' | 'sa-plans' | 'sa-providers' | 'sa-usage' | 'sa-billing' | 'sa-ai-logs' | 'sa-audit-logs' | 'sa-health' | 'sa-builder';
+
+export type ActiveTabType = 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription' | 'super-admin-dashboard' | 'tenant-dashboard' | 'tenant-billing' | 'sa-overview' | 'sa-tenants' | 'sa-users' | 'sa-plans' | 'sa-providers' | 'sa-usage' | 'sa-billing' | 'sa-ai-logs' | 'sa-audit-logs' | 'sa-health' | 'sa-builder' | 'sa-settings-general' | 'sa-settings-tenant' | 'sa-settings-smtp' | 'sa-settings-auth' | 'sa-settings-security' | 'sa-settings-payments' | 'sa-settings-domains' | 'sa-settings-apikeys' | 'sa-settings-backup' | 'sa-settings-notifications' | 'sa-settings-activity';
 export type ViewModeType = 'landing' | 'workspace';
 
 export interface HistoryItem {
@@ -71,7 +73,7 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('mcc-ai-theme');
+    const saved = storage.getItem('mcc-ai-theme');
     if (saved === 'light' || saved === 'dark') return saved;
     return 'dark';
   });
@@ -80,8 +82,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [billingOverview, setBillingOverview] = useState<any>(null);
 
   const fetchBillingOverview = async () => {
-    const savedToken = localStorage.getItem('mcc-ai-token');
-    const savedSlug = localStorage.getItem('mcc-ai-tenant-slug');
+    const savedToken = storage.getItem('mcc-ai-token');
+    const savedSlug = storage.getItem('mcc-ai-tenant-slug');
     if (!savedToken) {
       setBillingOverview(null);
       return;
@@ -138,10 +140,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const [activeTab, setActiveTabState] = useState<ActiveTabType>(() => {
-    const savedTab = localStorage.getItem('mcc-ai-active-tab');
+    const savedTab = storage.getItem('mcc-ai-active-tab');
     if (savedTab) return savedTab as ActiveTabType;
 
-    const savedUser = localStorage.getItem('mcc-ai-user');
+    const savedUser = storage.getItem('mcc-ai-user');
     if (savedUser) {
       try {
         const parsed = JSON.parse(savedUser);
@@ -157,66 +159,66 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setActiveTab = (tab: ActiveTabType) => {
     setActiveTabState(tab);
-    localStorage.setItem('mcc-ai-active-tab', tab);
+    storage.setItem('mcc-ai-active-tab', tab);
   };
 
   const [viewMode, setViewMode] = useState<ViewModeType>(() => {
-    return localStorage.getItem('mcc-ai-token') ? 'workspace' : 'landing';
+    return storage.getItem('mcc-ai-token') ? 'workspace' : 'landing';
   });
   const [history, setHistory] = useState<HistoryItem[]>(() => {
-    const saved = localStorage.getItem('mcc-ai-history');
+    const saved = storage.getItem('mcc-ai-history');
     return saved ? JSON.parse(saved) : [];
   });
 
   // Provider states
   const [ttsProvider, setTtsProviderState] = useState<string>(() => {
-    return localStorage.getItem('mcc-ai-tts-provider') || 'openai';
+    return storage.getItem('mcc-ai-tts-provider') || 'openai';
   });
   const [audioSttProvider, setAudioSttProviderState] = useState<string>(() => {
-    return localStorage.getItem('mcc-ai-audiostt-provider') || 'openai';
+    return storage.getItem('mcc-ai-audiostt-provider') || 'openai';
   });
   const [transcriptionProvider, setTranscriptionProviderState] = useState<string>(() => {
-    return localStorage.getItem('mcc-ai-transcription-provider') || 'openai';
+    return storage.getItem('mcc-ai-transcription-provider') || 'openai';
   });
   const [translationProvider, setTranslationProviderState] = useState<string>(() => {
-    return localStorage.getItem('mcc-ai-translation-provider') || 'openai';
+    return storage.getItem('mcc-ai-translation-provider') || 'openai';
   });
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' | 'warning' | 'error' } | null>(null);
 
   const setTtsProvider = (provider: string) => {
     setTtsProviderState(provider);
-    localStorage.setItem('mcc-ai-tts-provider', provider);
+    storage.setItem('mcc-ai-tts-provider', provider);
   };
   const setAudioSttProvider = (provider: string) => {
     setAudioSttProviderState(provider);
-    localStorage.setItem('mcc-ai-audiostt-provider', provider);
+    storage.setItem('mcc-ai-audiostt-provider', provider);
   };
   const setTranscriptionProvider = (provider: string) => {
     setTranscriptionProviderState(provider);
-    localStorage.setItem('mcc-ai-transcription-provider', provider);
+    storage.setItem('mcc-ai-transcription-provider', provider);
   };
   const setTranslationProvider = (provider: string) => {
     setTranslationProviderState(provider);
-    localStorage.setItem('mcc-ai-translation-provider', provider);
+    storage.setItem('mcc-ai-translation-provider', provider);
   };
 
   // Auth States
   const [user, setUser] = useState<UserProfile | null>(() => {
-    const savedUser = localStorage.getItem('mcc-ai-user');
+    const savedUser = storage.getItem('mcc-ai-user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
   const [token, setTokenState] = useState<string | null>(() => {
-    return localStorage.getItem('mcc-ai-token');
+    return storage.getItem('mcc-ai-token');
   });
   const [tenantSlug, setTenantSlugState] = useState<string | null>(() => {
-    return localStorage.getItem('mcc-ai-tenant-slug');
+    return storage.getItem('mcc-ai-tenant-slug');
   });
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | 'tenant-signup' | 'admin-login'>('login');
 
   useEffect(() => {
-    localStorage.setItem('mcc-ai-theme', theme);
+    storage.setItem('mcc-ai-theme', theme);
     const root = window.document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
@@ -236,18 +238,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [token]);
 
   const [openAiApiKey, setOpenAiApiKeyState] = useState<string>(() => {
-    return localStorage.getItem('mcc-ai-openai-key') || '';
+    return storage.getItem('mcc-ai-openai-key') || '';
   });
 
   const [detectedLang, setDetectedLang] = useState('');
 
   const setOpenAiApiKey = (key: string) => {
     setOpenAiApiKeyState(key);
-    localStorage.setItem('mcc-ai-openai-key', key);
+    storage.setItem('mcc-ai-openai-key', key);
   };
 
   useEffect(() => {
-    localStorage.setItem('mcc-ai-history', JSON.stringify(history));
+    storage.setItem('mcc-ai-history', JSON.stringify(history));
   }, [history]);
 
   const toggleTheme = () => {
@@ -295,21 +297,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTokenState(token);
     setTenantSlugState(slug || null);
 
-    localStorage.setItem('mcc-ai-user', JSON.stringify(profile));
-    localStorage.setItem('mcc-ai-token', token);
-    localStorage.setItem('mcc-ai-refresh-token', refreshToken);
+    storage.setItem('mcc-ai-user', JSON.stringify(profile));
+    storage.setItem('mcc-ai-token', token);
+    storage.setItem('mcc-ai-refresh-token', refreshToken);
     if (slug) {
-      localStorage.setItem('mcc-ai-tenant-slug', slug);
+      storage.setItem('mcc-ai-tenant-slug', slug);
     } else {
-      localStorage.removeItem('mcc-ai-tenant-slug');
+      storage.removeItem('mcc-ai-tenant-slug');
     }
 
     setNotification({ message: `Welcome back, ${name}!`, type: 'success' });
 
     // Set default active tab based on role
     if (role === 'super_admin') {
+      window.history.pushState({}, '', '/controller');
       setActiveTab('sa-overview');
     } else {
+      window.history.pushState({}, '', '/dashboard');
       setActiveTab('text-to-speech');
     }
     setViewMode('workspace');
@@ -319,11 +323,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setUser(null);
     setTokenState(null);
     setTenantSlugState(null);
-    localStorage.removeItem('mcc-ai-user');
-    localStorage.removeItem('mcc-ai-token');
-    localStorage.removeItem('mcc-ai-refresh-token');
-    localStorage.removeItem('mcc-ai-tenant-slug');
-    localStorage.removeItem('mcc-ai-active-tab');
+    storage.removeItem('mcc-ai-user');
+    storage.removeItem('mcc-ai-token');
+    storage.removeItem('mcc-ai-refresh-token');
+    storage.removeItem('mcc-ai-tenant-slug');
+    storage.removeItem('mcc-ai-active-tab');
     setViewMode('landing');
     setNotification({ message: 'Logged out successfully.', type: 'info' });
   };

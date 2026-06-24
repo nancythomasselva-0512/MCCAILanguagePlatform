@@ -4,6 +4,7 @@ from app.core.database import get_db
 from app.core.security import get_password_hash, verify_password, create_access_token, create_refresh_token, decode_token
 from app.models.models import User, Tenant, SubscriptionPlan, UsageTracking, AuditLog
 from app.schemas.schemas import Token, TokenRefreshRequest, TenantRegistration, UserCreate
+from app.utils.email_helper import send_welcome_subscription_email, send_superadmin_new_tenant_notification_email
 import datetime
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])

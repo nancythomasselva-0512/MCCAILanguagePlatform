@@ -58,6 +58,7 @@ export const VoiceToText: React.FC = () => {
   } = useApp();
   
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
+  const [activeProvider, setActiveProvider] = useState<string>('Managed by Platform');
   const [segments, setSegments] = useState<TranscriptionSegment[]>([]);
   const [liveTranscript, setLiveTranscript] = useState('');
   const [recordSeconds, setRecordSeconds] = useState(0);
@@ -73,7 +74,15 @@ export const VoiceToText: React.FC = () => {
   const isManuallyStoppedRef = useRef(false);
   const liveTranscriptRef = useRef('');
 
+  
   useEffect(() => {
+    providerManager.getActiveProviders().then(res => {
+      if (res["Audio To Text"]) {
+        setActiveProvider(res["Audio To Text"].toUpperCase());
+      }
+    });
+  }, []);
+useEffect(() => {
     // Check if loaded on a secure origin (SpeechRecognition is disabled on HTTP except localhost)
     const isSecure = window.location.protocol === 'https:' || 
                      window.location.hostname === 'localhost' || 
@@ -194,7 +203,7 @@ export const VoiceToText: React.FC = () => {
             selectedLanguage,
             (newProvider) => {
               // Trigger failover notification!
-              setTranscriptionProvider(newProvider);
+              // setTranscriptionProvider(newProvider);
               setNotification({
                 message: `Switched to ${newProvider === 'deepgram' ? 'Deepgram' : newProvider.toUpperCase()} for processing.`,
                 type: 'info'
@@ -809,7 +818,7 @@ export const VoiceToText: React.FC = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Engine</span>
-                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{transcriptionProvider.toUpperCase()}</h4>
+                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{activeProvider}</h4>
                   </div>
                   <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
                     <Award size={14} />
