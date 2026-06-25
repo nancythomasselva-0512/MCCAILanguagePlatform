@@ -38,9 +38,6 @@ export const AuthModal: React.FC = () => {
     setTenantSlug('');
     setIsSuccess(false);
     setIsLoading(false);
-    if (!isSuccessLogin && window.location.pathname === '/controller') {
-      window.location.href = '/';
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

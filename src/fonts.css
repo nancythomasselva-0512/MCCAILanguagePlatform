@@ -1,0 +1,160 @@
+/* Marutham */
+@font-face {
+  font-family: 'TAU-Marutham';
+  src: url('/fonts/TAU-Marutham.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Marutham';
+  src: url('/fonts/TAU-Marutham Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Marutham';
+  src: url('/fonts/TAU-Marutham Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Kurinji */
+@font-face {
+  font-family: 'TAU-Kurinji';
+  src: url('/fonts/TAU-Kurinji.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Kurinji';
+  src: url('/fonts/TAU-Kurinji Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Kurinji';
+  src: url('/fonts/TAU-Kurinji Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Mullai */
+@font-face {
+  font-family: 'TAU-Mullai';
+  src: url('/fonts/TAU-Mullai.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Mullai';
+  src: url('/fonts/TAU-Mullai Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Mullai';
+  src: url('/fonts/TAU-Mullai Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Malar */
+@font-face {
+  font-family: 'TAU-Malar';
+  src: url('/fonts/TAU-Malar.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Malar';
+  src: url('/fonts/TAU-Malar Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Malar';
+  src: url('/fonts/TAU-Malar Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Neythal */
+@font-face {
+  font-family: 'TAU-Neythal';
+  src: url('/fonts/TAU-Neythal.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Neythal';
+  src: url('/fonts/TAU-Neythal Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Neythal';
+  src: url('/fonts/TAU-Neythal Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Paalai */
+@font-face {
+  font-family: 'TAU-Paalai';
+  src: url('/fonts/TAU-Paalai.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Paalai';
+  src: url('/fonts/TAU-Paalai Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Paalai';
+  src: url('/fonts/TAU-Paalai Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Nilavu */
+@font-face {
+  font-family: 'TAU-Nilavu';
+  src: url('/fonts/TAU-Nilavu.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Nilavu';
+  src: url('/fonts/TAU-Nilavu Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'TAU-Nilavu';
+  src: url('/fonts/TAU-Nilavu Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}

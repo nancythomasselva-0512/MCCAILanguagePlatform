@@ -530,22 +530,26 @@ export const WorkspacePage: React.FC = () => {
         }}
       >
         <div className="flex flex-col flex-1 min-h-0">
-          <div className="flex flex-col items-center gap-4 mb-6 select-none w-full">
-            <div className="flex items-center justify-center overflow-hidden w-full">
-              <img
-                src={globalConfig?.branding?.logo_url || "/logo.png"}
-                alt="Logo"
-                className="h-10 w-10 rounded-full border border-white/40 object-cover flex-shrink-0"
-                style={{ height: "40px", width: "40px" }}
-              />
-            </div>
+          <div className="flex items-center gap-2 mb-6 select-none w-full pr-1 mt-1">
             <button
               onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/40 hover:bg-white/20 border border-white/10 text-[var(--text-primary)] transition-all cursor-pointer hover:scale-105 active:scale-95 flex-shrink-0"
+              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/40 hover:bg-white/20 border border-white/10 text-[var(--text-primary)] transition-all cursor-pointer hover:scale-105 active:scale-95 flex-shrink-0 -ml-1"
               title="Back to Home"
             >
-              <ArrowLeft size={14} />
+              <ArrowLeft size={13} />
             </button>
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-2">
+                <img
+                  src={globalConfig?.branding?.logo_url || "/logo.png"}
+                  alt="Logo"
+                  className="h-9 w-9 rounded-full border border-white/40 object-cover flex-shrink-0 shadow-sm"
+                />
+                <span className="text-[15px] leading-[1.15] font-black tracking-tight text-[var(--text-primary)] drop-shadow-sm">
+                  AI Language Hub
+                </span>
+              </div>
+            </div>
           </div>
 
           <nav className="space-y-2.5 flex-1 overflow-y-auto min-h-0 pr-2 mb-2 custom-scrollbar" aria-label="Tool navigation">
@@ -556,15 +560,15 @@ export const WorkspacePage: React.FC = () => {
                 <div key={section.title || `section-${section.items[0]?.id}`} className="space-y-0.5 mb-2">
                   {section.title && (
                     <div 
-                      className="flex items-center justify-between px-2 mt-2 mb-1 cursor-pointer group select-none"
+                      className="flex items-center justify-between px-2 py-2 mt-2 mb-1 cursor-pointer group select-none rounded-lg hover:bg-[var(--sidebar-item-hover)] transition-colors"
                       onClick={() => toggleExpanded(sectionId)}
                     >
-                      <h4 className="text-[10px] font-bold tracking-[0.1em] text-[var(--sidebar-panel-text)] uppercase opacity-80 group-hover:opacity-100 transition-colors truncate pr-1">
+                      <h4 className="text-xs font-bold tracking-[0.05em] text-[var(--sidebar-panel-text)] uppercase opacity-80 group-hover:opacity-100 transition-colors truncate pr-1">
                         {section.title}
                       </h4>
                       <ChevronDown 
-                        size={14} 
-                        className={`flex-shrink-0 text-[var(--sidebar-panel-text)] opacity-50 transition-transform duration-200 ${isSectionOpen ? 'rotate-180' : ''}`} 
+                        size={16} 
+                        className={`flex-shrink-0 text-[var(--sidebar-panel-text)] opacity-50 group-hover:opacity-100 transition-transform duration-200 ${isSectionOpen ? 'rotate-180' : ''}`} 
                       />
                     </div>
                   )}
@@ -595,85 +599,7 @@ export const WorkspacePage: React.FC = () => {
             })}
           </nav>
 
-          {user?.role !== 'super_admin' && (() => {
-            const planName = billingOverview?.current_plan?.name || "Free";
 
-            const planColors: Record<string, string> = {
-              'Free': 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-              'Starter': 'bg-teal-500/10 text-teal-400 border-teal-500/20',
-              'Professional': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-              'Enterprise': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-            };
-            const colorClass = planColors[planName] || 'bg-teal-500/10 text-teal-400 border-teal-500/20';
-
-            const transcriptionUsed = billingOverview?.usage?.audio_minutes_used || 0;
-            const transcriptionLimit = billingOverview?.usage?.audio_minutes_limit || 30;
-            const transcriptionPct = Math.min(100, (transcriptionUsed / transcriptionLimit) * 100);
-
-            const translationUsed = billingOverview?.usage?.translation_chars_used || 0;
-            const translationLimit = billingOverview?.usage?.translation_chars_limit || 50000;
-            const translationPct = Math.min(100, (translationUsed / translationLimit) * 100);
-
-            const ttsUsed = billingOverview?.usage?.tts_chars_used || 0;
-            const ttsLimit = billingOverview?.usage?.tts_chars_limit || 10000;
-            const ttsPct = Math.min(100, (ttsUsed / ttsLimit) * 100);
-
-            return (
-              <div
-                onClick={() => setActiveTab('tenant-billing')}
-                className="mt-4 mb-2 p-3 rounded-xl bg-white/40 hover:bg-white/60 shadow-sm backdrop-blur-md border border-white/40 hover:border-teal-500/30 transition-all duration-300 cursor-pointer relative group overflow-hidden"
-              >
-                <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-teal-500/10 blur-xl pointer-events-none transition-transform duration-500 group-hover:scale-150" />
-
-                <div className="flex flex-col justify-center items-center gap-1 mb-2">
-                  <span className="text-[10px] font-bold text-[var(--sidebar-panel-text)] uppercase tracking-wider text-center leading-tight">Active Workspace</span>
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${colorClass}`}>
-                    {planName}
-                  </span>
-                </div>
-
-                <div className="space-y-0.5">
-                  {/* Transcription Meter */}
-                  <div className="space-y-0.5">
-                    <div className="flex flex-col text-[9px] leading-tight text-center">
-                      <span className="text-[var(--sidebar-panel-text)] opacity-80">Transcription</span>
-                      <span className="text-[var(--text-primary)] font-bold">{transcriptionUsed.toFixed(1)} / {transcriptionLimit} m</span>
-                    </div>
-                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-teal-500 transition-all duration-500" style={{ width: `${transcriptionPct}%` }} />
-                    </div>
-                  </div>
-
-                  {/* Translation Meter */}
-                  <div className="space-y-0.5">
-                    <div className="flex flex-col text-[9px] leading-tight text-center">
-                      <span className="text-[var(--sidebar-panel-text)] opacity-80">Translation</span>
-                      <span className="text-[var(--text-primary)] font-bold">{(translationUsed / 1000).toFixed(1)}k / {(translationLimit / 1000).toFixed(0)}k c</span>
-                    </div>
-                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${translationPct}%` }} />
-                    </div>
-                  </div>
-
-                  {/* TTS Meter */}
-                  <div className="space-y-0.5">
-                    <div className="flex flex-col text-[9px] leading-tight text-center">
-                      <span className="text-[var(--sidebar-panel-text)] opacity-80">TTS Synthesis</span>
-                      <span className="text-[var(--text-primary)] font-bold">{(ttsUsed / 1000).toFixed(1)}k / {(ttsLimit / 1000).toFixed(0)}k c</span>
-                    </div>
-                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-amber-500 transition-all duration-500" style={{ width: `${ttsPct}%` }} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-white/40 flex items-center justify-between text-sm font-bold text-[var(--sidebar-panel-text)] group-hover:text-[var(--text-primary)] transition-colors">
-                  <span>Manage Plan & Limits</span>
-                  <ArrowUpRight size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </div>
-              </div>
-            );
-          })()}
         </div>
 
         <div className="pt-4 mt-auto">

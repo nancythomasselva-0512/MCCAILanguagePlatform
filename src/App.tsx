@@ -21,6 +21,7 @@ function App() {
           logout(); // Clear any non-admin session
           setAuthModalMode('admin-login');
           setIsAuthModalOpen(true);
+          setViewMode('landing');
         } else {
           // Already logged in as super admin
           setViewMode('workspace');
@@ -30,24 +31,14 @@ function App() {
           logout(); // Clear any invalid session
           setAuthModalMode('login');
           setIsAuthModalOpen(true);
+          setViewMode('landing');
         } else {
           // Already logged in
           setViewMode('workspace');
         }
       } else {
-        // Any other path (like /)
-        if (isSuperAdmin) {
-          // Super admins default to /controller
-          window.history.replaceState({}, '', '/controller');
-          setViewMode('workspace');
-        } else if (isNormalUser) {
-          // Normal users default to /dashboard
-          window.history.replaceState({}, '', '/dashboard');
-          setViewMode('workspace');
-        } else {
-          // Not logged in -> Landing page
-          setViewMode('landing');
-        }
+        // Any other path (like /) - MUST ALWAYS BE LANDING PAGE
+        setViewMode('landing');
       }
     }
   }, [user, setAuthModalMode, setIsAuthModalOpen, setViewMode, logout]);

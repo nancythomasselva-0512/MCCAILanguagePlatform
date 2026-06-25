@@ -6,18 +6,9 @@ export const openaiProvider = {
   /**
    * Synthesize text into speech audio
    */
-  async synthesizeSpeech(text: string, voice = 'alloy', apiKey: string): Promise<string> {
-    const fallback = () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        window.speechSynthesis.speak(utterance);
-      }
-      return 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAA';
-    };
-
+  async synthesizeSpeech(text: string, voice = 'alloy', apiKey?: string): Promise<string> {
     if (!apiKey) {
-      return fallback();
+      throw new Error("OpenAI API key missing");
     }
 
     try {
@@ -35,14 +26,14 @@ export const openaiProvider = {
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API status ${response.status}`);
+        const errData = await response.json().catch(() => null);
+        throw new Error(`OpenAI API Error ${response.status}: ${errData?.error?.message || response.statusText}`);
       }
 
       const blob = await response.blob();
       return URL.createObjectURL(blob);
-    } catch (err) {
-      console.warn('OpenAI TTS failed or key quota exceeded, falling back to Web Speech API:', err);
-      return fallback();
+    } catch (err: any) {
+      throw new Error(`OpenAI synthesis failed: ${err.message}`);
     }
   },
 

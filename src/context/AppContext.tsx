@@ -39,6 +39,9 @@ interface AppContextProps {
   detectedLang: string;
   setDetectedLang: (lang: string) => void;
 
+  contentFontFamily: string;
+  setContentFontFamily: (font: string) => void;
+
   // Provider states
   ttsProvider: string;
   setTtsProvider: (provider: string) => void;
@@ -138,6 +141,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     loadGlobalConfig();
   }, []);
+
+  const [contentFontFamily, setContentFontFamilyState] = useState<string>(() => {
+    return storage.getItem('mcc-ai-content-font') || 'TAU-Marutham';
+  });
+
+  const setContentFontFamily = (font: string) => {
+    setContentFontFamilyState(font);
+    storage.setItem('mcc-ai-content-font', font);
+  };
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (contentFontFamily === 'System Default') {
+      root.style.setProperty('--content-font', 'inherit');
+    } else {
+      root.style.setProperty('--content-font', `"${contentFontFamily}", sans-serif`);
+    }
+  }, [contentFontFamily]);
 
   const [activeTab, setActiveTabState] = useState<ActiveTabType>(() => {
     const savedTab = storage.getItem('mcc-ai-active-tab');
@@ -349,6 +370,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setOpenAiApiKey,
         detectedLang,
         setDetectedLang,
+        contentFontFamily,
+        setContentFontFamily,
         ttsProvider,
         setTtsProvider,
         audioSttProvider,

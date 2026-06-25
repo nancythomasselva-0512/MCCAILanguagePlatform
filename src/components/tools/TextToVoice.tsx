@@ -449,6 +449,7 @@ useEffect(() => {
                 background: theme === 'dark' ? 'rgba(15, 23, 42, 0.4)' : 'rgba(248, 250, 252, 0.7)',
                 border: '1px solid var(--border-base)',
                 color: 'var(--text-primary)',
+                fontFamily: 'var(--content-font)'
               }}
             />
             <div className="mt-2.5 flex justify-between text-xs font-bold" style={{ color: 'var(--text-muted)' }}>

@@ -4,10 +4,14 @@ import {
   ArrowLeftRight, Copy, Volume2, RefreshCw,
   ChevronDown, AlertCircle, CheckCircle2, Loader2, X, Cpu, Languages,
   Globe, Activity, Award, FileText, Download,
-  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify
+  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  Play, Pause, Square
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { providerManager } from '../../providers/providerManager';
+import { FontPicker } from '../common/FontPicker';
+import { ttsService } from '../../services/ttsService';
+import type { TTSState } from '../../services/ttsService';
 
 const LANGUAGES = [
   'Auto Detect', 'English', 'Tamil', 'Hindi', 'Spanish', 'French', 'German',
@@ -36,22 +40,45 @@ export const TextTranslation: React.FC = () => {
   const [detectedLang, setDetectedLang] = useState('');
   const [charCount, setCharCount] = useState(0);
   const [fontSize, setFontSize] = useState('14px');
-  const [fontFamily, setFontFamily] = useState('System Default');
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
   const [textColor, setTextColor] = useState('#1e293b');
+
+  const [sourceFont, setSourceFontState] = useState(() => localStorage.getItem('mcc-ai-source-font') || 'TAU-Marutham');
+  const [targetFont, setTargetFontState] = useState(() => localStorage.getItem('mcc-ai-target-font') || 'TAU-Marutham');
+  
+  const [srcTtsState, setSrcTtsState] = useState<TTSState>('idle');
+  const [tgtTtsState, setTgtTtsState] = useState<TTSState>('idle');
+
+  const setSourceFont = (font: string) => { setSourceFontState(font); localStorage.setItem('mcc-ai-source-font', font); };
+  const setTargetFont = (font: string) => { setTargetFontState(font); localStorage.setItem('mcc-ai-target-font', font); };
   
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const exportTranslation = () => {
     if (!translatedText) return;
-    const blob = new Blob([translatedText], { type: 'text/plain;charset=utf-8' });
+
+    const htmlContent = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset='utf-8'>
+        <title>Translation</title>
+      </head>
+      <body>
+        <div style="font-family: ${targetFont === 'System Default' ? 'sans-serif' : targetFont}; font-size: ${fontSize}; font-weight: ${isBold ? 'bold' : 'normal'}; font-style: ${isItalic ? 'italic' : 'normal'}; text-decoration: ${isUnderline ? 'underline' : 'none'}; text-align: ${textAlign}; color: ${textColor};">
+          ${translatedText.replace(/\n/g, '<br>')}
+        </div>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `translation_${targetLang.toLowerCase()}.txt`;
+    a.download = `translation_${targetLang.toLowerCase()}.doc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -96,6 +123,7 @@ export const TextTranslation: React.FC = () => {
 
   const handleSwap = () => {
     if (sourceLang === 'Auto Detect') return;
+    ttsService.stop();
     const prevSrc = sourceLang, prevTgt = targetLang;
     setSourceLang(prevTgt);
     setTargetLang(prevSrc);
@@ -106,17 +134,43 @@ export const TextTranslation: React.FC = () => {
 
   const handleTargetChange = (lang: string) => { setTargetLang(lang); translate(sourceText, lang); };
 
-  const speakText = (text: string, lang: string) => {
-    if (!window.speechSynthesis || !text) return;
-    window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    const langMap: Record<string, string> = {
-      Tamil: 'ta', Hindi: 'hi', Spanish: 'es', French: 'fr',
-      German: 'de', Japanese: 'ja', Korean: 'ko', Arabic: 'ar',
-      English: 'en', Portuguese: 'pt', Russian: 'ru', Italian: 'it',
-    };
-    utt.lang = langMap[lang] || 'en';
-    window.speechSynthesis.speak(utt);
+  const handleSrcListen = () => {
+    if (srcTtsState === 'idle' || srcTtsState === 'error') {
+      const lang = sourceLang === 'Auto Detect' ? (detectedLang || 'English') : sourceLang;
+      ttsService.play(sourceText, lang, {
+        onStateChange: setSrcTtsState,
+        onWarning: (msg) => setErrorMsg(msg),
+        openAiApiKey: openAiApiKey
+      });
+      setTgtTtsState('idle'); // ensure target UI resets if playing
+    } else if (srcTtsState === 'playing') {
+      ttsService.pause();
+    } else if (srcTtsState === 'paused') {
+      ttsService.resume();
+    }
+  };
+
+  const handleSrcStop = () => {
+    ttsService.stop();
+  };
+
+  const handleTgtListen = () => {
+    if (tgtTtsState === 'idle' || tgtTtsState === 'error') {
+      ttsService.play(translatedText, targetLang, {
+        onStateChange: setTgtTtsState,
+        onWarning: (msg) => setErrorMsg(msg),
+        openAiApiKey: openAiApiKey
+      });
+      setSrcTtsState('idle'); // ensure source UI resets if playing
+    } else if (tgtTtsState === 'playing') {
+      ttsService.pause();
+    } else if (tgtTtsState === 'paused') {
+      ttsService.resume();
+    }
+  };
+
+  const handleTgtStop = () => {
+    ttsService.stop();
   };
 
   const copyText = (text: string, type: 'src' | 'tgt') => {
@@ -126,6 +180,7 @@ export const TextTranslation: React.FC = () => {
   };
 
   const reset = () => {
+    ttsService.stop();
     setSourceText(''); setTranslatedText(''); setState('idle');
     setDetectedLang(''); setCharCount(0); setErrorMsg('');
   };
@@ -176,10 +231,10 @@ export const TextTranslation: React.FC = () => {
       {/* Main Content */}
       <div className="flex flex-col gap-6">
           {/* Language Bar Card */}
-          <div className="app-card rounded-2xl p-5 border border-slate-200/60 dark:border-white/5">
-            <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2 sm:flex sm:flex-row sm:flex-nowrap sm:gap-3">
+          <div className="app-card rounded-2xl p-5 border border-slate-200/60 dark:border-white/5 pb-7">
+            <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2 sm:flex sm:flex-row sm:flex-nowrap sm:gap-3 relative">
               {/* Source Lang */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 relative">
                 <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>From</label>
                 <div className="relative">
                   <select id="trans-source-lang" value={sourceLang}
@@ -191,7 +246,7 @@ export const TextTranslation: React.FC = () => {
                   <ChevronDown size={13} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
                 </div>
                 {detectedLang && sourceLang === 'Auto Detect' && (
-                  <p className="mt-1 text-[11px] font-semibold" style={{ color: 'var(--accent)' }}>
+                  <p className="absolute -bottom-5 left-1 text-[10px] font-semibold" style={{ color: 'var(--accent)' }}>
                     Detected: {detectedLang}
                   </p>
                 )}
@@ -200,7 +255,7 @@ export const TextTranslation: React.FC = () => {
               {/* Swap */}
               <button id="trans-swap-btn" onClick={handleSwap}
                 disabled={sourceLang === 'Auto Detect'}
-                className="btn-ghost flex h-9 w-9 flex-shrink-0 items-center justify-center self-end rounded-xl p-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn-ghost flex h-[38px] w-9 flex-shrink-0 items-center justify-center rounded-xl p-0 disabled:opacity-40 disabled:cursor-not-allowed"
                 title={sourceLang === 'Auto Detect' ? 'Select a source language first' : 'Swap languages'}>
                 <ArrowLeftRight size={15} />
               </button>
@@ -219,27 +274,7 @@ export const TextTranslation: React.FC = () => {
                 </div>
               </div>
 
-              {/* Font Family */}
-              <div className="flex-1 min-w-0 sm:max-w-[140px]">
-                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Font</label>
-                <div className="relative">
-                  <select value={fontFamily}
-                    onChange={(e) => setFontFamily(e.target.value)}
-                    className="w-full appearance-none rounded-xl px-3.5 pr-9 py-2.5 text-sm font-semibold focus:outline-none"
-                    style={selectStyle}>
-                    <option value="System Default">Default</option>
-                    <option value="Inter">Inter</option>
-                    <option value="Roboto">Roboto</option>
-                    <option value="Marudham">Marudham</option>
-                    <option value="Latha">Latha</option>
-                    <option value="Arial">Arial</option>
-                    <option value="Times New Roman">Times New Roman</option>
-                    <option value="Courier New">Courier New</option>
-                    <option value="Georgia">Georgia</option>
-                  </select>
-                  <ChevronDown size={13} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
-                </div>
-              </div>
+
 
               {/* Font Size */}
               <div className="flex-1 min-w-0 sm:max-w-[100px]">
@@ -264,7 +299,7 @@ export const TextTranslation: React.FC = () => {
               {/* Clear */}
               {(sourceText || translatedText) && (
                 <button onClick={reset}
-                  className="btn-ghost col-span-3 flex flex-shrink-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs sm:col-span-1 sm:mt-5 sm:py-2.5">
+                  className="btn-ghost col-span-3 flex flex-shrink-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs h-[38px] sm:col-span-1">
                   <RefreshCw size={11} /> Clear
                 </button>
               )}
@@ -275,21 +310,34 @@ export const TextTranslation: React.FC = () => {
           <div className="grid gap-6 md:grid-cols-2">
             {/* Source */}
             <div className="app-card rounded-2xl p-5 flex flex-col border border-slate-200/60 dark:border-white/5">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Source Text</span>
-                <div className="flex gap-2">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Source Text</span>
+                  <div className="w-[140px]">
+                    <FontPicker value={sourceFont} onChange={setSourceFont} hideLabel />
+                  </div>
+                </div>
+                <div className="flex gap-1">
                   <button id="trans-copy-src-btn" onClick={() => copyText(sourceText, 'src')}
                     disabled={!sourceText}
-                    className="btn-ghost flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs disabled:opacity-40">
-                    {copiedSrc ? <CheckCircle2 size={11} className="text-emerald-500" /> : <Copy size={11} />}
-                    {copiedSrc ? 'Copied' : 'Copy'}
+                    title="Copy"
+                    className="btn-ghost flex items-center justify-center rounded-lg p-1.5 disabled:opacity-40">
+                    {copiedSrc ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Copy size={14} />}
                   </button>
                   <button id="trans-listen-src-btn"
-                    onClick={() => speakText(sourceText, sourceLang === 'Auto Detect' ? 'English' : sourceLang)}
+                    onClick={handleSrcListen}
                     disabled={!sourceText}
-                    className="btn-ghost flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs disabled:opacity-40">
-                    <Volume2 size={11} /> Listen
+                    title={srcTtsState === 'playing' ? "Pause" : (srcTtsState === 'paused' ? "Resume" : "Listen")}
+                    className="btn-ghost flex items-center justify-center rounded-lg p-1.5 disabled:opacity-40">
+                    {srcTtsState === 'playing' ? <Pause size={14} /> : (srcTtsState === 'paused' ? <Play size={14} /> : <Volume2 size={14} />)}
                   </button>
+                  {srcTtsState !== 'idle' && srcTtsState !== 'error' && (
+                    <button id="trans-stop-src-btn" onClick={handleSrcStop}
+                      title="Stop"
+                      className="btn-ghost flex items-center justify-center rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                      <Square size={14} fill="currentColor" />
+                    </button>
+                  )}
                 </div>
               </div>
               <textarea
@@ -297,14 +345,14 @@ export const TextTranslation: React.FC = () => {
                 value={sourceText}
                 onChange={handleSourceChange}
                 placeholder="Type or paste text to translate…"
-                rows={7}
+                rows={15}
                 className="flex-1 resize-none rounded-xl px-4 py-3 text-sm focus:outline-none"
                 style={{
                   background: 'var(--bg-subtle)',
                   border: '1px solid var(--border-base)',
                   color: 'var(--text-primary)',
                   fontSize: fontSize,
-                  fontFamily: fontFamily === 'System Default' ? 'inherit' : `"${fontFamily}", sans-serif`
+                  fontFamily: sourceFont === 'System Default' ? 'inherit' : `"${sourceFont}", sans-serif`
                 }}
               />
               <div className="mt-1.5 text-right text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
@@ -314,26 +362,40 @@ export const TextTranslation: React.FC = () => {
 
             {/* Translation Output */}
             <div className="app-card rounded-2xl p-5 flex flex-col border border-slate-200/60 dark:border-white/5">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                  Translation — {targetLang}
-                </span>
-                <div className="flex gap-2">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                    Translation — {targetLang}
+                  </span>
+                  <div className="w-[140px]">
+                    <FontPicker value={targetFont} onChange={setTargetFont} hideLabel />
+                  </div>
+                </div>
+                <div className="flex gap-1">
                   <button id="trans-copy-tgt-btn" onClick={() => copyText(translatedText, 'tgt')}
                     disabled={!translatedText}
-                    className="btn-ghost flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs disabled:opacity-40">
-                    {copiedTgt ? <CheckCircle2 size={11} className="text-emerald-500" /> : <Copy size={11} />}
-                    {copiedTgt ? 'Copied' : 'Copy'}
+                    title="Copy"
+                    className="btn-ghost flex items-center justify-center rounded-lg p-1.5 disabled:opacity-40">
+                    {copiedTgt ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Copy size={14} />}
                   </button>
-                  <button id="trans-listen-tgt-btn" onClick={() => speakText(translatedText, targetLang)}
+                  <button id="trans-listen-tgt-btn" onClick={handleTgtListen}
                     disabled={!translatedText}
-                    className="btn-ghost flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs disabled:opacity-40">
-                    <Volume2 size={11} /> Listen
+                    title={tgtTtsState === 'playing' ? "Pause" : (tgtTtsState === 'paused' ? "Resume" : "Listen")}
+                    className="btn-ghost flex items-center justify-center rounded-lg p-1.5 disabled:opacity-40">
+                    {tgtTtsState === 'playing' ? <Pause size={14} /> : (tgtTtsState === 'paused' ? <Play size={14} /> : <Volume2 size={14} />)}
                   </button>
+                  {tgtTtsState !== 'idle' && tgtTtsState !== 'error' && (
+                    <button id="trans-stop-tgt-btn" onClick={handleTgtStop}
+                      title="Stop"
+                      className="btn-ghost flex items-center justify-center rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                      <Square size={14} fill="currentColor" />
+                    </button>
+                  )}
                   <button id="trans-export-btn" onClick={exportTranslation}
                     disabled={!translatedText}
-                    className="btn-ghost flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs disabled:opacity-40">
-                    <Download size={11} /> Export
+                    title="Export"
+                    className="btn-ghost flex items-center justify-center rounded-lg p-1.5 disabled:opacity-40">
+                    <Download size={14} />
                   </button>
                 </div>
               </div>
@@ -341,10 +403,10 @@ export const TextTranslation: React.FC = () => {
               <div className="relative flex flex-col flex-1 rounded-xl p-4" style={{
                 background: 'var(--bg-subtle)',
                 border: '1px solid var(--border-base)',
-                minHeight: '14rem',
+                minHeight: '24rem',
               }}>
                 {state === 'done' && translatedText && (
-                  <div className="flex flex-wrap items-center gap-1 border-b border-[var(--border-base)] pb-2 mb-3">
+                  <div className="flex flex-wrap items-center gap-1.5 border-b border-[var(--border-base)] pb-2 mb-3">
                     <button onClick={() => setIsBold(!isBold)} className={`p-1.5 rounded-lg transition-colors ${isBold ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Bold"><Bold size={14} /></button>
                     <button onClick={() => setIsItalic(!isItalic)} className={`p-1.5 rounded-lg transition-colors ${isItalic ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Italic"><Italic size={14} /></button>
                     <button onClick={() => setIsUnderline(!isUnderline)} className={`p-1.5 rounded-lg transition-colors ${isUnderline ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Underline"><Underline size={14} /></button>
@@ -382,9 +444,9 @@ export const TextTranslation: React.FC = () => {
                     className="flex-1 w-full h-full resize-none bg-transparent focus:outline-none text-sm leading-relaxed"
                     style={{ 
                       color: textColor, 
-                      minHeight: '10rem',
+                      minHeight: '20rem',
                       fontSize: fontSize,
-                      fontFamily: fontFamily === 'System Default' ? 'inherit' : `"${fontFamily}", sans-serif`,
+                      fontFamily: targetFont === 'System Default' ? 'inherit' : `"${targetFont}", sans-serif`,
                       fontWeight: isBold ? 'bold' : 'normal',
                       fontStyle: isItalic ? 'italic' : 'normal',
                       textDecoration: isUnderline ? 'underline' : 'none',

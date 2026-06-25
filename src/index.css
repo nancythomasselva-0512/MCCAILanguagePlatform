@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import "./fonts.css";
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -20,6 +21,9 @@
   --border-base:    rgba(255, 255, 255, 0.6);
   --border-subtle:  rgba(255, 255, 255, 0.3);
   --border-strong: #718096;
+
+  /* Fonts */
+  --content-font: 'TAU-Marutham', sans-serif;
 
   /* Brand Colors - Teal/Emerald */
   --accent:         #0D9488;
