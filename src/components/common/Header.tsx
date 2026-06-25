@@ -260,14 +260,32 @@ export const Header: React.FC = () => {
                           </p>
                         </div>
 
-                        {/* Dropdown Items */}
-                        <button
-                          onClick={() => { handleLaunchWorkspace(); setDropdownOpen(false); }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all text-left cursor-pointer"
-                        >
-                          <User size={14} />
-                          <span>Open Workspace</span>
-                        </button>
+                        {user.role === 'super_admin' ? (
+                          <>
+                            <button
+                              onClick={() => { window.history.pushState({}, '', '/controller'); handleLaunchWorkspace(); setDropdownOpen(false); }}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all text-left cursor-pointer"
+                            >
+                              <Activity size={14} />
+                              <span>Admin Panel</span>
+                            </button>
+                            <button
+                              onClick={() => { window.history.pushState({}, '', '/dashboard'); handleLaunchWorkspace(); setDropdownOpen(false); }}
+                              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all text-left cursor-pointer mt-0.5"
+                            >
+                              <User size={14} />
+                              <span>User Dashboard</span>
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => { window.history.pushState({}, '', '/dashboard'); handleLaunchWorkspace(); setDropdownOpen(false); }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all text-left cursor-pointer"
+                          >
+                            <User size={14} />
+                            <span>Open Workspace</span>
+                          </button>
+                        )}
 
                         <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-1.5" />
 

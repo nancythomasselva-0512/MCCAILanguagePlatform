@@ -116,10 +116,27 @@ export const WorkspacePage: React.FC = () => {
 
   // Dynamic Sidebar configuration based on RBAC role
   const getSidebarConfig = (): SidebarSection[] => {
-    if (user?.role === 'super_admin') {
+    const baseSections: SidebarSection[] = [
+      {
+        title: 'Speech Tools',
+        items: [
+          { id: 'text-to-speech', label: 'Text to Voice', icon: 'Volume2', action: 'tab', tabId: 'text-to-speech' },
+          { id: 'audio-transcription', label: 'Audio to Text', icon: 'FileAudio', action: 'tab', tabId: 'audio-transcription' }
+        ]
+      },
+      {
+        title: 'Transcription',
+        items: [
+          { id: 'voice-to-text', label: 'Transcription', icon: 'Mic', action: 'tab', tabId: 'voice-to-text' },
+          { id: 'translation', label: 'Translation', icon: 'Languages', action: 'tab', tabId: 'translation' }
+        ]
+      }
+    ];
+
+    if (user?.role === 'super_admin' && window.location.pathname === '/controller') {
       return [
         {
-          title: 'Dashboard',
+          title: '',
           items: [
             { id: 'sa-overview', label: 'Dashboard', icon: 'Activity', action: 'tab', tabId: 'sa-overview' },
           ]
@@ -179,20 +196,7 @@ export const WorkspacePage: React.FC = () => {
     }
 
     const sections: SidebarSection[] = [
-      {
-        title: 'Speech Tools',
-        items: [
-          { id: 'text-to-speech', label: 'Text to Voice', icon: 'Volume2', action: 'tab', tabId: 'text-to-speech' },
-          { id: 'audio-transcription', label: 'Audio to Text', icon: 'FileAudio', action: 'tab', tabId: 'audio-transcription' }
-        ]
-      },
-      {
-        title: 'Transcription',
-        items: [
-          { id: 'voice-to-text', label: 'Transcription', icon: 'Mic', action: 'tab', tabId: 'voice-to-text' },
-          { id: 'translation', label: 'Translation', icon: 'Languages', action: 'tab', tabId: 'translation' }
-        ]
-      }
+      ...baseSections
     ];
 
     // Add Workspace section for Tenant Admin, Manager, and standard user roles
@@ -454,7 +458,7 @@ export const WorkspacePage: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-              className="fixed left-0 top-0 z-50 flex h-full w-72 flex-col sm:hidden rounded-tr-[32px] rounded-br-[32px] p-4"
+              className="fixed left-0 top-0 z-50 flex h-full w-[100px] flex-col sm:hidden rounded-tr-[32px] rounded-br-[32px] p-4"
               style={{
                 background: 'var(--sidebar-panel-bg)',
                 borderRight: '1px solid var(--sidebar-panel-border)',
@@ -463,7 +467,8 @@ export const WorkspacePage: React.FC = () => {
             >
               <div className="flex items-center justify-between px-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-[var(--text-primary)]">{globalConfig?.branding?.platform_name || "MCC AI"} Workstation</span>
+                  <img src={globalConfig?.branding?.logo_url || "/logo.png"} alt="Logo" className="h-6 w-6 rounded-full" />
+                  <span className="text-sm font-bold text-[var(--text-primary)]">{globalConfig?.branding?.platform_name || "MCC AI"}</span>
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1.5 hover:bg-white/40" style={{ color: '#ffffff' }}>
                   <X size={18} />
@@ -475,21 +480,17 @@ export const WorkspacePage: React.FC = () => {
                   const sectionId = `section-${section.title}`;
                   const isSectionOpen = expanded[sectionId] ?? true;
                   return (
-                    <div key={section.title} className="space-y-0.5 mb-2">
-                      <div 
-                        className="flex items-center justify-between px-4 mt-2 mb-1 cursor-pointer group select-none"
-                        onClick={() => toggleExpanded(sectionId)}
-                      >
-                        <h4 className="text-[11px] font-bold tracking-[0.1em] text-teal-800 dark:text-teal-500 uppercase group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                          {section.title}
-                        </h4>
-                        <ChevronDown 
-                          size={14} 
-                          className={`text-teal-800/50 dark:text-teal-500/50 transition-transform duration-200 ${isSectionOpen ? 'rotate-180' : ''}`}
-                        />
-                      </div>
+                    <div key={section.title || `section-${section.items[0]?.id}`} className="space-y-0.5 mb-2">
+                      {section.title && (
+                        <div className="w-full flex justify-center py-2 relative mt-1 mb-1">
+                          <hr className="w-[60%] border-[rgba(255,255,255,0.1)] absolute top-1/2 -translate-y-1/2" style={{ borderColor: 'var(--sidebar-panel-border)' }} />
+                          <span className="bg-[var(--sidebar-bg)] px-1 text-[8px] font-bold tracking-wider text-[var(--sidebar-panel-text)] opacity-60 uppercase z-10 text-center leading-tight max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                            {section.title}
+                          </span>
+                        </div>
+                      )}
                       <AnimatePresence initial={false}>
-                        {isSectionOpen && (
+                        {(!section.title || isSectionOpen) && (
                           <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
@@ -522,14 +523,22 @@ export const WorkspacePage: React.FC = () => {
 
       {/* Left Panel: Desktop Sidebar */}
       <aside
-        className="hidden w-64 flex-shrink-0 sm:flex sm:flex-col justify-between p-6 rounded-none relative z-10"
+        className="hidden w-[180px] flex-shrink-0 sm:flex sm:flex-col justify-between px-2 py-6 rounded-none relative z-10"
         style={{
           background: 'var(--sidebar-bg)',
           borderRight: 'none',
         }}
       >
-        <div className="flex flex-col flex-1">
-          <div className="flex items-center gap-2.5 mb-6 select-none">
+        <div className="flex flex-col flex-1 min-h-0">
+          <div className="flex flex-col items-center gap-4 mb-6 select-none w-full">
+            <div className="flex items-center justify-center overflow-hidden w-full">
+              <img
+                src={globalConfig?.branding?.logo_url || "/logo.png"}
+                alt="Logo"
+                className="h-10 w-10 rounded-full border border-white/40 object-cover flex-shrink-0"
+                style={{ height: "40px", width: "40px" }}
+              />
+            </div>
             <button
               onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-white/40 hover:bg-white/20 border border-white/10 text-[var(--text-primary)] transition-all cursor-pointer hover:scale-105 active:scale-95 flex-shrink-0"
@@ -537,22 +546,6 @@ export const WorkspacePage: React.FC = () => {
             >
               <ArrowLeft size={14} />
             </button>
-            <div className="flex items-center gap-2 overflow-hidden">
-              <img
-                src={globalConfig?.branding?.logo_url || "/logo.png"}
-                alt="Logo"
-                className="h-8 w-8 rounded-full border border-white/40 object-cover flex-shrink-0"
-                style={{ height: globalConfig?.branding?.logo_size || "32px", width: globalConfig?.branding?.logo_size || "32px" }}
-              />
-              <div className="flex flex-col justify-center min-w-0">
-                <span className="font-display text-base font-black tracking-tight leading-none text-[var(--text-primary)] truncate flex items-center gap-0.5">
-                  {globalConfig?.branding?.platform_name || "MCC AI"}
-                </span>
-                <span className="text-[10px] font-bold tracking-wider uppercase mt-1 text-[var(--sidebar-panel-text)] opacity-80 whitespace-nowrap overflow-hidden text-ellipsis">
-                  {globalConfig?.branding?.tagline || "Language Platform"}
-                </span>
-              </div>
-            </div>
           </div>
 
           <nav className="space-y-2.5 flex-1 overflow-y-auto min-h-0 pr-2 mb-2 custom-scrollbar" aria-label="Tool navigation">
@@ -560,21 +553,23 @@ export const WorkspacePage: React.FC = () => {
               const sectionId = `section-${section.title}`;
               const isSectionOpen = expanded[sectionId] ?? true;
               return (
-                <div key={section.title} className="space-y-0.5 mb-2">
-                  <div 
-                    className="flex items-center justify-between px-4 mt-2 mb-1 cursor-pointer group select-none"
-                    onClick={() => toggleExpanded(sectionId)}
-                  >
-                    <h4 className="text-[11px] font-bold tracking-[0.1em] text-teal-800 dark:text-teal-500 uppercase group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                      {section.title}
-                    </h4>
-                    <ChevronDown 
-                      size={14} 
-                      className={`text-teal-800/50 dark:text-teal-500/50 transition-transform duration-200 ${isSectionOpen ? 'rotate-180' : ''}`}
-                    />
-                  </div>
+                <div key={section.title || `section-${section.items[0]?.id}`} className="space-y-0.5 mb-2">
+                  {section.title && (
+                    <div 
+                      className="flex items-center justify-between px-2 mt-2 mb-1 cursor-pointer group select-none"
+                      onClick={() => toggleExpanded(sectionId)}
+                    >
+                      <h4 className="text-[10px] font-bold tracking-[0.1em] text-[var(--sidebar-panel-text)] uppercase opacity-80 group-hover:opacity-100 transition-colors truncate pr-1">
+                        {section.title}
+                      </h4>
+                      <ChevronDown 
+                        size={14} 
+                        className={`flex-shrink-0 text-[var(--sidebar-panel-text)] opacity-50 transition-transform duration-200 ${isSectionOpen ? 'rotate-180' : ''}`} 
+                      />
+                    </div>
+                  )}
                   <AnimatePresence initial={false}>
-                    {isSectionOpen && (
+                    {(!section.title || isSectionOpen) && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
@@ -630,8 +625,8 @@ export const WorkspacePage: React.FC = () => {
               >
                 <div className="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-teal-500/10 blur-xl pointer-events-none transition-transform duration-500 group-hover:scale-150" />
 
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs font-bold text-[var(--sidebar-panel-text)] uppercase tracking-wider">Active Workspace</span>
+                <div className="flex flex-col justify-center items-center gap-1 mb-2">
+                  <span className="text-[10px] font-bold text-[var(--sidebar-panel-text)] uppercase tracking-wider text-center leading-tight">Active Workspace</span>
                   <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${colorClass}`}>
                     {planName}
                   </span>
@@ -640,7 +635,7 @@ export const WorkspacePage: React.FC = () => {
                 <div className="space-y-0.5">
                   {/* Transcription Meter */}
                   <div className="space-y-0.5">
-                    <div className="flex justify-between text-[11px] leading-none">
+                    <div className="flex flex-col text-[9px] leading-tight text-center">
                       <span className="text-[var(--sidebar-panel-text)] opacity-80">Transcription</span>
                       <span className="text-[var(--text-primary)] font-bold">{transcriptionUsed.toFixed(1)} / {transcriptionLimit} m</span>
                     </div>
@@ -651,7 +646,7 @@ export const WorkspacePage: React.FC = () => {
 
                   {/* Translation Meter */}
                   <div className="space-y-0.5">
-                    <div className="flex justify-between text-[11px] leading-none">
+                    <div className="flex flex-col text-[9px] leading-tight text-center">
                       <span className="text-[var(--sidebar-panel-text)] opacity-80">Translation</span>
                       <span className="text-[var(--text-primary)] font-bold">{(translationUsed / 1000).toFixed(1)}k / {(translationLimit / 1000).toFixed(0)}k c</span>
                     </div>
@@ -662,7 +657,7 @@ export const WorkspacePage: React.FC = () => {
 
                   {/* TTS Meter */}
                   <div className="space-y-0.5">
-                    <div className="flex justify-between text-[11px] leading-none">
+                    <div className="flex flex-col text-[9px] leading-tight text-center">
                       <span className="text-[var(--sidebar-panel-text)] opacity-80">TTS Synthesis</span>
                       <span className="text-[var(--text-primary)] font-bold">{(ttsUsed / 1000).toFixed(1)}k / {(ttsLimit / 1000).toFixed(0)}k c</span>
                     </div>

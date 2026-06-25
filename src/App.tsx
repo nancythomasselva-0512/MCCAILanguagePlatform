@@ -26,22 +26,22 @@ function App() {
           setViewMode('workspace');
         }
       } else if (window.location.pathname === '/dashboard') {
-        if (!isNormalUser) {
+        if (!user) { // ALLOW super_admin to access /dashboard too
           logout(); // Clear any invalid session
           setAuthModalMode('login');
           setIsAuthModalOpen(true);
         } else {
-          // Already logged in as user
+          // Already logged in
           setViewMode('workspace');
         }
       } else {
         // Any other path (like /)
         if (isSuperAdmin) {
-          // Super admins should be on /controller
+          // Super admins default to /controller
           window.history.replaceState({}, '', '/controller');
           setViewMode('workspace');
         } else if (isNormalUser) {
-          // Normal users should be on /dashboard
+          // Normal users default to /dashboard
           window.history.replaceState({}, '', '/dashboard');
           setViewMode('workspace');
         } else {
@@ -55,10 +55,19 @@ function App() {
   // Ensure URL stays synchronized with viewMode and user role
   useEffect(() => {
     if (viewMode === 'workspace') {
-      if (user?.role === 'super_admin' && window.location.pathname !== '/controller') {
-        window.history.replaceState({}, '', '/controller');
-      } else if (user?.role && user.role !== 'super_admin' && window.location.pathname !== '/dashboard') {
-        window.history.replaceState({}, '', '/dashboard');
+      if (!user) return;
+      
+      const path = window.location.pathname;
+      if (user.role === 'super_admin') {
+        // Super admin can be on /controller or /dashboard. Default to /controller if somewhere else.
+        if (path !== '/controller' && path !== '/dashboard') {
+          window.history.replaceState({}, '', '/controller');
+        }
+      } else {
+        // Normal user must be on /dashboard
+        if (path !== '/dashboard') {
+          window.history.replaceState({}, '', '/dashboard');
+        }
       }
     } else {
       // Landing mode

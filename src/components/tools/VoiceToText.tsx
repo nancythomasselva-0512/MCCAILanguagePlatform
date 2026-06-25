@@ -67,6 +67,8 @@ export const VoiceToText: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en-US');
   const [isInsecureOrigin, setIsInsecureOrigin] = useState(false);
+  const [fontSize, setFontSize] = useState('14px');
+  const [fontFamily, setFontFamily] = useState('System Default');
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -547,7 +549,38 @@ useEffect(() => {
                   <span className="text-[11px] font-bold uppercase tracking-wider text-left" style={{ color: 'var(--text-muted)' }}>
                     Transcription · {segments.length} segment{segments.length !== 1 ? 's' : ''}
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Font Configuration */}
+                    <div className="relative">
+                      <select value={fontFamily}
+                        onChange={(e) => setFontFamily(e.target.value)}
+                        className="appearance-none rounded-lg px-2.5 pr-7 py-1.5 text-[11px] font-bold focus:outline-none bg-[var(--bg-subtle)] border border-[var(--border-base)] text-[var(--text-primary)]">
+                        <option value="System Default">Default Font</option>
+                        <option value="Inter">Inter</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Marudham">Marudham</option>
+                        <option value="Latha">Latha</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                      </select>
+                      <ChevronDown size={11} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    </div>
+                    <div className="relative">
+                      <select value={fontSize}
+                        onChange={(e) => setFontSize(e.target.value)}
+                        className="appearance-none rounded-lg px-2.5 pr-7 py-1.5 text-[11px] font-bold focus:outline-none bg-[var(--bg-subtle)] border border-[var(--border-base)] text-[var(--text-primary)]">
+                        <option value="12px">12</option>
+                        <option value="14px">14</option>
+                        <option value="16px">16</option>
+                        <option value="18px">18</option>
+                        <option value="20px">20</option>
+                        <option value="22px">22</option>
+                        <option value="24px">24</option>
+                      </select>
+                      <ChevronDown size={11} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    </div>
                     <button
                       onClick={reset}
                       className="btn-ghost flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs"
@@ -625,7 +658,11 @@ useEffect(() => {
                             className="w-full resize-none rounded-xl px-3 py-2 text-sm app-input"
                           />
                         ) : (
-                          <p className="text-sm font-medium leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                          <p className="font-medium leading-relaxed" style={{ 
+                            color: 'var(--text-primary)',
+                            fontSize: fontSize,
+                            fontFamily: fontFamily === 'System Default' ? 'inherit' : `"${fontFamily}", sans-serif`
+                          }}>
                             {seg.text}
                           </p>
                         )}

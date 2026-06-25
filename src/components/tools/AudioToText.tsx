@@ -64,6 +64,8 @@ export const AudioToText: React.FC = () => {
   const [modelSize, setModelSize] = useState('base');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [viewMode, setViewMode] = useState<'segmented' | 'paragraph'>('segmented');
+  const [fontSize, setFontSize] = useState('14px');
+  const [fontFamily, setFontFamily] = useState('System Default');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
@@ -582,6 +584,40 @@ export const AudioToText: React.FC = () => {
                         Paragraph
                       </button>
                     </div>
+                    
+                    {/* Font Configuration */}
+                    <div className="flex items-center gap-2 ml-1">
+                      <div className="relative">
+                        <select value={fontFamily}
+                          onChange={(e) => setFontFamily(e.target.value)}
+                          className="appearance-none rounded-lg px-2.5 pr-7 py-1 text-[10px] font-extrabold focus:outline-none bg-[var(--bg-subtle)] border border-[var(--border-base)] text-[var(--text-primary)]">
+                          <option value="System Default">Default Font</option>
+                          <option value="Inter">Inter</option>
+                          <option value="Roboto">Roboto</option>
+                          <option value="Marudham">Marudham</option>
+                          <option value="Latha">Latha</option>
+                          <option value="Arial">Arial</option>
+                          <option value="Times New Roman">Times New Roman</option>
+                          <option value="Courier New">Courier New</option>
+                          <option value="Georgia">Georgia</option>
+                        </select>
+                        <ChevronDown size={11} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                      </div>
+                      <div className="relative">
+                        <select value={fontSize}
+                          onChange={(e) => setFontSize(e.target.value)}
+                          className="appearance-none rounded-lg px-2.5 pr-7 py-1 text-[10px] font-extrabold focus:outline-none bg-[var(--bg-subtle)] border border-[var(--border-base)] text-[var(--text-primary)]">
+                          <option value="12px">12</option>
+                          <option value="14px">14</option>
+                          <option value="16px">16</option>
+                          <option value="18px">18</option>
+                          <option value="20px">20</option>
+                          <option value="22px">22</option>
+                          <option value="24px">24</option>
+                        </select>
+                        <ChevronDown size={11} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                      </div>
+                    </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:justify-end">
                     <button onClick={reset} className="btn-ghost flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs">
@@ -602,7 +638,12 @@ export const AudioToText: React.FC = () => {
                 {viewMode === 'paragraph' ? (
                   <div 
                     className="app-card rounded-2xl p-6 text-sm font-semibold leading-relaxed text-left whitespace-pre-wrap select-text" 
-                    style={{ border: '1px solid var(--border-base)', color: 'var(--text-primary)' }}
+                    style={{ 
+                      border: '1px solid var(--border-base)', 
+                      color: 'var(--text-primary)',
+                      fontSize: fontSize,
+                      fontFamily: fontFamily === 'System Default' ? 'inherit' : `"${fontFamily}", sans-serif`
+                    }}
                   >
                     {segments.map((seg, idx) => (
                       editingIndex === idx ? (
@@ -696,7 +737,11 @@ export const AudioToText: React.FC = () => {
                             </div>
                           ) : (
                             <p className="cursor-text text-sm font-medium leading-relaxed"
-                              style={{ color: 'var(--text-primary)' }}
+                              style={{ 
+                                color: 'var(--text-primary)',
+                                fontSize: fontSize,
+                                fontFamily: fontFamily === 'System Default' ? 'inherit' : `"${fontFamily}", sans-serif`
+                              }}
                               onClick={() => startEdit(i)}>
                               {seg.text}
                             </p>

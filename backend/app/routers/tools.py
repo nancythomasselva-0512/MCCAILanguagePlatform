@@ -141,10 +141,14 @@ def translate_text(
         try:
             # Simple wrapper to OpenAI chat completions
             headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            system_prompt = f"You are a professional translator. Translate the user's input text to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
+            if source_lang and source_lang != "Auto Detect":
+                system_prompt = f"You are a professional translator. Translate the user's input text from {source_lang} to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
+                
             payload = {
                 "model": "gpt-4o-mini",
                 "messages": [
-                    {"role": "system", "content": f"Translate the input text from {source_lang} to {target_lang}."},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": text}
                 ]
             }

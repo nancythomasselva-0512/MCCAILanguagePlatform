@@ -1,6 +1,6 @@
 import { storage } from "../utils/storage";
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "http://localhost:8000/api";
 
 export async function apiRequest(
   endpoint: string,

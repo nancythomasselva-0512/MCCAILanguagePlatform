@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeftRight, Copy, Volume2, RefreshCw,
   ChevronDown, AlertCircle, CheckCircle2, Loader2, X, Cpu, Languages,
-  Globe, Activity, Award, FileText
+  Globe, Activity, Award, FileText, Download,
+  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { providerManager } from '../../providers/providerManager';
@@ -34,8 +35,28 @@ export const TextTranslation: React.FC = () => {
   const [copiedTgt, setCopiedTgt] = useState(false);
   const [detectedLang, setDetectedLang] = useState('');
   const [charCount, setCharCount] = useState(0);
+  const [fontSize, setFontSize] = useState('14px');
+  const [fontFamily, setFontFamily] = useState('System Default');
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+  const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
+  const [textColor, setTextColor] = useState('#1e293b');
   
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const exportTranslation = () => {
+    if (!translatedText) return;
+    const blob = new Blob([translatedText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `translation_${targetLang.toLowerCase()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const translate = (text: string, target: string) => {
     if (!text.trim()) { setTranslatedText(''); setState('idle'); return; }
@@ -152,10 +173,8 @@ export const TextTranslation: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* 2-Column Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Column - Form & Usage Overview */}
-        <div className="lg:col-span-3 space-y-6">
+      {/* Main Content */}
+      <div className="flex flex-col gap-6">
           {/* Language Bar Card */}
           <div className="app-card rounded-2xl p-5 border border-slate-200/60 dark:border-white/5">
             <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2 sm:flex sm:flex-row sm:flex-nowrap sm:gap-3">
@@ -195,6 +214,48 @@ export const TextTranslation: React.FC = () => {
                     className="w-full appearance-none rounded-xl px-3.5 pr-9 py-2.5 text-sm font-semibold focus:outline-none"
                     style={selectStyle}>
                     {TARGET_LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                  <ChevronDown size={13} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+                </div>
+              </div>
+
+              {/* Font Family */}
+              <div className="flex-1 min-w-0 sm:max-w-[140px]">
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Font</label>
+                <div className="relative">
+                  <select value={fontFamily}
+                    onChange={(e) => setFontFamily(e.target.value)}
+                    className="w-full appearance-none rounded-xl px-3.5 pr-9 py-2.5 text-sm font-semibold focus:outline-none"
+                    style={selectStyle}>
+                    <option value="System Default">Default</option>
+                    <option value="Inter">Inter</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Marudham">Marudham</option>
+                    <option value="Latha">Latha</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                  </select>
+                  <ChevronDown size={13} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+                </div>
+              </div>
+
+              {/* Font Size */}
+              <div className="flex-1 min-w-0 sm:max-w-[100px]">
+                <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Size</label>
+                <div className="relative">
+                  <select value={fontSize}
+                    onChange={(e) => setFontSize(e.target.value)}
+                    className="w-full appearance-none rounded-xl px-3.5 pr-9 py-2.5 text-sm font-semibold focus:outline-none"
+                    style={selectStyle}>
+                    <option value="12px">12</option>
+                    <option value="14px">14</option>
+                    <option value="16px">16</option>
+                    <option value="18px">18</option>
+                    <option value="20px">20</option>
+                    <option value="22px">22</option>
+                    <option value="24px">24</option>
                   </select>
                   <ChevronDown size={13} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
                 </div>
@@ -242,6 +303,8 @@ export const TextTranslation: React.FC = () => {
                   background: 'var(--bg-subtle)',
                   border: '1px solid var(--border-base)',
                   color: 'var(--text-primary)',
+                  fontSize: fontSize,
+                  fontFamily: fontFamily === 'System Default' ? 'inherit' : `"${fontFamily}", sans-serif`
                 }}
               />
               <div className="mt-1.5 text-right text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
@@ -267,14 +330,43 @@ export const TextTranslation: React.FC = () => {
                     className="btn-ghost flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs disabled:opacity-40">
                     <Volume2 size={11} /> Listen
                   </button>
+                  <button id="trans-export-btn" onClick={exportTranslation}
+                    disabled={!translatedText}
+                    className="btn-ghost flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs disabled:opacity-40">
+                    <Download size={11} /> Export
+                  </button>
                 </div>
               </div>
 
-              <div className="relative flex flex-1 rounded-xl p-4" style={{
+              <div className="relative flex flex-col flex-1 rounded-xl p-4" style={{
                 background: 'var(--bg-subtle)',
                 border: '1px solid var(--border-base)',
                 minHeight: '14rem',
               }}>
+                {state === 'done' && translatedText && (
+                  <div className="flex flex-wrap items-center gap-1 border-b border-[var(--border-base)] pb-2 mb-3">
+                    <button onClick={() => setIsBold(!isBold)} className={`p-1.5 rounded-lg transition-colors ${isBold ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Bold"><Bold size={14} /></button>
+                    <button onClick={() => setIsItalic(!isItalic)} className={`p-1.5 rounded-lg transition-colors ${isItalic ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Italic"><Italic size={14} /></button>
+                    <button onClick={() => setIsUnderline(!isUnderline)} className={`p-1.5 rounded-lg transition-colors ${isUnderline ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Underline"><Underline size={14} /></button>
+                    
+                    <div className="w-px h-4 bg-slate-300 dark:bg-slate-600 mx-1.5" />
+                    
+                    <button onClick={() => setTextAlign('left')} className={`p-1.5 rounded-lg transition-colors ${textAlign === 'left' ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Align Left"><AlignLeft size={14} /></button>
+                    <button onClick={() => setTextAlign('center')} className={`p-1.5 rounded-lg transition-colors ${textAlign === 'center' ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Align Center"><AlignCenter size={14} /></button>
+                    <button onClick={() => setTextAlign('right')} className={`p-1.5 rounded-lg transition-colors ${textAlign === 'right' ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Align Right"><AlignRight size={14} /></button>
+                    <button onClick={() => setTextAlign('justify')} className={`p-1.5 rounded-lg transition-colors ${textAlign === 'justify' ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Justify"><AlignJustify size={14} /></button>
+                    
+                    <div className="w-px h-4 bg-slate-300 dark:bg-slate-600 mx-1.5" />
+
+                    <input 
+                      type="color" 
+                      value={textColor} 
+                      onChange={(e) => setTextColor(e.target.value)}
+                      className="w-6 h-6 p-0 border-0 rounded cursor-pointer bg-transparent"
+                      title="Text Color"
+                    />
+                  </div>
+                )}
                 {state === 'translating' && (
                   <div className="absolute inset-0 flex items-center justify-center rounded-xl"
                     style={{ background: 'color-mix(in srgb, var(--bg-subtle) 80%, transparent)' }}>
@@ -284,7 +376,21 @@ export const TextTranslation: React.FC = () => {
                   </div>
                 )}
                 {state === 'done' && translatedText && (
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{translatedText}</p>
+                  <textarea 
+                    value={translatedText}
+                    onChange={(e) => setTranslatedText(e.target.value)}
+                    className="flex-1 w-full h-full resize-none bg-transparent focus:outline-none text-sm leading-relaxed"
+                    style={{ 
+                      color: textColor, 
+                      minHeight: '10rem',
+                      fontSize: fontSize,
+                      fontFamily: fontFamily === 'System Default' ? 'inherit' : `"${fontFamily}", sans-serif`,
+                      fontWeight: isBold ? 'bold' : 'normal',
+                      fontStyle: isItalic ? 'italic' : 'normal',
+                      textDecoration: isUnderline ? 'underline' : 'none',
+                      textAlign: textAlign
+                    }}
+                  />
                 )}
                 {state === 'idle' && !translatedText && (
                   <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Translation will appear here…</p>
@@ -299,144 +405,6 @@ export const TextTranslation: React.FC = () => {
               )}
             </div>
           </div>
-
-          {/* Usage Overview Row */}
-          <div className="space-y-4 pt-2">
-            <h3 className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Usage Overview</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              {/* Translations Today */}
-              <div className="glass-card rounded-2xl p-4.5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Translations Count</span>
-                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{translationHistory.length}</h4>
-                  </div>
-                  <div className="h-7 w-7 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0">
-                    <Activity size={14} />
-                  </div>
-                </div>
-                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
-                  Total translation queries
-                </div>
-              </div>
-
-              {/* Characters Used */}
-              <div className="glass-card rounded-2xl p-4.5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Characters Used</span>
-                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{(billingOverview?.usage?.translation_chars_used || 0).toLocaleString()}</h4>
-                  </div>
-                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
-                    <FileText size={14} />
-                  </div>
-                </div>
-                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
-                  Characters translated
-                </div>
-              </div>
-
-              {/* Remaining Characters */}
-              <div className="glass-card rounded-2xl p-4.5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Remaining Characters</span>
-                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{remainingChars.toLocaleString()}</h4>
-                  </div>
-                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
-                    <Globe size={14} />
-                  </div>
-                </div>
-                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
-                  Out of {translationLimit.toLocaleString()} chars
-                </div>
-              </div>
-
-              {/* Active Provider */}
-              <div className="glass-card rounded-2xl p-4.5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Engine</span>
-                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">Platform AI</h4>
-                  </div>
-                  <div className="h-7 w-7 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0">
-                    <Award size={14} />
-                  </div>
-                </div>
-                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
-                  Centrally managed provider
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column - Banners & Recent Activity */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Connected Banner */}
-          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-gradient-to-br from-teal-600/10 to-emerald-500/10 dark:from-teal-600/5 dark:to-emerald-500/5 min-h-[120px] flex flex-col justify-center">
-            <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
-            <div className="relative z-10">
-              <span className="text-[8px] font-black uppercase text-emerald-500 dark:text-emerald-400 tracking-wider">Engine Status</span>
-              <h4 className="font-display text-sm font-black text-slate-950 dark:text-white mt-1 leading-snug">127 Languages Connected</h4>
-              <p className="mt-1 text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                Our engine auto-routes translations to ensure maximum nuance and accuracy.
-              </p>
-            </div>
-            <Globe size={52} className="absolute right-[-10px] bottom-[-10px] opacity-10 text-emerald-500" />
-          </div>
-
-          {/* Recent Translations Card */}
-          <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
-              <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Recent Translations</h4>
-              <span className="text-[9px] text-teal-500 dark:text-teal-400 font-bold cursor-pointer hover:underline" onClick={() => fetchBillingOverview()}>Refresh</span>
-            </div>
-
-            <div className="space-y-2">
-              {translationHistory.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-[10px] font-medium font-sans">
-                  No recent translations.
-                </div>
-              ) : (
-                translationHistory.slice(0, 4).map(item => (
-                  <div key={item.id} className="p-2.5 rounded-xl bg-slate-100/50 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5 flex items-start gap-3 hover:border-slate-300 dark:hover:border-white/10 transition-colors text-left font-sans font-medium">
-                    <span className="text-[9px] font-black text-teal-600 bg-teal-500/10 rounded px-1.5 py-0.5 mt-0.5">TRANS</span>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">{item.title}</p>
-                      <span className="text-[8px] text-slate-500 font-medium">{item.details} · {item.timestamp}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Recent Activity Timeline */}
-          <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-3 text-left">
-            <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest border-b border-slate-200 dark:border-white/5 pb-2">Recent Activity</h4>
-            <div className="relative border-l border-slate-200 dark:border-white/5 ml-2 pl-4 space-y-4 text-[10px] font-semibold text-slate-500">
-              {translationHistory.length === 0 ? (
-                <div className="text-center py-4 text-slate-400 dark:text-slate-500 text-[10px] font-medium font-sans">
-                  No recent activity.
-                </div>
-              ) : (
-                translationHistory.slice(0, 3).map(item => (
-                  <div key={item.id} className="relative text-left">
-                    <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full bg-slate-50 dark:bg-[#0B1020] border-2 border-emerald-500 flex items-center justify-center z-10" />
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="text-slate-900 dark:text-white block font-bold truncate max-w-[120px]">{item.title}</span>
-                        <span className="text-[9px] text-slate-550 dark:text-slate-400 mt-0.5 block">{item.details}</span>
-                      </div>
-                      <span className="text-[8px] text-slate-450 dark:text-slate-500 font-mono flex-shrink-0">{item.timestamp}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

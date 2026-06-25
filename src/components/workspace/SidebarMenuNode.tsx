@@ -113,7 +113,7 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
       {/* Node Button */}
       <button
         onClick={handleClick}
-        className={`w-full flex items-center justify-between py-1.5 px-4 rounded-xl text-sm font-semibold transition-all relative overflow-hidden select-none cursor-pointer ${isFolder
+        className={`w-full flex flex-col items-center justify-center py-3 px-1 rounded-2xl gap-1.5 text-center transition-all relative overflow-hidden select-none cursor-pointer ${isFolder
             ? 'text-teal-600 hover:text-teal-800 hover:bg-[var(--sidebar-panel-hover-bg)]'
             : active
               ? 'text-[var(--sidebar-panel-text-active)] font-bold'
@@ -130,16 +130,16 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
           />
         )}
 
-        <div className="flex items-center gap-2.5 relative z-10">
+        <div className="flex flex-col items-center justify-center gap-1.5 relative z-10 w-full">
           {node.icon ? (
-            <span className="flex h-5 w-5 items-center justify-center rounded text-current">
-              <LucideIcon name={node.icon} size={15} />
+            <span className="flex h-8 w-8 items-center justify-center rounded text-current">
+              <LucideIcon name={node.icon} size={24} />
             </span>
           ) : (
             // Default Bullet Dot for Sub-menu elements
-            <span className={`h-1.5 w-1.5 rounded-full ml-1.5 transition-colors ${active ? 'bg-white' : 'bg-[var(--sidebar-panel-text)] opacity-30 group-hover:opacity-50'}`} />
+            <span className={`h-2 w-2 rounded-full ml-1.5 transition-colors ${active ? 'bg-white' : 'bg-[var(--sidebar-panel-text)] opacity-30 group-hover:opacity-50'}`} />
           )}
-          <span className="text-left leading-none">{node.label}</span>
+          <span className="text-center text-xs leading-tight whitespace-normal break-words w-full">{node.label}</span>
         </div>
 
         {/* Chevron for accordions */}

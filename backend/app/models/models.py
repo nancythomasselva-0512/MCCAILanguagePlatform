@@ -451,3 +451,16 @@ class InvoiceHistory(Base):
 
     tenant = relationship("Tenant", back_populates="invoice_history")
     invoice = relationship("Invoice", back_populates="history")
+
+class SMTPSettings(Base):
+    __tablename__ = "smtp_settings"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
+    smtp_host = Column(String(255), nullable=True)
+    smtp_port = Column(Integer, default=587)
+    smtp_username = Column(String(255), nullable=True)
+    smtp_password = Column(String(255), nullable=True)
+    from_email = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
