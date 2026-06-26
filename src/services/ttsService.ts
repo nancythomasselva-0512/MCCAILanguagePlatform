@@ -1,5 +1,6 @@
 import { openaiProvider } from '../providers/openai';
 import { elevenlabsProvider } from '../providers/elevenlabs';
+import { providerManager } from '../providers/providerManager';
 
 const ttsAudioCache = new Map<string, string>();
 
@@ -248,16 +249,16 @@ class TTSService {
       } else {
         const errors: string[] = [];
         
-        // Priority 1: OpenAI
+        // Priority 1: Backend TTS (Proxy to OpenAI)
         try {
-          console.log(`TTS: Sending request... [Provider: OpenAI]`);
-          audioUrl = await openaiProvider.synthesizeSpeech(chunk, 'alloy', this.options?.openAiApiKey);
-          console.log(`TTS: Response received... [Provider: OpenAI]`);
+          console.log(`TTS: Sending request... [Provider: Backend / OpenAI]`);
+          audioUrl = await providerManager.synthesizeSpeech(chunk, 'alloy');
+          console.log(`TTS: Response received... [Provider: Backend / OpenAI]`);
           ttsAudioCache.set(cacheKey, audioUrl);
           console.log(`TTS: Audio URL created & cached.`);
         } catch (e: any) {
-          console.error(`TTS: Provider OpenAI failed:`, e.message);
-          errors.push(`OpenAI: ${e.message}`);
+          console.error(`TTS: Provider Backend failed:`, e.message);
+          errors.push(`Backend: ${e.message}`);
         }
 
         // Priority 2: ElevenLabs

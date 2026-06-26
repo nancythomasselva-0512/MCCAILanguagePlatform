@@ -7,7 +7,23 @@ export async function apiRequest(
   options: RequestInit = {}
 ): Promise<any> {
   const token = storage.getItem("mcc-ai-token");
-  const tenantSlug = storage.getItem("mcc-ai-tenant-slug");
+  
+  // Try to get tenant slug from dedicated key first, then fall back to user profile
+  let tenantSlug = storage.getItem("mcc-ai-tenant-slug");
+  if (!tenantSlug) {
+    // Fallback: read from user profile object
+    try {
+      const userStr = localStorage.getItem("mcc-ai-user");
+      if (userStr) {
+        const userObj = JSON.parse(userStr);
+        tenantSlug = userObj?.tenant_slug || null;
+        // If we recovered the slug, save it back to the dedicated key
+        if (tenantSlug) {
+          localStorage.setItem("mcc-ai-tenant-slug", tenantSlug);
+        }
+      }
+    } catch (_) {}
+  }
 
   const headers = new Headers(options.headers || {});
   

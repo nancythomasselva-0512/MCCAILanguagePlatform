@@ -104,7 +104,7 @@ export const providerManager = {
     });
 
     return {
-      text: data.text || "",
+      text: data.text || data.translated_text || "",
       detectedLang: data.detected_lang || ""
     };
   }

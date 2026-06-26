@@ -102,13 +102,24 @@ def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str, 
 
 def send_welcome_subscription_email(db: Session, tenant: Tenant, plan_name: str):
     subject = f"Welcome to MCC {plan_name} Plan!"
-    body = f"Hello {tenant.tenant_name},\n\nThank you for subscribing to the {plan_name} plan on the MCC AI Language Platform. Your workspace has been activated with new resource limits.\n\nEnjoy the platform!\nThe MCC AI Team"
+    body = f"Hello {tenant.tenant_name},\n\nThank you for subscribing to the {plan_name} plan on Fluentia. Your workspace has been activated with new resource limits.\n\nEnjoy the platform!\nThe Fluentia Team"
     log_email_action(db, tenant.id, subject, body)
 
 def send_invoice_generated_email(db: Session, tenant: Tenant, invoice_number: str, amount: float):
     subject = f"New Invoice Generated - {invoice_number}"
     body = f"Hello {tenant.tenant_name},\n\nA new invoice {invoice_number} has been generated for your workspace subscription. Total amount: ${amount:.2f}.\n\nPlease review it in your Billing settings.\n\nThanks,\nMCC AI Billing"
-    log_email_action(db, tenant.id, subject, body)
+    
+    # Locate invoice PDF to attach
+    attachment_path = None
+    try:
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        pdf_file = os.path.join(base_dir, "invoices_pdf", f"{invoice_number}.pdf")
+        if os.path.exists(pdf_file):
+            attachment_path = pdf_file
+    except Exception as e:
+        logger.error(f"Could not locate invoice PDF to attach: {e}")
+
+    log_email_action(db, tenant.id, subject, body, attachment_path)
 
 def send_user_subscription_activated_email(
     db: Session,
@@ -152,7 +163,7 @@ def send_user_subscription_activated_email(
     except Exception as e:
         logger.error(f"Could not locate invoice PDF to attach: {e}")
 
-    log_email_action(db, tenant.id, subject, body, attachment_path, recipient_email=user.email)
+    log_email_action(db, tenant.id, subject, body, attachment_path=attachment_path, recipient_email=user.email)
 
 def send_admin_purchase_notification_email(
     db: Session,
@@ -182,16 +193,13 @@ def send_admin_purchase_notification_email(
         f"MCC AI Billing System"
     )
     
-    # Find super admin email
+    # Find super admin email dynamically from database
     super_admin = db.query(User).filter(User.role == "super_admin").first()
-    recipient_email = super_admin.email if super_admin else None
-    
-    if not recipient_email:
-        # Fallback to config sender email or default admin email
-        from app.core.config import settings
-        recipient_email = settings.SMTP_SENDER or settings.SMTP_USER or "admin@mcc-ai.com"
+    if not super_admin or not super_admin.email:
+        logger.warning("No super admin email found in database. Cannot send admin purchase notification.")
+        return
         
-    log_email_action(db, tenant.id, subject, body, recipient_email=recipient_email)
+    log_email_action(db, tenant.id, subject, body, recipient_email=super_admin.email)
 
 def send_payment_success_email(db: Session, tenant: Tenant, invoice_number: str, amount: float, transaction_id: str):
     subject = f"Payment Successful! Invoice {invoice_number}"
@@ -254,7 +262,10 @@ def send_upgrade_confirmation_email(db: Session, tenant: Tenant, old_plan_name: 
 
 def send_superadmin_new_tenant_notification_email(db: Session, tenant: Tenant, admin_email: str, plan_name: str):
     super_admin = db.query(User).filter(User.role == "super_admin").first()
-    recipient_email = super_admin.email if super_admin and super_admin.email else "admin@mcc-ai.com"
+    if not super_admin or not super_admin.email:
+        logger.warning("No super admin email found in database. Cannot send super admin new tenant notification.")
+        return
+        
     
     subject = f"New Workspace Registered: {tenant.tenant_name}"
     body = (
@@ -269,4 +280,4 @@ def send_superadmin_new_tenant_notification_email(db: Session, tenant: Tenant, a
         f"System Notification"
     )
     
-    log_email_action(db, tenant.id, subject, body, recipient_email=recipient_email)
+    log_email_action(db, tenant.id, subject, body, recipient_email=super_admin.email)

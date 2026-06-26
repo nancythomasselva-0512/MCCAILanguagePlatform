@@ -57,6 +57,24 @@ export const TextTranslation: React.FC = () => {
   
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    
+    if (sourceText.trim()) {
+      debounceRef.current = setTimeout(() => {
+        translate(sourceText, targetLang);
+      }, 800);
+    } else {
+      setTranslatedText('');
+      setState('idle');
+    }
+    
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceText, targetLang, sourceLang]);
+
   const exportTranslation = () => {
     if (!translatedText) return;
 
@@ -85,40 +103,36 @@ export const TextTranslation: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const translate = (text: string, target: string) => {
+  const translate = async (text: string, target: string) => {
     if (!text.trim()) { setTranslatedText(''); setState('idle'); return; }
     setState('translating');
     setErrorMsg('');
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const result = await providerManager.translateText(
-          text,
-          sourceLang,
-          target,
-          openAiApiKey
-        );
-        setTranslatedText(result.text);
-        if (sourceLang === 'Auto Detect' && result.detectedLang) {
-          setDetectedLang(result.detectedLang);
-        } else {
-          setDetectedLang('');
-        }
-        setState('done');
-        fetchBillingOverview();
-        addHistoryItem('translation', `${sourceLang === 'Auto Detect' ? (result.detectedLang || 'Detected') : sourceLang} → ${target}`, `${text.split(' ').filter(Boolean).length} words`);
-      } catch (err: any) {
-        setErrorMsg(err.message || 'Translation failed. Please check your connection.');
-        setState('error');
+    try {
+      const result = await providerManager.translateText(
+        text,
+        sourceLang,
+        target,
+        openAiApiKey
+      );
+      setTranslatedText(result.text);
+      if (sourceLang === 'Auto Detect' && result.detectedLang) {
+        setDetectedLang(result.detectedLang);
+      } else {
+        setDetectedLang('');
       }
-    }, 700);
+      setState('done');
+      fetchBillingOverview();
+      addHistoryItem('translation', `${sourceLang === 'Auto Detect' ? (result.detectedLang || 'Detected') : sourceLang} → ${target}`, `${text.split(' ').filter(Boolean).length} words`);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Translation failed. Please check your connection.');
+      setState('error');
+    }
   };
 
   const handleSourceChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value.slice(0, 5000);
     setSourceText(val);
     setCharCount(val.length);
-    translate(val, targetLang);
   };
 
   const handleSwap = () => {
@@ -129,10 +143,11 @@ export const TextTranslation: React.FC = () => {
     setTargetLang(prevSrc);
     setSourceText(translatedText);
     setCharCount(translatedText.length);
-    translate(translatedText, prevSrc);
+    setTranslatedText('');
+    setState('idle');
   };
 
-  const handleTargetChange = (lang: string) => { setTargetLang(lang); translate(sourceText, lang); };
+  const handleTargetChange = (lang: string) => { setTargetLang(lang); };
 
   const handleSrcListen = () => {
     if (srcTtsState === 'idle' || srcTtsState === 'error') {
@@ -355,8 +370,10 @@ export const TextTranslation: React.FC = () => {
                   fontFamily: sourceFont === 'System Default' ? 'inherit' : `"${sourceFont}", sans-serif`
                 }}
               />
-              <div className="mt-1.5 text-right text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                {charCount} / 5,000
+              <div className="mt-3 flex items-center justify-between">
+                <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                  {charCount} / 5,000
+                </div>
               </div>
             </div>
 
@@ -405,7 +422,7 @@ export const TextTranslation: React.FC = () => {
                 border: '1px solid var(--border-base)',
                 minHeight: '24rem',
               }}>
-                {state === 'done' && translatedText && (
+                <div className="flex flex-col flex-1">
                   <div className="flex flex-wrap items-center gap-1.5 border-b border-[var(--border-base)] pb-2 mb-3">
                     <button onClick={() => setIsBold(!isBold)} className={`p-1.5 rounded-lg transition-colors ${isBold ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Bold"><Bold size={14} /></button>
                     <button onClick={() => setIsItalic(!isItalic)} className={`p-1.5 rounded-lg transition-colors ${isItalic ? 'bg-slate-200 dark:bg-slate-700 text-teal-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`} title="Italic"><Italic size={14} /></button>
@@ -428,7 +445,24 @@ export const TextTranslation: React.FC = () => {
                       title="Text Color"
                     />
                   </div>
-                )}
+
+                <textarea 
+                  value={translatedText}
+                  onChange={(e) => setTranslatedText(e.target.value)}
+                  placeholder="Translation will appear here…"
+                  className="flex-1 w-full h-full resize-none bg-transparent focus:outline-none text-sm leading-relaxed"
+                  style={{ 
+                    color: textColor, 
+                    minHeight: '20rem',
+                    fontSize: fontSize,
+                    fontFamily: targetFont === 'System Default' ? 'inherit' : `"${targetFont}", sans-serif`,
+                    fontWeight: isBold ? 'bold' : 'normal',
+                    fontStyle: isItalic ? 'italic' : 'normal',
+                    textDecoration: isUnderline ? 'underline' : 'none',
+                    textAlign: textAlign
+                  }}
+                />
+                </div>
                 {state === 'translating' && (
                   <div className="absolute inset-0 flex items-center justify-center rounded-xl"
                     style={{ background: 'color-mix(in srgb, var(--bg-subtle) 80%, transparent)' }}>
@@ -436,26 +470,6 @@ export const TextTranslation: React.FC = () => {
                       <Loader2 size={15} className="animate-spin" /> Translating…
                     </div>
                   </div>
-                )}
-                {state === 'done' && translatedText && (
-                  <textarea 
-                    value={translatedText}
-                    onChange={(e) => setTranslatedText(e.target.value)}
-                    className="flex-1 w-full h-full resize-none bg-transparent focus:outline-none text-sm leading-relaxed"
-                    style={{ 
-                      color: textColor, 
-                      minHeight: '20rem',
-                      fontSize: fontSize,
-                      fontFamily: targetFont === 'System Default' ? 'inherit' : `"${targetFont}", sans-serif`,
-                      fontWeight: isBold ? 'bold' : 'normal',
-                      fontStyle: isItalic ? 'italic' : 'normal',
-                      textDecoration: isUnderline ? 'underline' : 'none',
-                      textAlign: textAlign
-                    }}
-                  />
-                )}
-                {state === 'idle' && !translatedText && (
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Translation will appear here…</p>
                 )}
               </div>
 

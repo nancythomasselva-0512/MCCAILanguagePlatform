@@ -21,6 +21,7 @@ interface SidebarMenuNodeProps {
   onSettingsOpen: () => void;
   onSidebarClose?: () => void; // for mobile drawer dismissal
   onHistoryOpen?: () => void;
+  isCollapsed?: boolean;
 }
 
 const LucideIcon = ({ name, size = 15, className = '' }: { name: string; size?: number; className?: string }) => {
@@ -35,7 +36,8 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
   toggleExpanded,
   onSettingsOpen,
   onSidebarClose,
-  onHistoryOpen
+  onHistoryOpen,
+  isCollapsed = false
 }) => {
   const {
     activeTab,
@@ -113,8 +115,8 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
       {/* Node Button */}
       <button
         onClick={handleClick}
-        className={`w-full flex flex-col items-center justify-center py-3 px-1 rounded-2xl gap-1.5 text-center transition-all relative overflow-hidden select-none cursor-pointer ${isFolder
-            ? 'text-teal-600 hover:text-teal-800 hover:bg-[var(--sidebar-panel-hover-bg)]'
+        className={`w-full flex flex-row items-center ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} py-3 rounded-xl gap-3 text-left transition-all relative overflow-hidden select-none cursor-pointer ${isFolder
+            ? 'text-[var(--sidebar-panel-text)] hover:text-[var(--sidebar-panel-text-active)] hover:bg-[var(--sidebar-panel-hover-bg)]'
             : active
               ? 'text-[var(--sidebar-panel-text-active)] font-bold'
               : 'text-teal-600 hover:text-teal-800 hover:bg-[var(--sidebar-panel-hover-bg)]'
@@ -130,20 +132,21 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
           />
         )}
 
-        <div className="flex flex-col items-center justify-center gap-1.5 relative z-10 w-full">
+        <div className={`flex flex-row items-center ${isCollapsed ? 'justify-center' : 'justify-start gap-3'} relative z-10 w-full`}>
           {node.icon ? (
-            <span className="flex h-8 w-8 items-center justify-center rounded text-current">
-              <LucideIcon name={node.icon} size={24} />
+            <span className={`flex flex-shrink-0 items-center justify-center rounded text-current transition-all ${isCollapsed ? 'h-10 w-10 bg-transparent hover:bg-white/10' : 'h-6 w-6'}`} title={isCollapsed ? node.label : undefined}>
+              <LucideIcon name={node.icon} size={isCollapsed ? 22 : 20} />
             </span>
           ) : (
             // Default Bullet Dot for Sub-menu elements
             <span className={`h-2 w-2 rounded-full ml-1.5 transition-colors ${active ? 'bg-white' : 'bg-[var(--sidebar-panel-text)] opacity-30 group-hover:opacity-50'}`} />
           )}
-          <span className="text-center text-xs leading-tight whitespace-normal break-words w-full">{node.label}</span>
+          {!isCollapsed && <span className="text-left text-sm font-medium leading-tight truncate w-full">{node.label}</span>}
         </div>
 
         {/* Chevron for accordions */}
-        {isFolder && (
+        {/* Chevron for accordions */}
+        {!isCollapsed && isFolder && (
           <motion.span
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.2 }}
@@ -172,6 +175,7 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
                 toggleExpanded={toggleExpanded}
                 onSettingsOpen={onSettingsOpen}
                 onSidebarClose={onSidebarClose}
+                isCollapsed={isCollapsed}
               />
             ))}
           </motion.div>

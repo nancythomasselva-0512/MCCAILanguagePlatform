@@ -5,7 +5,8 @@ import {
   History, Trash2, Clock, X, Settings, ShieldCheck, Key, Menu, ArrowLeft, LogOut,
   Activity, Building2, Users, Layers, Server, TrendingUp, CreditCard, Cpu, ShieldAlert, Settings2,
   ArrowUpRight
-, Mail, Globe, Database, Bell, LayoutGrid, ChevronDown} from 'lucide-react';
+  , Mail, Globe, Database, Bell, LayoutGrid, ChevronDown, ChevronLeft, ChevronRight
+} from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { VoiceToText } from '../tools/VoiceToText';
 import { TextToVoice } from '../tools/TextToVoice';
@@ -14,6 +15,9 @@ import { AudioToText } from '../tools/AudioToText';
 import { SuperAdminDashboard } from '../admin/SuperAdminDashboard';
 import { TenantDashboard } from './TenantDashboard';
 import { TenantBilling } from './TenantBilling';
+import UserDashboard from './UserDashboard';
+import { SMTPSettings } from '../admin/settings/SMTPSettings';
+import { PaymentSettings } from '../admin/settings/PaymentSettings';
 import { Header } from '../common/Header';
 import { SidebarMenuNode } from './SidebarMenuNode';
 import type { SidebarMenuItem } from './SidebarMenuNode';
@@ -35,6 +39,8 @@ const TYPE_LABELS: Record<string, string> = {
   'sa-usage': 'Usage Analytics',
   'sa-billing': 'Billing',
   'tenant-billing': 'Billing',
+  'tenant-settings-smtp': 'SMTP & Email',
+  'tenant-settings-payments': 'Payment Gateways',
   'sa-ai-logs': 'AI Logs',
   'sa-audit-logs': 'Audit Logs',
   'sa-health': 'System Health',
@@ -68,6 +74,8 @@ const TYPE_COLORS: Record<string, string> = {
   'sa-usage': '#3b82f6',
   'sa-billing': '#3b82f6',
   'tenant-billing': '#3b82f6',
+  'tenant-settings-smtp': '#ef4444',
+  'tenant-settings-payments': '#ef4444',
   'sa-ai-logs': '#3b82f6',
   'sa-audit-logs': '#3b82f6',
   'sa-health': '#3b82f6',
@@ -104,9 +112,10 @@ export const WorkspacePage: React.FC = () => {
     billingOverview
   } = useApp();
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tempKey, setTempKey] = useState(openAiApiKey);
 
   interface SidebarSection {
@@ -117,6 +126,12 @@ export const WorkspacePage: React.FC = () => {
   // Dynamic Sidebar configuration based on RBAC role
   const getSidebarConfig = (): SidebarSection[] => {
     const baseSections: SidebarSection[] = [
+      {
+        title: 'Overview',
+        items: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'LayoutGrid', action: 'tab', tabId: 'dashboard' }
+        ]
+      },
       {
         title: 'Speech Tools',
         items: [
@@ -199,13 +214,10 @@ export const WorkspacePage: React.FC = () => {
       ...baseSections
     ];
 
-    // Add Workspace section for Tenant Admin, Manager, and standard user roles
-    if (user?.role === 'tenant_admin' || user?.role === 'manager' || user?.role === 'user') {
+    // Add Workspace section
+    if (user) {
       const workspaceItems: SidebarMenuItem[] = [];
-      if (user?.role === 'tenant_admin' || user?.role === 'manager') {
-        workspaceItems.push({ id: 'tenant-dashboard-menu', label: 'Workspace Panel', icon: 'Settings', action: 'tab', tabId: 'tenant-dashboard' });
-      }
-      workspaceItems.push({ id: 'tenant-billing-menu', label: 'Billing', icon: 'CreditCard', action: 'tab', tabId: 'tenant-billing' });
+      workspaceItems.push({ id: 'tenant-billing-menu', label: 'Plans & Billing', icon: 'CreditCard', action: 'tab', tabId: 'tenant-billing' });
 
       sections.push({
         title: 'Workspace',
@@ -260,6 +272,7 @@ export const WorkspacePage: React.FC = () => {
   };
 
   const isSuperAdminTab = activeTab.startsWith('sa-');
+  const isValidSuperAdminView = isSuperAdminTab && window.location.pathname === '/controller' && user?.role === 'super_admin';
   const getSuperAdminSubTab = (): any => {
     if (!isSuperAdminTab) return 'overview';
     const sub = activeTab.replace('sa-', '');
@@ -297,21 +310,25 @@ export const WorkspacePage: React.FC = () => {
 
 
     return {
+      'dashboard': { label: 'Dashboard', icon: <LayoutGrid size={16} />, activeColor: '#10b981' },
       'voice-to-text': { label: 'Transcription', icon: <Mic size={16} />, activeColor: '#3b82f6' },
       'text-to-speech': { label: 'Text to Voice', icon: <Volume2 size={16} />, activeColor: '#8b5cf6' },
       'translation': { label: 'Translation', icon: <Languages size={16} />, activeColor: '#10b981' },
       'audio-transcription': { label: 'Audio to Text', icon: <FileAudio size={16} />, activeColor: '#f59e0b' },
       'super-admin-dashboard': { label: 'Super Admin', icon: <ShieldCheck size={16} />, activeColor: '#ef4444' },
       'tenant-dashboard': { label: 'Workspace settings', icon: <Settings size={16} />, activeColor: '#3b82f6' },
-      'tenant-billing': { label: 'Billing', icon: <CreditCard size={16} />, activeColor: '#3b82f6' },
+      'tenant-settings-smtp': { label: 'SMTP & Email', icon: <Mail size={16} />, activeColor: '#ef4444' },
+      'tenant-settings-payments': { label: 'Payment Gateways', icon: <CreditCard size={16} />, activeColor: '#ef4444' },
+      'tenant-billing': { label: 'Plans & Billing', icon: <CreditCard size={16} />, activeColor: '#3b82f6' },
     }[activeTab] || { label: 'Tools', icon: <Volume2 size={16} />, activeColor: '#8b5cf6' };
   };
 
   const currentTab = getActiveTabMetadata();
 
-  const ActiveTool = isSuperAdminTab
+  const ActiveTool = isValidSuperAdminView
     ? null
     : ({
+      'dashboard': UserDashboard,
       'voice-to-text': VoiceToText,
       'text-to-speech': TextToVoice,
       'translation': TextTranslation,
@@ -319,6 +336,8 @@ export const WorkspacePage: React.FC = () => {
       'super-admin-dashboard': SuperAdminDashboard,
       'tenant-dashboard': TenantDashboard,
       'tenant-billing': TenantBilling,
+      'tenant-settings-smtp': SMTPSettings,
+      'tenant-settings-payments': PaymentSettings,
     } as Record<string, any>)[activeTab] || VoiceToText;
 
   return (
@@ -466,8 +485,8 @@ export const WorkspacePage: React.FC = () => {
               }}
             >
               <div className="flex items-center justify-between px-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <div className="flex items-center gap-2">
-                  <img src={globalConfig?.branding?.logo_url || "/logo.png"} alt="Logo" className="h-6 w-6 rounded-full" />
+              <div className="flex items-center gap-0">
+                  <img src={"/logo.png?v=2"} alt="Logo" className="h-14 w-14 min-w-[56px] object-contain transform scale-125 origin-center -ml-2 -mr-3 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180" />
                   <span className="text-sm font-bold text-[var(--text-primary)]">{globalConfig?.branding?.platform_name || "MCC AI"}</span>
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1.5 hover:bg-white/40" style={{ color: '#ffffff' }}>
@@ -523,33 +542,39 @@ export const WorkspacePage: React.FC = () => {
 
       {/* Left Panel: Desktop Sidebar */}
       <aside
-        className="hidden w-[180px] flex-shrink-0 sm:flex sm:flex-col justify-between px-2 py-6 rounded-none relative z-10"
+        className={`hidden sm:flex sm:flex-col justify-between px-2 py-6 rounded-none relative z-10 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[72px]' : 'w-[230px]'} flex-shrink-0`}
         style={{
           background: 'var(--sidebar-bg)',
           borderRight: 'none',
         }}
       >
         <div className="flex flex-col flex-1 min-h-0">
-          <div className="flex items-center gap-2 mb-6 select-none w-full pr-1 mt-1">
-            <button
-              onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-white/40 hover:bg-white/20 border border-white/10 text-[var(--text-primary)] transition-all cursor-pointer hover:scale-105 active:scale-95 flex-shrink-0 -ml-1"
-              title="Back to Home"
-            >
-              <ArrowLeft size={13} />
-            </button>
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-2">
-                <img
-                  src={globalConfig?.branding?.logo_url || "/logo.png"}
-                  alt="Logo"
-                  className="h-9 w-9 rounded-full border border-white/40 object-cover flex-shrink-0 shadow-sm"
-                />
-                <span className="text-[15px] leading-[1.15] font-black tracking-tight text-[var(--text-primary)] drop-shadow-sm">
-                  AI Language Hub
-                </span>
-              </div>
+          <div className={`flex items-center select-none w-full pr-1 mt-1 mb-6 transition-all duration-300 ${isCollapsed ? 'flex-col gap-4 justify-center' : 'justify-between'}`}>
+            <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-0 ml-0.5'}`}>
+              <img
+                src={"/logo.png?v=2"}
+                alt="Logo"
+                className={`object-contain flex-shrink-0 transform origin-center dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180 transition-all duration-300 ${isCollapsed ? 'h-11 w-11 min-w-[44px] scale-[1.4]' : 'h-16 w-16 min-w-[64px] scale-[1.45] -ml-2 -mr-3'}`}
+              />
+              {!isCollapsed && (
+                <div className="flex flex-col min-w-0 justify-center mt-1">
+                  <span className="text-[26px] leading-[0.95] font-black tracking-tight text-[var(--text-primary)] drop-shadow-sm truncate" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                    Fluentia
+                  </span>
+                  <span className="text-[11.5px] text-[var(--text-secondary)] font-bold tracking-[0.08em] truncate mt-1 opacity-80 uppercase">
+                    AI Voice & Text Studio
+                  </span>
+                </div>
+              )}
             </div>
+            
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="flex h-6 w-6 items-center justify-center rounded text-[var(--text-primary)] transition-all cursor-pointer hover:bg-white/10 active:scale-95 flex-shrink-0 opacity-50 hover:opacity-100"
+              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </button>
           </div>
 
           <nav className="space-y-2.5 flex-1 overflow-y-auto min-h-0 pr-2 mb-2 custom-scrollbar" aria-label="Tool navigation">
@@ -558,22 +583,22 @@ export const WorkspacePage: React.FC = () => {
               const isSectionOpen = expanded[sectionId] ?? true;
               return (
                 <div key={section.title || `section-${section.items[0]?.id}`} className="space-y-0.5 mb-2">
-                  {section.title && (
-                    <div 
+                  {!isCollapsed && section.title && (
+                    <div
                       className="flex items-center justify-between px-2 py-2 mt-2 mb-1 cursor-pointer group select-none rounded-lg hover:bg-[var(--sidebar-item-hover)] transition-colors"
                       onClick={() => toggleExpanded(sectionId)}
                     >
                       <h4 className="text-xs font-bold tracking-[0.05em] text-[var(--sidebar-panel-text)] uppercase opacity-80 group-hover:opacity-100 transition-colors truncate pr-1">
                         {section.title}
                       </h4>
-                      <ChevronDown 
-                        size={16} 
-                        className={`flex-shrink-0 text-[var(--sidebar-panel-text)] opacity-50 group-hover:opacity-100 transition-transform duration-200 ${isSectionOpen ? 'rotate-180' : ''}`} 
+                      <ChevronDown
+                        size={16}
+                        className={`flex-shrink-0 text-[var(--sidebar-panel-text)] opacity-50 group-hover:opacity-100 transition-transform duration-200 ${isSectionOpen ? 'rotate-180' : ''}`}
                       />
                     </div>
                   )}
                   <AnimatePresence initial={false}>
-                    {(!section.title || isSectionOpen) && (
+                    {(!section.title || isSectionOpen || isCollapsed) && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
@@ -589,6 +614,7 @@ export const WorkspacePage: React.FC = () => {
                             toggleExpanded={toggleExpanded}
                             onSettingsOpen={() => setSettingsOpen(true)}
                             onHistoryOpen={() => setHistoryOpen(true)}
+                            isCollapsed={isCollapsed}
                           />
                         ))}
                       </motion.div>
@@ -605,10 +631,11 @@ export const WorkspacePage: React.FC = () => {
         <div className="pt-4 mt-auto">
           <button
             onClick={() => logout()}
-            className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-sm font-bold text-red-500 hover:text-red-600 border border-red-500/20 hover:bg-red-500/10 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+            className={`w-full flex items-center justify-center gap-2 rounded-xl py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} text-sm font-bold text-red-500 hover:text-red-600 border border-red-500/20 hover:bg-red-500/10 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]`}
+            title="Logout"
           >
             <LogOut size={16} />
-            <span>Logout</span>
+            {!isCollapsed && <span>Logout</span>}
           </button>
         </div>
       </aside>
@@ -620,15 +647,15 @@ export const WorkspacePage: React.FC = () => {
         <main className="flex-grow overflow-y-auto px-4 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10">
           <AnimatePresence mode="wait">
             <motion.div
-              key={isSuperAdminTab ? 'admin-panel' : activeTab}
+              key={isValidSuperAdminView ? 'admin-panel' : activeTab}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}
             >
-              {isSuperAdminTab
+              {isValidSuperAdminView
                 ? <SuperAdminDashboard subTab={superAdminSubTab} />
-                : ActiveTool && <ActiveTool />
+                : ActiveTool && <ActiveTool setActiveTab={setActiveTab} setHistoryOpen={setHistoryOpen} />
               }
             </motion.div>
           </AnimatePresence>

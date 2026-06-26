@@ -125,7 +125,7 @@ def seed_database():
                 gst_percentage=18.0,
                 invoice_prefix="INV",
                 invoice_footer="For any subscription questions, contact billing@mcc-ai.com.",
-                company_name="MCC AI Language Platform",
+                company_name="Fluentia",
                 company_address="123 Tech Campus, Bangalore, India",
                 company_email="billing@mcc-ai.com",
                 stripe_enabled=True,
@@ -143,31 +143,26 @@ def seed_database():
 
         db.commit()
 
-        # 2. Seed default Super Admin
-        admin_email = "aachinancy@gmail.com"
-        existing_admin = db.query(User).filter(User.email == admin_email).first()
+        # 2. Check for existing Super Admin or seed dynamically if env var is provided
+        super_admin_email = os.environ.get("SUPER_ADMIN_EMAIL")
+        existing_admin = db.query(User).filter(User.role == "super_admin").first()
+        
         if existing_admin:
-            existing_admin.password_hash = get_password_hash("admin123")
-            db.add(existing_admin)
-            logger.info(f"Updated default Super Admin password for: {admin_email}")
+            # Super Admin exists, do nothing or update password if needed
+            pass
+        elif super_admin_email:
+            # Only seed if an explicit environment variable is provided, to avoid hardcoding
+            super_admin = User(
+                name="Platform Owner",
+                email=super_admin_email,
+                password_hash=get_password_hash("admin123"),
+                role="super_admin",
+                status="active"
+            )
+            db.add(super_admin)
+            logger.info(f"Seeded default Super Admin from env var.")
         else:
-            # Look up and rename/re-key the old seed admin if present in the database file
-            old_admin = db.query(User).filter(User.email.in_(["mrfadmin@gmail.com", "admin@mcc-ai.com"])).first()
-            if old_admin:
-                old_admin.email = admin_email
-                old_admin.password_hash = get_password_hash("admin123")
-                db.add(old_admin)
-                logger.info(f"Updated default Super Admin to: {admin_email} / admin123")
-            else:
-                super_admin = User(
-                    name="Platform Owner",
-                    email=admin_email,
-                    password_hash=get_password_hash("admin123"),
-                    role="super_admin",
-                    status="active"
-                )
-                db.add(super_admin)
-                logger.info(f"Seeded default Super Admin: {admin_email} / admin123")
+            logger.info("No super_admin found in DB and SUPER_ADMIN_EMAIL env var not set. Skipping seed.")
         db.commit()
     except Exception as e:
         logger.error(f"Error seeding database: {e}")
@@ -178,22 +173,22 @@ seed_database()
 
 app = FastAPI(title="MCC AI Multi-Tenant SaaS Workspace Platform")
 
-# Enable CORS for frontend requests
+# Inject multi-tenant workspace extraction middleware
+app.add_middleware(TenantMiddleware)
+
+# Enable CORS for frontend requests (outermost)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
         "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-        "http://localhost:8000"
+        "http://127.0.0.1:5173"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Inject multi-tenant workspace extraction middleware
-app.add_middleware(TenantMiddleware)
 
 # Bind new routers
 app.include_router(auth.router, prefix="/api")
@@ -238,3 +233,4 @@ async def transcribe(
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
+# Trigger reload

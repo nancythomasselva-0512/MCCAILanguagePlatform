@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApp } from './context/AppContext';
 import { Header } from './components/common/Header';
 import { AuthModal } from './components/common/AuthModal';
@@ -7,8 +7,15 @@ import { WorkspacePage } from './components/workspace/WorkspacePage';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function App() {
-  const { viewMode, setViewMode, setAuthModalMode, setIsAuthModalOpen, user, logout } = useApp();
+  const { viewMode, setViewMode, setAuthModalMode, setIsAuthModalOpen, user, logout, activeTab, setActiveTab } = useApp();
   const hasInitialized = useRef(false);
+  const [forceRender, setForceRender] = useState(0);
+
+  useEffect(() => {
+    const handlePopState = () => setForceRender(f => f + 1);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     if (!hasInitialized.current) {
@@ -49,15 +56,25 @@ function App() {
       if (!user) return;
       
       const path = window.location.pathname;
+      const isSA = activeTab?.startsWith('sa-') || activeTab === 'super-admin-dashboard';
+      
       if (user.role === 'super_admin') {
         // Super admin can be on /controller or /dashboard. Default to /controller if somewhere else.
         if (path !== '/controller' && path !== '/dashboard') {
           window.history.replaceState({}, '', '/controller');
+          if (!isSA) setActiveTab('sa-overview');
+        } else if (path === '/dashboard' && isSA) {
+          setActiveTab('text-to-speech');
+        } else if (path === '/controller' && !isSA) {
+          setActiveTab('sa-overview');
         }
       } else {
         // Normal user must be on /dashboard
         if (path !== '/dashboard') {
           window.history.replaceState({}, '', '/dashboard');
+        }
+        if (isSA) {
+          setActiveTab('text-to-speech');
         }
       }
     } else {
@@ -66,7 +83,7 @@ function App() {
         window.history.replaceState({}, '', '/');
       }
     }
-  }, [viewMode, user?.role]);
+  }, [viewMode, user?.role, activeTab, setActiveTab, forceRender]);
 
   return (
     <div className="flex min-h-screen flex-col" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>

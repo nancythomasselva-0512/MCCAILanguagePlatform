@@ -84,7 +84,7 @@ def get_or_create_settings(db: Session) -> BillingSettings:
             gst_percentage=18.0,
             invoice_prefix="INV",
             invoice_footer="For any subscription questions, contact billing@mcc-ai.com.",
-            company_name="MCC AI Language Platform",
+            company_name="Fluentia",
             company_address="123 Tech Campus, Bangalore, India",
             company_email="billing@mcc-ai.com",
             stripe_enabled=True,
@@ -107,7 +107,7 @@ def get_or_create_settings(db: Session) -> BillingSettings:
 @router.get("/plans")
 def get_billing_plans(db: Session = Depends(get_db)):
     """Public list of active plans for subscription selection."""
-    return db.query(SubscriptionPlan).filter(SubscriptionPlan.active == True).all()
+    return db.query(SubscriptionPlan).filter(SubscriptionPlan.active == True).order_by(SubscriptionPlan.price.asc()).all()
 
 @router.get("/settings")
 def get_billing_settings(db: Session = Depends(get_db)):
@@ -156,8 +156,12 @@ def get_tenant_billing_overview(
     tenant: Tenant = Depends(get_current_tenant_context)
 ):
     """Retrieve tenant dashboard invoice lists, current active plans, remaining limits."""
+    # If middleware didn't inject tenant, fall back to user's own tenant
     if not tenant:
-        raise HTTPException(status_code=400, detail="Tenant context required.")
+        if user.tenant_id:
+            tenant = db.query(Tenant).filter(Tenant.id == user.tenant_id).first()
+        if not tenant:
+            raise HTTPException(status_code=400, detail="Tenant context required.")
 
     # 1. Fetch current subscription
     sub = db.query(Subscription).filter(Subscription.tenant_id == tenant.id, Subscription.status == "active").first()
@@ -224,8 +228,8 @@ def get_tenant_billing_overview(
             "plan_name": sh.plan.name if sh.plan else "Unknown",
             "action": sh.action.capitalize(),
             "price": sh.price,
-            "start_date": sh.start_date.strftime("%Y-%m-%d"),
-            "end_date": sh.end_date.strftime("%Y-%m-%d"),
+            "start_date": sh.start_date.strftime("%Y-%m-%d") if sh.start_date else None,
+            "end_date": sh.end_date.strftime("%Y-%m-%d") if sh.end_date else None,
             "created_at": sh.created_at.isoformat()
         })
         
@@ -258,8 +262,8 @@ def get_tenant_billing_overview(
             "translation_chars_limit": plan.translation_limit if plan else 50000,
             "tts_chars_used": usage.tts_chars_used,
             "tts_chars_limit": plan.tts_limit if plan else 10000,
-            "billing_period_start": usage.billing_period_start.isoformat(),
-            "billing_period_end": usage.billing_period_end.isoformat()
+            "billing_period_start": usage.billing_period_start.isoformat() if usage and usage.billing_period_start else None,
+            "billing_period_end": usage.billing_period_end.isoformat() if usage and usage.billing_period_end else None
         },
         "invoices": invoices_list,
         "payments": payments_list,
@@ -280,8 +284,12 @@ def create_payment_session(
     """
     Step 1 of payment: Creates a pending invoice and payment object to track the session.
     """
+    # If middleware didn't inject tenant (missing x-tenant-slug header), fall back to user's own tenant
     if not tenant:
-        raise HTTPException(status_code=400, detail="Tenant context required.")
+        if user.tenant_id:
+            tenant = db.query(Tenant).filter(Tenant.id == user.tenant_id).first()
+        if not tenant:
+            raise HTTPException(status_code=400, detail="Tenant context required. Please re-login and try again.")
         
     plan = db.query(SubscriptionPlan).filter(SubscriptionPlan.id == req.plan_id).first()
     if not plan:
@@ -345,10 +353,20 @@ def create_payment_session(
     )
     db.add(payment)
     db.commit()
-    db.refresh(payment)
-    
+    # Generate Invoice PDF instantly for the generated email
+    try:
+        from app.utils.pdf_generator import generate_invoice_pdf
+        pdf_file = generate_invoice_pdf(invoice, tenant.tenant_name, plan.name, settings)
+        invoice.pdf_path = pdf_file
+        db.commit()
+    except Exception as pdf_err:
+        logger.error(f"Failed to generate invoice PDF during session create: {pdf_err}")
+
     # Automated email for invoice generation
-    send_invoice_generated_email(db, tenant, inv_number, total)
+    try:
+        send_invoice_generated_email(db, tenant, inv_number, total)
+    except Exception as email_err:
+        logger.error(f"Failed to send invoice email during session create: {email_err}")
     
     return {
         "payment_id": payment.id,
@@ -385,8 +403,12 @@ def complete_payment_session(
     """
     Step 2 of payment: Receives simulated success or fail status and completes processing AUTOMATICALLY.
     """
+    # If middleware didn't inject tenant, fall back to user's own tenant
     if not tenant:
-        raise HTTPException(status_code=400, detail="Tenant context required.")
+        if user.tenant_id:
+            tenant = db.query(Tenant).filter(Tenant.id == user.tenant_id).first()
+        if not tenant:
+            raise HTTPException(status_code=400, detail="Tenant context required.")
         
     payment = db.query(Payment).filter(Payment.id == req.payment_id, Payment.tenant_id == tenant.id).first()
     if not payment:
@@ -509,39 +531,51 @@ def complete_payment_session(
         expiry_date_str = sub.end_date.strftime("%Y-%m-%d")
         purchase_date_str = payment.created_at.strftime("%Y-%m-%d %H:%M:%S")
         
-        # User email notification
-        send_user_subscription_activated_email(
-            db=db,
-            tenant=tenant,
-            user=user,
-            plan_name=plan.name,
-            amount_paid=payment.amount,
-            currency=payment.currency,
-            payment_id=payment.transaction_id or payment.id,
-            invoice_number=invoice.invoice_number,
-            start_date=start_date_str,
-            expiry_date=expiry_date_str,
-            invoice_id=invoice.id
-        )
-        
-        # Admin email notification
-        send_admin_purchase_notification_email(
-            db=db,
-            user=user,
-            tenant=tenant,
-            plan_name=plan.name,
-            amount_paid=payment.amount,
-            currency=payment.currency,
-            payment_id=payment.transaction_id or payment.id,
-            purchase_date=purchase_date_str,
-            expiry_date=expiry_date_str
-        )
-        
-        send_payment_success_email(db, tenant, invoice.invoice_number, payment.amount, payment.transaction_id)
-        if old_plan_name != plan.name:
-            send_upgrade_confirmation_email(db, tenant, old_plan_name, plan.name)
-        else:
-            send_renewal_confirmation_email(db, tenant, plan.name)
+        try:
+            # User email notification
+            send_user_subscription_activated_email(
+                db=db,
+                tenant=tenant,
+                user=user,
+                plan_name=plan.name,
+                amount_paid=payment.amount,
+                currency=payment.currency,
+                payment_id=payment.transaction_id or payment.id,
+                invoice_number=invoice.invoice_number,
+                start_date=start_date_str,
+                expiry_date=expiry_date_str,
+                invoice_id=invoice.id
+            )
+        except Exception as e:
+            logger.error(f"Failed to send subscription activated email: {e}")
+            
+        try:
+            # Admin email notification
+            send_admin_purchase_notification_email(
+                db=db,
+                user=user,
+                tenant=tenant,
+                plan_name=plan.name,
+                amount_paid=payment.amount,
+                currency=payment.currency,
+                payment_id=payment.transaction_id or payment.id,
+                purchase_date=purchase_date_str,
+                expiry_date=expiry_date_str
+            )
+        except Exception as e:
+            logger.error(f"Failed to send admin purchase notification email: {e}")
+            
+        try:
+            send_payment_success_email(db, tenant, invoice.invoice_number, payment.amount, payment.transaction_id)
+        except Exception as e:
+            logger.error(f"Failed to send payment success email: {e}")
+        try:
+            if old_plan_name != plan.name:
+                send_upgrade_confirmation_email(db, tenant, old_plan_name, plan.name)
+            else:
+                send_renewal_confirmation_email(db, tenant, plan.name)
+        except Exception as e:
+            logger.error(f"Failed to send upgrade/renewal email: {e}")
             
         # 10. Write Audit Log
         log = AuditLog(
@@ -660,8 +694,12 @@ def cancel_subscription(
     tenant: Tenant = Depends(get_current_tenant_context)
 ):
     """Sets subscription status to canceled or scheduled for expiration."""
+    # If middleware didn't inject tenant, fall back to user's own tenant
     if not tenant:
-        raise HTTPException(status_code=400, detail="Tenant context required.")
+        if user.tenant_id:
+            tenant = db.query(Tenant).filter(Tenant.id == user.tenant_id).first()
+        if not tenant:
+            raise HTTPException(status_code=400, detail="Tenant context required.")
         
     sub = db.query(Subscription).filter(Subscription.tenant_id == tenant.id, Subscription.status == "active").first()
     if not sub:

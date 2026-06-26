@@ -3,7 +3,7 @@ import { Settings, Save, Upload, Globe, Type } from "lucide-react";
 
 export const GeneralSettings: React.FC = () => {
   const [config, setConfig] = useState({
-    platformName: "MCC AI Language Platform",
+    platformName: "Fluentia",
     description: "Next Generation AI Workstation",
     timezone: "UTC",
     language: "en-US",

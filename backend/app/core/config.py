@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_SENDER: str = ""
+    
+    # Provider Keys
+    OPENAI_API_KEY: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

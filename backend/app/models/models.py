@@ -462,5 +462,6 @@ class SMTPSettings(Base):
     smtp_username = Column(String(255), nullable=True)
     smtp_password = Column(String(255), nullable=True)
     from_email = Column(String(255), nullable=True)
+    reply_to_email = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)

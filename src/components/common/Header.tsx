@@ -128,21 +128,20 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-2 md:gap-3">
           {viewMode !== 'workspace' ? (
             <div
-              className="flex cursor-pointer items-center gap-2 md:gap-3"
+              className="flex cursor-pointer items-center gap-0"
               onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             >
               <img
-                src={globalConfig?.branding?.logo_url || "/logo.png"}
+                src={"/logo.png?v=2"}
                 alt="Logo"
-                className="h-10 w-10 min-w-[40px] md:h-12 md:w-12 md:min-w-[48px] object-cover rounded-full shadow-md border border-white/10 hover:scale-105 transition-transform duration-200"
-                style={{ height: globalConfig?.branding?.logo_size || "40px", width: globalConfig?.branding?.logo_size || "40px" }}
+                className="h-16 w-16 min-w-[64px] md:h-20 md:w-20 md:min-w-[80px] object-contain transform scale-125 origin-center -ml-2 -mr-4 hover:scale-[1.35] transition-transform duration-200 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180"
               />
               <div className="flex flex-col justify-center select-none">
                 <span className="font-display text-base md:text-lg font-black tracking-tight leading-none text-slate-900 dark:text-white flex items-center gap-1">
-                  {globalConfig?.branding?.platform_name || "MCC AI"}
+                  {globalConfig?.branding?.platform_name || "Fluentia"}
                 </span>
                 <span className="text-[7px] md:text-[9px] font-bold tracking-[0.18em] uppercase mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                  {globalConfig?.branding?.tagline || "Language Platform"}
+                  {globalConfig?.branding?.tagline || "AI Workspace"}
                 </span>
               </div>
             </div>

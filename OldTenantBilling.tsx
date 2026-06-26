@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../utils/api';
 import { useApp } from '../../context/AppContext';
 import { 
   CreditCard, AlertTriangle, Loader2, CheckCircle2,
-  TrendingUp, Info, Download, QrCode, X
+  TrendingUp, Info, Download, QrCode
 } from 'lucide-react';
 
 const getCurrencySymbol = (currencyCode: string) => {
-  return currencyCode === 'INR' ? '₹' : currencyCode === 'USD' ? '$' : currencyCode;
+  return currencyCode === 'INR' ? 'Γé╣' : currencyCode === 'USD' ? '$' : currencyCode;
 };
 
 export const TenantBilling: React.FC = () => {
@@ -43,16 +43,11 @@ export const TenantBilling: React.FC = () => {
   const loadBillingData = async () => {
     setLoading(true);
     try {
-      // Load plans first so they always render
-      try {
-        const plansList = await apiRequest("/billing/plans");
-        setPlans(plansList.sort((a: any, b: any) => a.price - b.price));
-      } catch (err) {
-        console.error("Failed to load plans:", err);
-      }
-
       const res = await apiRequest("/billing/tenant/overview");
       setData(res);
+      
+      const plansList = await apiRequest("/billing/plans");
+      setPlans(plansList);
       
       // Sync limits to global sidebar widget
       fetchBillingOverview();
@@ -168,7 +163,7 @@ export const TenantBilling: React.FC = () => {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <Loader2 className="animate-spin text-teal-500" size={32} />
+        <Loader2 className="animate-spin text-blue-500" size={32} />
       </div>
     );
   }
@@ -179,147 +174,203 @@ export const TenantBilling: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-8 animate-fadeIn">
+      {/* Header Banner */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/5 pb-5">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <CreditCard className="text-blue-500" size={20} />
+            Billing & Workspace Subscription
+          </h1>
+          <p className="text-xs text-slate-650 dark:text-slate-400 font-semibold mt-1">
+            Manage subscription plans, check remaining usage limits, and download invoice copies.
+          </p>
+        </div>
+      </div>
 
+      {/* Active Subscription Summary */}
+      {activePlan && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 app-card rounded-2xl p-6 space-y-6 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Current Plan Tier</span>
+                  <h2 className="text-3xl font-black text-slate-900 dark:text-white mt-1 flex items-center gap-2">
+                    {activePlan.name}
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                      activePlan.status === 'active' 
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' 
+                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                    }`}>
+                      {activePlan.status.toUpperCase()}
+                    </span>
+                  </h2>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recurring Price</span>
+                  <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-0.5">{getCurrencySymbol(data?.currency || 'INR')}{activePlan.price} <span className="text-xs font-medium text-slate-500 dark:text-slate-400">/ mo</span></p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4 border-t border-slate-200 dark:border-white/5 text-xs text-slate-500 dark:text-slate-400">
+                <div>
+                  <span className="block text-[10px] uppercase font-bold text-slate-450 dark:text-slate-500">Billing Cycle</span>
+                  <strong className="text-slate-900 dark:text-white capitalize mt-0.5 block">{activePlan.billing_cycle}</strong>
+                </div>
+                <div>
+                  <span className="block text-[10px] uppercase font-bold text-slate-450 dark:text-slate-500">Expiry Date</span>
+                  <strong className="text-slate-900 dark:text-white mt-0.5 block">{activePlan.expiry_date || "Lifetime"}</strong>
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <span className="block text-[10px] uppercase font-bold text-slate-450 dark:text-slate-500">Support Level</span>
+                  <strong className="text-slate-900 dark:text-white mt-0.5 block">
+                    {activePlan.name === 'Enterprise' ? '24/7 Dedicated Support' : activePlan.name === 'Professional' ? 'Priority Support' : 'Standard Email Support'}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {activePlan.name !== 'Free' && (
+              <div className="flex gap-3 pt-6 border-t border-slate-200 dark:border-white/5 justify-end">
+                <button
+                  onClick={handleCancelSubscription}
+                  className="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/10 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  Cancel Plan
+                </button>
+                <button
+                  onClick={handleRenewSubscription}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  Renew Plan
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Metrics */}
+          <div className="app-card rounded-2xl p-6 flex flex-col justify-between space-y-4">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-1.5">
+                <TrendingUp size={16} className="text-blue-500 dark:text-blue-400" />
+                Remaining Plan Limits
+              </h3>
+              
+              {usage && (
+                <div className="space-y-4">
+                  {/* Audio transcription minutes */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500 dark:text-slate-400">Transcription Limit</span>
+                      <strong className="text-slate-950 dark:text-white">{usage.audio_minutes_used.toFixed(1)} / {usage.audio_minutes_limit} mins</strong>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (usage.audio_minutes_used / usage.audio_minutes_limit) * 100)}%` }} />
+                    </div>
+                  </div>
+
+                  {/* Language translation characters */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500 dark:text-slate-400">Translation Limit</span>
+                      <strong className="text-slate-950 dark:text-white">{(usage.translation_chars_used).toLocaleString()} / {(usage.translation_chars_limit).toLocaleString()} Chars</strong>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, (usage.translation_chars_used / usage.translation_chars_limit) * 100)}%` }} />
+                    </div>
+                  </div>
+
+                  {/* TTS Synthesis characters */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500 dark:text-slate-400">TTS Audio Limit</span>
+                      <strong className="text-slate-950 dark:text-white">{(usage.tts_chars_used).toLocaleString()} / {(usage.tts_chars_limit).toLocaleString()} Chars</strong>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-500" style={{ width: `${Math.min(100, (usage.tts_chars_used / usage.tts_chars_limit) * 100)}%` }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="text-[10px] text-slate-600 dark:text-slate-500 leading-relaxed font-semibold flex items-start gap-1">
+              <Info size={11} className="text-blue-500 mt-0.5 flex-shrink-0" />
+              <span>Limits reset automatically on {new Date(usage?.billing_period_end).toLocaleDateString()}.</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Plans Pricing Selection Section */}
-      <div className="space-y-8 bg-teal-900/5 p-10 rounded-[2.5rem] relative overflow-hidden shadow-2xl shadow-teal-900/5 border border-white/60">
-        {/* Subtle background glow effect */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-teal-400/20 blur-[120px] pointer-events-none rounded-full" />
-        
-        <div className="relative z-10 text-center space-y-1">
-          <h3 className="text-4xl md:text-5xl font-black text-teal-950 tracking-widest uppercase drop-shadow-sm">Our Prices</h3>
-          <p className="text-[10px] text-teal-700 font-bold tracking-[0.2em] uppercase">Select a target tier to upgrade or downgrade your active workspace instantly.</p>
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">Compare Subscriptions & Plans</h3>
+          <p className="text-[10px] text-slate-550 dark:text-slate-500 font-semibold mt-0.5">Select a target tier to upgrade or downgrade your active workspace instantly.</p>
         </div>
 
-        {/* Monthly / Yearly Toggle */}
-        <div className="relative z-10 flex items-center justify-center gap-3 pt-2">
-          <button
-            onClick={() => setBillingCycle('monthly')}
-            className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${
-              billingCycle === 'monthly'
-                ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
-                : 'bg-white/70 text-slate-500 border border-teal-200/60 hover:border-teal-300'
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setBillingCycle('yearly')}
-            className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 flex items-center gap-2 ${
-              billingCycle === 'yearly'
-                ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
-                : 'bg-white/70 text-slate-500 border border-teal-200/60 hover:border-teal-300'
-            }`}
-          >
-            Yearly
-            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider ${
-              billingCycle === 'yearly' ? 'bg-white/30 text-white' : 'bg-emerald-100 text-emerald-600 border border-emerald-200'
-            }`}>
-              Save 30%
-            </span>
-          </button>
-        </div>
-
-        <div className="relative z-10 flex flex-col md:flex-row flex-wrap items-stretch justify-center gap-6 max-w-6xl mx-auto pt-4">
-          {plans.map((p, idx) => {
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {plans.map((p) => {
             const isCurrent = activePlan?.name.toLowerCase() === p.name.toLowerCase();
-            const isFree = p.price === 0;
-            // Compute displayed price: yearly = base * 12 * 0.7 (30% off), show per-month
-            const monthlyPrice = p.price;
-            const yearlyPerMonth = +(p.price * 0.7).toFixed(0);
-            const displayPrice = billingCycle === 'yearly' ? yearlyPerMonth : monthlyPrice;
-            const currSymbol = getCurrencySymbol(data?.currency || 'INR');
-            
             return (
               <div 
                 key={p.id}
-                className={`p-8 rounded-[2.5rem] flex flex-col justify-between transition-all duration-300 relative overflow-hidden group backdrop-blur-2xl w-full md:w-[300px] scale-100 hover:scale-105 hover:z-20 ${
+                className={`p-5 rounded-2xl border flex flex-col justify-between transition-all relative overflow-hidden group ${
                   isCurrent 
-                    ? 'shadow-[0_10px_40px_rgba(20,184,166,0.25)] bg-white/95 border-2 border-teal-400/60' 
-                    : 'shadow-[0_5px_20px_rgba(20,184,166,0.1)] bg-white/80 border border-teal-200/50 hover:border-teal-400/50 hover:bg-white/90'
+                    ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/10 shadow-lg shadow-blue-100 dark:shadow-blue-950/20' 
+                    : 'border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/20 hover:border-slate-355 dark:hover:border-white/10 shadow-sm dark:shadow-none'
                 }`}
               >
-                {/* Glossy top reflection */}
-                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white to-transparent rounded-t-[2.5rem] pointer-events-none opacity-60" />
-
-                {/* Free Trial Badge on free plan */}
-                {isFree && (
-                  <div className="absolute top-4 right-4 z-20">
-                    <span className="px-2.5 py-1 bg-emerald-400 text-white text-[9px] font-black uppercase tracking-[0.15em] rounded-full shadow-md">
-                      Free 7 Days
-                    </span>
+                {isCurrent && (
+                  <div className="absolute top-0 right-0 bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl">
+                    Active
                   </div>
                 )}
 
-                <div className="relative z-10 text-center space-y-6">
-                  <div>
-                    <h4 className="text-2xl font-extrabold text-teal-950 capitalize tracking-wider">{p.name}</h4>
-                    {isCurrent && (
-                       <span className="inline-block mt-2 px-3 py-1 bg-teal-100 text-teal-700 text-[9px] font-black uppercase tracking-[0.15em] rounded-full border border-teal-200 shadow-sm">
-                         Current Plan
-                       </span>
-                    )}
-                    {isFree && !isCurrent && (
-                      <p className="mt-1 text-[10px] text-emerald-600 font-bold">Try free for 7 days, no card needed</p>
-                    )}
+                <div>
+                  <h4 className="text-base font-extrabold text-slate-900 dark:text-white capitalize">{p.name}</h4>
+                  <div className="mt-3 text-2xl font-black text-slate-900 dark:text-white">
+                    {getCurrencySymbol(data?.currency || 'INR')}{p.price}
+                    <span className="text-[10px] font-bold text-slate-500 ml-1">/ month</span>
                   </div>
 
-                  <ul className="space-y-4 text-[11px] font-medium text-slate-600 text-left w-max mx-auto py-4">
-                    <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-teal-500 drop-shadow-sm" />
-                      <span><strong className="text-teal-950">{p.transcription_limit} mins</strong> Audio Transcriptions</span>
+                  <ul className="mt-5 space-y-2.5 text-[10px] font-semibold text-slate-600 dark:text-slate-400 border-t border-slate-200 dark:border-white/5 pt-4">
+                    <li className="flex justify-between items-center">
+                      <span>Audio Transcriptions:</span>
+                      <strong className="text-slate-900 dark:text-white">{p.transcription_limit} mins</strong>
                     </li>
-                    <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-teal-500 drop-shadow-sm" />
-                      <span><strong className="text-teal-950">{(p.translation_limit || 0).toLocaleString()}</strong> Translation Chars</span>
+                    <li className="flex justify-between items-center">
+                      <span>Translation characters:</span>
+                      <strong className="text-slate-900 dark:text-white">{(p.translation_limit || 0).toLocaleString()}</strong>
                     </li>
-                    <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-teal-500 drop-shadow-sm" />
-                      <span><strong className="text-teal-950">{(p.tts_limit || 0).toLocaleString()}</strong> TTS Voice Chars</span>
+                    <li className="flex justify-between items-center">
+                      <span>TTS Voice Synthesis:</span>
+                      <strong className="text-slate-900 dark:text-white">{(p.tts_limit || 0).toLocaleString()}</strong>
                     </li>
-                    <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-teal-500 drop-shadow-sm" />
-                      <span><strong className="text-teal-950">{p.storage_limit} MB</strong> Cloud Storage</span>
+                    <li className="flex justify-between items-center">
+                      <span>Cloud Storage:</span>
+                      <strong className="text-slate-900 dark:text-white">{p.storage_limit} MB</strong>
                     </li>
                   </ul>
-                  
-                  <div className="pt-2">
-                    <div className="text-[2rem] leading-none font-black text-teal-950 drop-shadow-sm flex items-end justify-center gap-1.5">
-                      {isFree ? (
-                        <span>{currSymbol}0</span>
-                      ) : (
-                        <>
-                          <span>{currSymbol}{displayPrice}</span>
-                          {billingCycle === 'yearly' && (
-                            <span className="text-xs text-slate-400 line-through pb-1">{currSymbol}{monthlyPrice}</span>
-                          )}
-                        </>
-                      )}
-                      <span className="text-sm font-bold text-slate-400 tracking-widest uppercase pb-1">/ mo</span>
-                    </div>
-                    {billingCycle === 'yearly' && !isFree && (
-                      <p className="text-[9px] text-emerald-600 font-bold mt-1 tracking-wider">
-                        Billed as {currSymbol}{+(p.price * 12 * 0.7).toFixed(0)} / year
-                      </p>
-                    )}
-                  </div>
                 </div>
 
-                <div className="mt-8 relative z-10 flex justify-center">
+                <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/5">
                   {isCurrent ? (
                     <button 
                       disabled
-                      className="px-10 py-3 rounded-full bg-slate-100 text-slate-400 text-xs font-black uppercase tracking-[0.2em] border border-slate-200 shadow-inner cursor-default"
+                      className="w-full py-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-xs font-bold border border-slate-200 dark:border-white/5 text-center cursor-default"
                     >
-                      Active
+                      Active Plan
                     </button>
                   ) : (
-                    <button
-                      onClick={() => handleStartCheckout(p, billingCycle)}
-                      className="px-10 py-3 rounded-full bg-teal-500 hover:bg-teal-400 text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_5px_15px_rgba(20,184,166,0.4)] hover:shadow-[0_8px_25px_rgba(20,184,166,0.5)] transition-all transform hover:-translate-y-0.5"
-                    >
-                      {isFree ? 'Start Free Trial' : 'Get Started ↗'}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleStartCheckout(p, 'monthly')}
+                        className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold text-center cursor-pointer transition-all"
+                      >
+                        Subscribe
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -327,7 +378,6 @@ export const TenantBilling: React.FC = () => {
           })}
         </div>
       </div>
-
 
       {/* Bottom History Layout with Split Tabs */}
       <div className="app-card rounded-2xl p-6 space-y-6">
@@ -337,7 +387,7 @@ export const TenantBilling: React.FC = () => {
             onClick={() => setActiveHistoryTab('invoices')}
             className={`text-xs font-bold pb-2 transition-all cursor-pointer ${
               activeHistoryTab === 'invoices' 
-                ? 'text-slate-900 dark:text-white border-b-2 border-teal-500' 
+                ? 'text-slate-900 dark:text-white border-b-2 border-blue-500' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
@@ -347,7 +397,7 @@ export const TenantBilling: React.FC = () => {
             onClick={() => setActiveHistoryTab('payments')}
             className={`text-xs font-bold pb-2 transition-all cursor-pointer ${
               activeHistoryTab === 'payments' 
-                ? 'text-slate-900 dark:text-white border-b-2 border-teal-500' 
+                ? 'text-slate-900 dark:text-white border-b-2 border-blue-500' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
@@ -357,7 +407,7 @@ export const TenantBilling: React.FC = () => {
             onClick={() => setActiveHistoryTab('subscriptions')}
             className={`text-xs font-bold pb-2 transition-all cursor-pointer ${
               activeHistoryTab === 'subscriptions' 
-                ? 'text-slate-900 dark:text-white border-b-2 border-teal-500' 
+                ? 'text-slate-900 dark:text-white border-b-2 border-blue-500' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
@@ -517,7 +567,7 @@ export const TenantBilling: React.FC = () => {
                     <td className="py-3 font-bold text-slate-900 dark:text-white capitalize">{sh.plan_name}</td>
                     <td className="py-3">
                       <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                        sh.action === 'Upgrade' ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20' : 
+                        sh.action === 'Upgrade' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' : 
                         sh.action === 'Renew' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' :
                         'bg-red-500/10 text-red-500 border border-red-500/20'
                       }`}>
@@ -552,7 +602,7 @@ export const TenantBilling: React.FC = () => {
             <div className="flex justify-between items-start border-b border-slate-200 dark:border-white/5 pb-4">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <CreditCard className="text-teal-500" size={18} />
+                  <CreditCard className="text-blue-500" size={18} />
                   Checkout - Workspace Upgrade
                 </h3>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-1">Completing payment securely via automated gateway integration.</p>
@@ -562,23 +612,13 @@ export const TenantBilling: React.FC = () => {
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-sm cursor-pointer"
                 disabled={processingPayment}
               >
-                <X size={20} />
+                Γ£ò
               </button>
             </div>
 
-            {/* Error display if session creation failed entirely */}
-            {!processingPayment && !checkoutSession && errorMsg && (
-              <div className="flex flex-col items-center justify-center py-8 space-y-4 animate-fadeIn">
-                <div className="p-4 rounded-xl bg-red-50/10 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-650 dark:text-red-500 text-sm font-semibold flex items-start gap-2 leading-relaxed">
-                  <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
-                  <span>{errorMsg}</span>
-                </div>
-              </div>
-            )}
-
             {processingPayment && (
               <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <Loader2 className="animate-spin text-teal-500" size={40} />
+                <Loader2 className="animate-spin text-blue-500" size={40} />
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Verifying secure checkout session with payment nodes...</p>
               </div>
             )}
@@ -627,7 +667,7 @@ export const TenantBilling: React.FC = () => {
                     href={`http://127.0.0.1:8000/api/billing/payments/${completedSessionData.paymentId}/receipt`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center justify-center gap-1.5 w-full bg-teal-50 dark:bg-teal-600/10 hover:bg-teal-100 dark:hover:bg-teal-600/20 text-teal-650 dark:text-teal-400 border border-teal-200 dark:border-teal-500/10 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-1.5 w-full bg-blue-50 dark:bg-blue-600/10 hover:bg-blue-100 dark:hover:bg-blue-600/20 text-blue-650 dark:text-blue-400 border border-blue-200 dark:border-blue-500/10 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
                   >
                     <Download size={14} /> Download Receipt
                   </a>
@@ -635,7 +675,7 @@ export const TenantBilling: React.FC = () => {
 
                 <button
                   onClick={() => setCheckoutModalOpen(false)}
-                  className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer mt-4"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer mt-4"
                 >
                   Done
                 </button>
@@ -644,7 +684,7 @@ export const TenantBilling: React.FC = () => {
 
             {!processingPayment && paymentResult === 'success' && !completedSessionData && (
               <div className="flex flex-col items-center justify-center py-6 space-y-4 animate-fadeIn">
-                <Loader2 className="animate-spin text-teal-500" size={32} />
+                <Loader2 className="animate-spin text-blue-500" size={32} />
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Updating billing state...</p>
               </div>
             )}
@@ -657,7 +697,7 @@ export const TenantBilling: React.FC = () => {
                       <span className="text-[10px] font-bold text-slate-500 uppercase">Selected Subscription Plan</span>
                       <h4 className="text-lg font-black text-slate-900 dark:text-white capitalize">{selectedPlan.name} Plan</h4>
                     </div>
-                    <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-teal-50 dark:bg-teal-600/10 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 capitalize">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 capitalize">
                       {billingCycle} billing
                     </span>
                   </div>
@@ -687,7 +727,7 @@ export const TenantBilling: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setCheckoutStep('payment')}
-                    className="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex-1"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex-1"
                   >
                     Proceed to Payment
                   </button>
@@ -707,7 +747,7 @@ export const TenantBilling: React.FC = () => {
                         onClick={() => setActiveGateway('stripe')}
                         className={`w-full flex items-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           activeGateway === 'stripe' 
-                            ? 'border-teal-500 bg-teal-50 dark:bg-teal-950/15 text-slate-900 dark:text-white' 
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/15 text-slate-900 dark:text-white' 
                             : 'border-slate-200 dark:border-white/5 bg-slate-55 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
@@ -720,7 +760,7 @@ export const TenantBilling: React.FC = () => {
                         onClick={() => setActiveGateway('razorpay')}
                         className={`w-full flex items-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           activeGateway === 'razorpay' 
-                            ? 'border-teal-500 bg-teal-50 dark:bg-teal-950/15 text-slate-900 dark:text-white' 
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/15 text-slate-900 dark:text-white' 
                             : 'border-slate-200 dark:border-white/5 bg-slate-55 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
@@ -733,7 +773,7 @@ export const TenantBilling: React.FC = () => {
                         onClick={() => setActiveGateway('upi')}
                         className={`w-full flex items-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           activeGateway === 'upi' 
-                            ? 'border-teal-500 bg-teal-50 dark:bg-teal-950/15 text-slate-900 dark:text-white' 
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/15 text-slate-900 dark:text-white' 
                             : 'border-slate-200 dark:border-white/5 bg-slate-55 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >

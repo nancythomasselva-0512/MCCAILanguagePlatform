@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storage } from "../utils/storage";
 
 
-export type ActiveTabType = 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription' | 'super-admin-dashboard' | 'tenant-dashboard' | 'tenant-billing' | 'sa-overview' | 'sa-tenants' | 'sa-users' | 'sa-plans' | 'sa-providers' | 'sa-usage' | 'sa-billing' | 'sa-ai-logs' | 'sa-audit-logs' | 'sa-health' | 'sa-builder' | 'sa-settings-general' | 'sa-settings-tenant' | 'sa-settings-smtp' | 'sa-settings-auth' | 'sa-settings-security' | 'sa-settings-payments' | 'sa-settings-domains' | 'sa-settings-apikeys' | 'sa-settings-backup' | 'sa-settings-notifications' | 'sa-settings-activity';
+export type ActiveTabType = 'dashboard' | 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription' | 'super-admin-dashboard' | 'tenant-dashboard' | 'tenant-billing' | 'sa-overview' | 'sa-tenants' | 'sa-users' | 'sa-plans' | 'sa-providers' | 'sa-usage' | 'sa-billing' | 'sa-ai-logs' | 'sa-audit-logs' | 'sa-health' | 'sa-builder' | 'sa-settings-general' | 'sa-settings-tenant' | 'sa-settings-smtp' | 'sa-settings-auth' | 'sa-settings-security' | 'sa-settings-payments' | 'sa-settings-domains' | 'sa-settings-apikeys' | 'sa-settings-backup' | 'sa-settings-notifications' | 'sa-settings-activity';
 export type ViewModeType = 'landing' | 'workspace';
 
 export interface HistoryItem {
@@ -161,8 +161,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [contentFontFamily]);
 
   const [activeTab, setActiveTabState] = useState<ActiveTabType>(() => {
-    const savedTab = storage.getItem('mcc-ai-active-tab');
-    if (savedTab) return savedTab as ActiveTabType;
+    const savedTab = storage.getItem('mcc-ai-active-tab') as ActiveTabType;
+    const path = window.location.pathname;
+    
+    // Strict Routing Validation
+    const isSA = savedTab?.startsWith('sa-') || savedTab === 'super-admin-dashboard';
+    if (path === '/dashboard' && isSA) {
+      return 'dashboard';
+    }
+    if (path === '/controller' && savedTab && !isSA) {
+      return 'sa-overview';
+    }
+    
+    if (savedTab) return savedTab;
 
     const savedUser = storage.getItem('mcc-ai-user');
     if (savedUser) {
@@ -175,7 +186,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // ignore
       }
     }
-    return 'text-to-speech';
+    return 'dashboard';
   });
 
   const setActiveTab = (tab: ActiveTabType) => {
@@ -323,8 +334,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     storage.setItem('mcc-ai-refresh-token', refreshToken);
     if (slug) {
       storage.setItem('mcc-ai-tenant-slug', slug);
+      // Also write to raw key to ensure it's accessible from any path
+      localStorage.setItem('mcc-ai-tenant-slug', slug);
     } else {
       storage.removeItem('mcc-ai-tenant-slug');
+      localStorage.removeItem('mcc-ai-tenant-slug');
     }
 
     setNotification({ message: `Welcome back, ${name}!`, type: 'success' });
@@ -349,6 +363,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     storage.removeItem('mcc-ai-refresh-token');
     storage.removeItem('mcc-ai-tenant-slug');
     storage.removeItem('mcc-ai-active-tab');
+    // Also clear raw keys
+    localStorage.removeItem('mcc-ai-tenant-slug');
+    localStorage.removeItem('mcc-ai-user');
+    localStorage.removeItem('mcc-ai-token');
     setViewMode('landing');
     setNotification({ message: 'Logged out successfully.', type: 'info' });
   };

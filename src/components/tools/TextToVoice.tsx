@@ -10,7 +10,7 @@ import { providerManager } from '../../providers/providerManager';
 
 type PlayState = 'idle' | 'playing' | 'paused' | 'done' | 'loading' | 'error';
 
-const SAMPLE_TEXT = "Welcome to MCC AI Language Platform. This tool converts your text into natural-sounding speech using advanced AI voice synthesis technology.";
+const SAMPLE_TEXT = "Welcome to Fluentia. This tool converts your text into natural-sounding speech using advanced AI voice synthesis technology.";
 
 export const TextToVoice: React.FC = () => {
   const { history, billingOverview, addHistoryItem, theme, openAiApiKey, fetchBillingOverview } = useApp();

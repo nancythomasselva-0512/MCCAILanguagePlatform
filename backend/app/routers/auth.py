@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_password_hash, verify_password, create_access_token, create_refresh_token, decode_token
-from app.models.models import User, Tenant, SubscriptionPlan, UsageTracking, AuditLog
+from app.models.models import User, Tenant, SubscriptionPlan, UsageTracking, AuditLog, Subscription
 from app.schemas.schemas import Token, TokenRefreshRequest, TenantRegistration, UserCreate
 from app.utils.email_helper import send_welcome_subscription_email, send_superadmin_new_tenant_notification_email
 import datetime
@@ -75,6 +75,24 @@ def register_tenant(data: TenantRegistration, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_admin)
 
+    # 4. Create 7-Day Free Trial Subscription
+    now = datetime.datetime.utcnow()
+    trial_end = now + datetime.timedelta(days=7)
+    
+    new_subscription = Subscription(
+        tenant_id=new_tenant.id,
+        plan_id=plan_id,
+        status="active",
+        price=0.0,
+        billing_cycle="monthly",
+        start_date=now,
+        end_date=trial_end,
+        current_period_start=now,
+        current_period_end=trial_end
+    )
+    db.add(new_subscription)
+    db.commit()
+
     # Log action
     log = AuditLog(
         tenant_id=new_tenant.id,
@@ -84,6 +102,19 @@ def register_tenant(data: TenantRegistration, db: Session = Depends(get_db)):
     )
     db.add(log)
     db.commit()
+
+    # Send registration emails
+    try:
+        plan_name = "Free"
+        if plan_id:
+            plan = db.query(SubscriptionPlan).filter(SubscriptionPlan.id == plan_id).first()
+            if plan:
+                plan_name = plan.name
+        
+        send_superadmin_new_tenant_notification_email(db, new_tenant, data.admin_email, plan_name)
+        send_welcome_subscription_email(db, new_tenant, plan_name)
+    except Exception as e:
+        print(f"Failed to send registration emails: {e}")
 
     # Generate Tokens
     access = create_access_token(new_admin.id)

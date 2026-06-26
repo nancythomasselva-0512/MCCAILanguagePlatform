@@ -5,10 +5,12 @@ from app.dependencies.auth import get_current_user, get_current_tenant_context, 
 from app.models.models import User, Tenant, UsageTracking, ProviderConfiguration, TranscriptionHistory, TranslationHistory, TtsHistory, SubscriptionPlan, FeatureProviderMapping
 from app.schemas.schemas import TranscriptionResponse, TranslationResponse, TtsResponse
 from app.core.security import decrypt_data
+from app.core.config import settings
 import datetime
 import requests
 import tempfile
 import os
+import base64
 from typing import List
 
 router = APIRouter(prefix="/tools", tags=["AI Processing Tools"], dependencies=[Depends(check_tenant_access)])
@@ -40,6 +42,9 @@ def get_global_provider_for_feature(db: Session, tenant: Tenant, feature_name: s
 
 # Helper to check usage limit
 def verify_limit(db: Session, tenant: Tenant, metric: str, incremental_amount: float):
+    if not tenant:
+        return  # Bypass if no tenant (e.g. Super Admin without context)
+        
     plan = db.query(SubscriptionPlan).filter(SubscriptionPlan.id == tenant.plan_id).first()
     usage = db.query(UsageTracking).filter(UsageTracking.tenant_id == tenant.id).first()
     
@@ -68,13 +73,14 @@ def verify_limit(db: Session, tenant: Tenant, metric: str, incremental_amount: f
 # Helper to resolve API Key: checks Tenant settings first, falls back to Global Settings
 def resolve_api_key(db: Session, tenant: Tenant, provider_name: str) -> str:
     # 1. Check Tenant config
-    tenant_config = db.query(ProviderConfiguration).filter(
-        ProviderConfiguration.tenant_id == tenant.id,
-        ProviderConfiguration.provider_name == provider_name,
-        ProviderConfiguration.is_enabled == True
-    ).first()
-    if tenant_config and tenant_config.credentials_encrypted:
-        return decrypt_data(tenant_config.credentials_encrypted)
+    if tenant:
+        tenant_config = db.query(ProviderConfiguration).filter(
+            ProviderConfiguration.tenant_id == tenant.id,
+            ProviderConfiguration.provider_name == provider_name,
+            ProviderConfiguration.is_enabled == True
+        ).first()
+        if tenant_config and tenant_config.credentials_encrypted:
+            return decrypt_data(tenant_config.credentials_encrypted)
         
     # 2. Fall back to Global config
     global_config = db.query(ProviderConfiguration).filter(
@@ -101,6 +107,8 @@ def resolve_api_key(db: Session, tenant: Tenant, provider_name: str) -> str:
 
 # Increment usage helper
 def increment_usage(db: Session, tenant_id: str, metric: str, amount: float):
+    if not tenant_id:
+        return
     usage = db.query(UsageTracking).filter(UsageTracking.tenant_id == tenant_id).first()
     if not usage:
         usage = UsageTracking(tenant_id=tenant_id)
@@ -130,7 +138,7 @@ def translate_text(
     verify_limit(db, tenant, "translation", char_len)
     
     # Resolve Provider and API Key via Global Mapping
-    provider, api_key = get_global_provider_for_feature(db, tenant, "Text Translation")
+    provider, api_key = get_global_provider_for_feature(db, tenant, "translation")
 
     
     # Perform Translation Action (simulate if no keys available)
@@ -196,23 +204,28 @@ def translate_text(
                 translated_text = "".join(item[0] for item in data[0])
                 if src == "auto" and len(data) > 2:
                     detected_lang = data[2]
+            else:
+                translated_text = f"[Fallback API Error] Simulated Translation to {target_lang}: {text}"
         except Exception as e:
             translated_text = f"[Simulated Translation to {target_lang}]: {text}"
             
+    if not translated_text:
+        translated_text = f"[Translation Failed] Please check API configuration for {target_lang}"
     # Record History Log
-    history = TranslationHistory(
-        tenant_id=tenant.id,
-        user_id=user.id,
-        source_text=text,
-        translated_text=translated_text,
-        source_lang=source_lang if source_lang != "Auto Detect" else f"Auto ({detected_lang})",
-        target_lang=target_lang,
-        provider=provider
-    )
-    db.add(history)
-    db.commit()
+    if tenant:
+        history = TranslationHistory(
+            tenant_id=tenant.id if tenant else None,
+            user_id=user.id,
+            source_text=text,
+            translated_text=translated_text,
+            source_lang=source_lang if source_lang != "Auto Detect" else f"Auto ({detected_lang})",
+            target_lang=target_lang,
+            provider=provider
+        )
+        db.add(history)
+        db.commit()
     
-    increment_usage(db, tenant.id, "translation", char_len)
+    increment_usage(db, tenant.id if tenant else None, "translation", char_len)
     
     return {
         "text": translated_text,
@@ -279,19 +292,20 @@ async def transcribe_audio(
         transcript_text = f"[Transcribed via Simulated STT]: Speech recognized from file {file.filename}."
         
     # Record history
-    history = TranscriptionHistory(
-        tenant_id=tenant.id,
-        user_id=user.id,
-        file_name=file.filename or "voice-recording.wav",
-        file_size=file_size,
-        duration_seconds=estimated_minutes * 60,
-        transcript_text=transcript_text,
-        provider=provider
-    )
-    db.add(history)
-    db.commit()
+    if tenant:
+        history = TranscriptionHistory(
+            tenant_id=tenant.id if tenant else None,
+            user_id=user.id,
+            file_name=file.filename or "voice-recording.wav",
+            file_size=file_size,
+            duration_seconds=estimated_minutes * 60,
+            transcript_text=transcript_text,
+            provider=provider
+        )
+        db.add(history)
+        db.commit()
     
-    increment_usage(db, tenant.id, "transcription", estimated_minutes)
+    increment_usage(db, tenant.id if tenant else None, "transcription", estimated_minutes)
     
     return {
         "text": transcript_text,
@@ -313,20 +327,43 @@ def synthesize_speech(
     
     provider, api_key = get_global_provider_for_feature(db, tenant, "Text To Speech")
     
-    # Record TTS request log (simulate audio generation path)
-    history = TtsHistory(
-        tenant_id=tenant.id,
-        user_id=user.id,
-        text=text,
-        voice_name=voice,
-        characters_count=char_len,
-        file_path="",  # Path where final synthesized audio was hosted
-        provider=provider
-    )
-    db.add(history)
-    db.commit()
+    if not api_key:
+        api_key = settings.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY")
+        
+    if not api_key:
+        raise HTTPException(status_code=500, detail="OpenAI API key is missing from environment variables and tenant config.")
+
+    audio_url = ""
+    try:
+        res = requests.post(
+            "https://api.openai.com/v1/audio/speech",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={"model": "tts-1", "input": text, "voice": voice}
+        )
+        if res.ok:
+            b64_audio = base64.b64encode(res.content).decode('utf-8')
+            audio_url = f"data:audio/mpeg;base64,{b64_audio}"
+        else:
+            print(f"TTS API Error: {res.text}")
+    except Exception as e:
+        print(f"TTS Generation Error: {e}")
+
     
-    increment_usage(db, tenant.id, "tts", char_len)
+    # Record TTS request log (simulate audio generation path)
+    if tenant:
+        history = TtsHistory(
+            tenant_id=tenant.id if tenant else None,
+            user_id=user.id,
+            text=text,
+            voice_name=voice,
+            characters_count=char_len,
+            file_path="",  # Path where final synthesized audio was hosted
+            provider=provider
+        )
+        db.add(history)
+        db.commit()
+    
+    increment_usage(db, tenant.id if tenant else None, "tts", char_len)
     
     # We return the API key validation details along with success status
     # Frontend handles audio fallback playback elements
@@ -335,7 +372,7 @@ def synthesize_speech(
         "characters": char_len,
         "voice": voice,
         "provider": provider,
-        "audio_url": "" # Returned audio stream or base64 data
+        "audio_url": audio_url # Returned audio stream or base64 data
     }
 
 # --- USER TRANSLATION HISTORY LOG ---
@@ -346,6 +383,7 @@ def get_translations_history(
     tenant: Tenant = Depends(get_current_tenant_context)
 ):
     # Enforce strict multi-tenant filtering (only fetch logs within this tenant)
+    if not tenant: return []
     return db.query(TranslationHistory).filter(TranslationHistory.tenant_id == tenant.id).order_by(TranslationHistory.created_at.desc()).all()
 
 # --- USER TRANSCRIPTION HISTORY LOG ---
@@ -355,6 +393,7 @@ def get_transcriptions_history(
     user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant_context)
 ):
+    if not tenant: return []
     return db.query(TranscriptionHistory).filter(TranscriptionHistory.tenant_id == tenant.id).order_by(TranscriptionHistory.created_at.desc()).all()
 
 # --- USER TTS HISTORY LOG ---
@@ -364,4 +403,5 @@ def get_tts_history(
     user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant_context)
 ):
+    if not tenant: return []
     return db.query(TtsHistory).filter(TtsHistory.tenant_id == tenant.id).order_by(TtsHistory.created_at.desc()).all()
