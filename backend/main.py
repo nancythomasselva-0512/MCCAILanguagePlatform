@@ -214,6 +214,9 @@ app.include_router(tools.router, prefix="/api")
 app.include_router(platform_builder.router, prefix="/api")
 app.include_router(billing.router, prefix="/api")
 
+from app.routers import document
+app.include_router(document.router, prefix="/api")
+
 # --- BACKWARD COMPATIBILITY: LOCAL FASTER-WHISPER RUNNER ---
 from app.utils.audio import get_model, transcribe_local_audio
 
@@ -248,5 +251,4 @@ async def transcribe(
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
-# Trigger reload
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

@@ -4,7 +4,7 @@ import {
   Mic, Volume2, Languages, FileAudio,
   History, Trash2, Clock, X, Settings, ShieldCheck, Key, Menu, ArrowLeft, LogOut,
   Activity, Building2, Users, Layers, Server, TrendingUp, CreditCard, Cpu, ShieldAlert, Settings2,
-  ArrowUpRight
+  ArrowUpRight, FileText
   , Mail, Globe, Database, Bell, LayoutGrid, ChevronDown, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -16,11 +16,13 @@ import { SuperAdminDashboard } from '../admin/SuperAdminDashboard';
 import { TenantDashboard } from './TenantDashboard';
 import { TenantBilling } from './TenantBilling';
 import UserDashboard from './UserDashboard';
+import DocumentIntelligence from './DocumentIntelligence';
 import { SMTPSettings } from '../admin/settings/SMTPSettings';
 import { PaymentSettings } from '../admin/settings/PaymentSettings';
 import { Header } from '../common/Header';
 import { SidebarMenuNode } from './SidebarMenuNode';
 import type { SidebarMenuItem } from './SidebarMenuNode';
+import { HistoryPage } from './HistoryPage';
 import { storage } from "../../utils/storage";
 
 
@@ -218,6 +220,7 @@ export const WorkspacePage: React.FC = () => {
     if (user) {
       const workspaceItems: SidebarMenuItem[] = [];
       workspaceItems.push({ id: 'tenant-billing-menu', label: 'Plans & Billing', icon: 'CreditCard', action: 'tab', tabId: 'tenant-billing' });
+      workspaceItems.push({ id: 'document-intelligence', label: 'Document Intelligence', icon: 'FileText', action: 'tab', tabId: 'document-intelligence' });
 
       sections.push({
         title: 'Workspace',
@@ -229,7 +232,7 @@ export const WorkspacePage: React.FC = () => {
     sections.push({
       title: 'Other',
       items: [
-        { id: 'history-menu', label: 'History', icon: 'History', action: 'history' }
+        { id: 'history-page', label: 'History', icon: 'History', action: 'tab', tabId: 'history-page' }
       ]
     });
 
@@ -320,6 +323,7 @@ export const WorkspacePage: React.FC = () => {
       'tenant-settings-smtp': { label: 'SMTP & Email', icon: <Mail size={16} />, activeColor: '#ef4444' },
       'tenant-settings-payments': { label: 'Payment Gateways', icon: <CreditCard size={16} />, activeColor: '#ef4444' },
       'tenant-billing': { label: 'Plans & Billing', icon: <CreditCard size={16} />, activeColor: '#3b82f6' },
+      'document-intelligence': { label: 'Document Intelligence', icon: <FileText size={16} />, activeColor: '#10b981' },
     }[activeTab] || { label: 'Tools', icon: <Volume2 size={16} />, activeColor: '#8b5cf6' };
   };
 
@@ -338,6 +342,8 @@ export const WorkspacePage: React.FC = () => {
       'tenant-billing': TenantBilling,
       'tenant-settings-smtp': SMTPSettings,
       'tenant-settings-payments': PaymentSettings,
+      'history-page': HistoryPage,
+      'document-intelligence': DocumentIntelligence,
     } as Record<string, any>)[activeTab] || VoiceToText;
 
   return (
@@ -542,7 +548,7 @@ export const WorkspacePage: React.FC = () => {
 
       {/* Left Panel: Desktop Sidebar */}
       <aside
-        className={`hidden sm:flex sm:flex-col justify-between px-2 py-6 rounded-none relative z-10 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[72px]' : 'w-[230px]'} flex-shrink-0`}
+        className={`hidden sm:flex sm:flex-col justify-between px-2 py-6 rounded-none relative z-10 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[72px]' : 'w-[230px]'} flex-shrink-0 min-h-0`}
         style={{
           background: 'var(--sidebar-bg)',
           borderRight: 'none',
@@ -661,102 +667,6 @@ export const WorkspacePage: React.FC = () => {
           </AnimatePresence>
         </main>
 
-        {/* History Drawer */}
-        <AnimatePresence>
-          {historyOpen && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-30"
-                style={{ background: 'rgba(0,0,0,0.4)' }}
-                onClick={() => setHistoryOpen(false)}
-              />
-              <motion.aside
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-                className="fixed right-0 top-0 z-40 flex h-full flex-col"
-                style={{
-                  width: 'min(88vw, 22rem)',
-                  background: 'var(--bg-card)',
-                  borderLeft: '1px solid var(--border-base)',
-                  boxShadow: 'var(--shadow-xl)',
-                }}
-              >
-                <div className="flex items-center justify-between px-4 py-3.5 flex-shrink-0" style={{ borderBottom: '1px solid var(--border-base)' }}>
-                  <div className="flex items-center gap-2">
-                    <History size={14} style={{ color: 'var(--accent)' }} />
-                    <span className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>History</span>
-                    {history.length > 0 && (
-                      <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
-                        {history.length}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {history.length > 0 && (
-                      <button onClick={clearHistory} className="rounded-md px-2 py-1 text-sm font-medium transition-colors hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
-                        Clear all
-                      </button>
-                    )}
-                    <button onClick={() => setHistoryOpen(false)} className="rounded-md p-1.5 transition-colors hover:opacity-70" style={{ color: 'var(--text-muted)' }}>
-                      <X size={15} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto">
-                  {history.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full px-4 py-10 text-center">
-                      <History size={32} className="mb-3 opacity-20" style={{ color: 'var(--text-muted)' }} />
-                      <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>No history yet</p>
-                    </div>
-                  ) : (
-                    <ul>
-                      {history.map((item) => (
-                        <li
-                          key={item.id}
-                          className="group flex items-start gap-3 px-4 py-3 transition-colors"
-                          style={{ borderBottom: '1px solid var(--border-subtle)' }}
-                        >
-                          <div className="mt-0.5 flex-shrink-0">
-                            <span
-                              className="text-xs rounded-full px-2 py-1 font-bold"
-                              style={{
-                                background: `color-mix(in srgb, ${TYPE_COLORS[item.type]} 12%, var(--bg-subtle))`,
-                                color: TYPE_COLORS[item.type],
-                                border: `1px solid color-mix(in srgb, ${TYPE_COLORS[item.type]} 25%, transparent)`,
-                              }}
-                            >
-                              {TYPE_LABELS[item.type]?.split(' ')[0] || item.type}
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="truncate text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{item.title}</p>
-                            <p className="mt-1 truncate text-xs" style={{ color: 'var(--text-muted)' }}>{item.details}</p>
-                            <p className="mt-1 flex items-center gap-1 text-xs" style={{ color: 'var(--text-disabled)' }}>
-                              <Clock size={12} /> {item.timestamp}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => deleteHistoryItem(item.id)}
-                            className="mt-0.5 flex-shrink-0 rounded p-1 opacity-0 transition-all group-hover:opacity-100 hover:text-red-500"
-                            style={{ color: 'var(--text-disabled)' }}
-                          >
-                            <Trash2 size={11} />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </motion.aside>
-            </>
-          )}
-        </AnimatePresence>
 
         <AnimatePresence>
           {notification && (

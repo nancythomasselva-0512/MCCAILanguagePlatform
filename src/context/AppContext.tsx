@@ -11,6 +11,7 @@ export interface HistoryItem {
   title: string;
   timestamp: string;
   details: string;
+  content?: string;
 }
 
 export interface UserProfile {
@@ -31,7 +32,7 @@ interface AppContextProps {
   viewMode: ViewModeType;
   setViewMode: (mode: ViewModeType) => void;
   history: HistoryItem[];
-  addHistoryItem: (type: string, title: string, details: string) => void;
+  addHistoryItem: (type: string, title: string, details: string, content?: string) => void;
   clearHistory: () => void;
   deleteHistoryItem: (id: string) => void;
   openAiApiKey: string;
@@ -296,13 +297,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  const addHistoryItem = (type: string, title: string, details: string) => {
+  const addHistoryItem = (type: string, title: string, details: string, content?: string) => {
     const newItem: HistoryItem = {
       id: Math.random().toString(36).substring(2, 9),
       type,
       title,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       details,
+      content,
     };
     setHistory((prev) => [newItem, ...prev].slice(0, 50));
   };
@@ -357,7 +359,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setActiveTab('sa-overview');
     } else {
       window.history.pushState({}, '', '/dashboard');
-      setActiveTab('text-to-speech');
+      setActiveTab('dashboard');
     }
     setViewMode('workspace');
   };

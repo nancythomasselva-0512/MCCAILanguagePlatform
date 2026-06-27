@@ -158,7 +158,7 @@ export const AudioToText: React.FC = () => {
           setProcessState('done');
           const totalWords = formatted.reduce((a, s) => a + s.text.split(' ').length, 0);
           const langInfo = responseData.language ? ` (${responseData.language.toUpperCase()})` : '';
-          addHistoryItem('audio-transcription', file.name, `Faster-Whisper${langInfo} · ${totalWords} words`);
+          addHistoryItem('audio-transcription', file.name, `Faster-Whisper${langInfo} · ${totalWords} words`, resultText);
         } else {
           throw new Error('No segments returned from server.');
         }
@@ -208,7 +208,7 @@ export const AudioToText: React.FC = () => {
       setSegments(formatted);
       setProcessState('done');
       const totalWords = formatted.reduce((a, s) => a + s.text.split(' ').length, 0);
-      addHistoryItem('audio-transcription', file.name, `Platform STT · ${totalWords} words`);
+      addHistoryItem('audio-transcription', file.name, `Platform STT · ${totalWords} words`, transcriptText);
     } catch (err: any) {
       setErrorMsg(err.message || 'Transcription failed.');
       setProcessState('error');

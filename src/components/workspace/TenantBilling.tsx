@@ -178,7 +178,7 @@ export const TenantBilling: React.FC = () => {
   const invoices = data?.invoices || [];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-8 animate-fadeIn">
+    <div className="space-y-6 w-full mx-auto p-4 md:p-8 animate-fadeIn">
 
 
       {/* Plans Pricing Selection Section */}
@@ -220,7 +220,7 @@ export const TenantBilling: React.FC = () => {
           </button>
         </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row flex-wrap items-stretch justify-center gap-6 max-w-6xl mx-auto pt-4">
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-[1400px] mx-auto pt-4 w-full">
           {plans.map((p, idx) => {
             const isCurrent = activePlan?.name.toLowerCase() === p.name.toLowerCase();
             const isFree = p.price === 0;
@@ -233,7 +233,7 @@ export const TenantBilling: React.FC = () => {
             return (
               <div 
                 key={p.id}
-                className={`p-8 rounded-[2.5rem] flex flex-col justify-between transition-all duration-300 relative overflow-hidden group backdrop-blur-2xl w-full md:w-[300px] scale-100 hover:scale-105 hover:z-20 ${
+                className={`p-6 xl:p-8 rounded-[2.5rem] flex flex-col justify-between transition-all duration-300 relative overflow-hidden group backdrop-blur-2xl w-full scale-100 hover:scale-105 hover:z-20 ${
                   isCurrent 
                     ? 'shadow-[0_10px_40px_rgba(20,184,166,0.25)] bg-white/95 border-2 border-teal-400/60' 
                     : 'shadow-[0_5px_20px_rgba(20,184,166,0.1)] bg-white/80 border border-teal-200/50 hover:border-teal-400/50 hover:bg-white/90'

@@ -213,3 +213,31 @@ class FeatureProviderMappingResponse(FeatureProviderMappingBase):
 
 class FeatureProviderBulkUpdate(BaseModel):
     mappings: List[FeatureProviderMappingBase]
+
+# Document Intelligence Schemas
+class DocumentIntelligenceBase(BaseModel):
+    filename: str
+    filepath: str
+    filetype: Optional[str] = None
+    filesize: int = 0
+    page_count: int = 1
+    word_count: int = 0
+    character_count: int = 0
+    extracted_text: Optional[str] = None
+    translated_text: Optional[str] = None
+    summary: Optional[str] = None
+
+class DocumentIntelligenceResponse(DocumentIntelligenceBase):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class DocumentTranslateRequest(BaseModel):
+    target_language: str
+
+class DocumentSummarizeRequest(BaseModel):
+    pass # No params needed right now, generates structured summary.

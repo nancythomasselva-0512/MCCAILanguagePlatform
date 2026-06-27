@@ -465,3 +465,26 @@ class SMTPSettings(Base):
     reply_to_email = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+import uuid
+
+class DocumentIntelligence(Base):
+    __tablename__ = "document_intelligence"
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    filename = Column(String(255), nullable=False)
+    filepath = Column(String(512), nullable=False)
+    filetype = Column(String(50), nullable=True)
+    filesize = Column(Integer, default=0) # in bytes
+    page_count = Column(Integer, default=1)
+    word_count = Column(Integer, default=0)
+    character_count = Column(Integer, default=0)
+    extracted_text = Column(Text, nullable=True)
+    translated_text = Column(Text, nullable=True)
+    summary = Column(Text, nullable=True) # Could store JSON for structured summary
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    user = relationship("User")

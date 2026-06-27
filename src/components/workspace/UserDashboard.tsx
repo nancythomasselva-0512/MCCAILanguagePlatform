@@ -15,18 +15,18 @@ export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDash
     {
       id: 'text-to-speech',
       badge: 'Text Generation',
-      badgeColor: '#f97316',
+      badgeColor: '#0d9488',
       title: 'Text to Voice',
       description: 'Convert text into lifelike speech with ultra-realistic AI voices.',
       linkText: 'Start generating',
-      bgClass: 'bg-[#ffedd5]',
-      hoverClass: 'hover:bg-[#ffeaab]',
+      bgClass: 'bg-[#f0fdfa]',
+      hoverClass: 'hover:bg-[#ccfbf1]',
       pattern: (
         <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-30 pointer-events-none flex items-center justify-end overflow-hidden pr-4">
           <div className="flex gap-2">
-            <div className="h-32 w-12 rounded-full bg-[#fb923c] transform rotate-45 -mr-4" />
-            <div className="h-32 w-12 rounded-full bg-[#fdba74] transform rotate-45 -mr-4" />
-            <div className="h-32 w-12 rounded-full bg-[#fed7aa] transform rotate-45" />
+            <div className="h-32 w-12 rounded-full bg-[#14b8a6] transform rotate-45 -mr-4" />
+            <div className="h-32 w-12 rounded-full bg-[#2dd4bf] transform rotate-45 -mr-4" />
+            <div className="h-32 w-12 rounded-full bg-[#5eead4] transform rotate-45" />
           </div>
         </div>
       )

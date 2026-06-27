@@ -122,7 +122,7 @@ export const TextTranslation: React.FC = () => {
       }
       setState('done');
       fetchBillingOverview();
-      addHistoryItem('translation', `${sourceLang === 'Auto Detect' ? (result.detectedLang || 'Detected') : sourceLang} → ${target}`, `${text.split(' ').filter(Boolean).length} words`);
+      addHistoryItem('translation', `${sourceLang === 'Auto Detect' ? (result.detectedLang || 'Detected') : sourceLang} → ${target}`, `${text.split(' ').filter(Boolean).length} words`, `Original:\n${text}\n\nTranslation:\n${result.text}`);
     } catch (err: any) {
       setErrorMsg(err.message || 'Translation failed. Please check your connection.');
       setState('error');

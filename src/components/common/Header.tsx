@@ -48,8 +48,10 @@ export const Header: React.FC = () => {
       const query = searchQuery.toLowerCase();
       let targetTab = '';
 
-      if (query.includes('plan') || query.includes('bill') || query.includes('subscript') || query.includes('pay') || query.includes('upgrade')) targetTab = 'billing';
+      if (query.includes('plan') || query.includes('bill') || query.includes('subscript') || query.includes('pay') || query.includes('upgrade')) targetTab = 'tenant-billing';
       else if (query.includes('dash') || query.includes('home') || query.includes('overview')) targetTab = 'dashboard';
+      else if (query.includes('history') || query.includes('record') || query.includes('past')) targetTab = 'history-page';
+      else if (query.includes('document') || query.includes('doc')) targetTab = 'document-intelligence';
       else if (query.includes('translate') || query.includes('language')) targetTab = 'text-translation';
       else if ((query.includes('audio') || query.includes('mp3')) && query.includes('text')) targetTab = 'audio-to-text';
       else if (query.includes('voice') && query.includes('text')) targetTab = 'voice-to-text';
@@ -123,7 +125,7 @@ export const Header: React.FC = () => {
           : '0 4px 20px -1px rgba(0, 0, 0, 0.04)',
       }}
     >
-      <div className={`w-full flex h-14 md:h-16 items-center justify-between px-4 sm:px-6 ${viewMode === 'workspace' ? 'w-full px-4 md:px-8' : 'max-w-7xl mx-auto'}`}>
+      <div className={`w-full flex h-20 md:h-24 items-center justify-between px-4 sm:px-6 ${viewMode === 'workspace' ? 'w-full px-4 md:px-8' : 'max-w-7xl mx-auto'}`}>
 
         <div className="flex items-center gap-2 md:gap-3">
           {viewMode !== 'workspace' ? (
@@ -147,10 +149,10 @@ export const Header: React.FC = () => {
             </div>
           ) : (
             <div className="hidden md:flex flex-col justify-center animate-fadeIn">
-              <span className="font-display text-lg font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="font-display text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
                 Welcome back, {user?.name?.split(' ')[0] || 'User'} 👋
               </span>
-              <span className="text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 uppercase">
+              <span className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 mt-1 uppercase">
                 Ready to conquer the day and create something amazing
               </span>
             </div>
@@ -175,9 +177,9 @@ export const Header: React.FC = () => {
         {/* Right: Actions */}
         <div className="hidden md:flex items-center gap-3">
           {viewMode === 'workspace' && (
-            <div className="relative w-56 lg:w-64 transition-all mr-2">
+            <div className="relative w-64 lg:w-80 transition-all mr-2">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <Search size={14} className="text-slate-400 dark:text-slate-500" />
+                <Search size={16} className="text-slate-400 dark:text-slate-500" />
               </div>
               <input
                 type="text"
@@ -185,14 +187,14 @@ export const Header: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearch}
-                className="block w-full pl-9 pr-4 py-1.5 border border-slate-200 dark:border-white/10 rounded-full leading-5 bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 sm:text-xs shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900/80"
+                className="block w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-white/10 rounded-full leading-5 bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 sm:text-sm shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900/80"
               />
             </div>
           )}
 
           <button
             onClick={toggleTheme}
-            className="flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+            className="flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
             style={{
               background: theme === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(15, 23, 42, 0.05)',
               border: '1px solid var(--border-base)',
@@ -200,7 +202,7 @@ export const Header: React.FC = () => {
             }}
             aria-label="Toggle theme"
           >
-            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
           </button>
 
           {/* Auth Buttons or User Menu */}
@@ -209,7 +211,7 @@ export const Header: React.FC = () => {
               {/* Active Workspace / Open Workspace Button */}
               <button
                 onClick={() => handleLaunchWorkspace()}
-                className={`group flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer`}
+                className={`group flex items-center gap-2 rounded-full px-5 py-2 text-sm font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer`}
                 style={{
                   background: viewMode === 'workspace'
                     ? (theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.08)')
@@ -218,7 +220,7 @@ export const Header: React.FC = () => {
                   border: '1px solid var(--border-base)',
                 }}
               >
-                <span className={`h-1.5 w-1.5 rounded-full ${viewMode === 'workspace' ? 'bg-emerald-500 animate-pulse' : 'bg-teal-500'}`} />
+                <span className={`h-2 w-2 rounded-full ${viewMode === 'workspace' ? 'bg-emerald-500 animate-pulse' : 'bg-teal-500'}`} />
                 <span>{viewMode === 'workspace' ? 'Workspace Active' : 'Go to Workspace'}</span>
               </button>
 
@@ -226,15 +228,15 @@ export const Header: React.FC = () => {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-1.5 rounded-full p-0.5 pr-2.5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer"
+                    className="flex items-center gap-2 rounded-full p-1 pr-3 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer"
                   >
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-teal-600 to-emerald-500 text-white flex items-center justify-center text-[10px] font-black border border-white/10 uppercase select-none">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-600 to-emerald-500 text-white flex items-center justify-center text-xs font-black border border-white/10 uppercase select-none">
                       {user.name ? user.name.charAt(0) : 'U'}
                     </div>
-                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 max-w-[80px] truncate">
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 max-w-[100px] truncate">
                       {user.name}
                     </span>
-                    <ChevronDown size={12} className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   <AnimatePresence>

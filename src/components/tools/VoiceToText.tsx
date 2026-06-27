@@ -159,7 +159,7 @@ useEffect(() => {
             language: langName,
             text: finalTranscript
           }]);
-          addHistoryItem('voice-to-text', finalTranscript, `Voice Recording (Demo) • ${finalTranscript.split(' ').filter(Boolean).length} words`);
+          addHistoryItem('voice-to-text', finalTranscript, `Voice Recording (Demo) • ${finalTranscript.split(' ').filter(Boolean).length} words`, finalTranscript);
         }
         setLiveTranscript('');
         liveTranscriptRef.current = '';
@@ -226,12 +226,11 @@ useEffect(() => {
               timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
               day: new Date().toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' }),
               language: langName,
-              text: finalTranscript
+              text: resultText
             }]);
             addHistoryItem(
-              'voice-to-text',
-              finalTranscript,
-              `Live Recording (${result.finalProvider.toUpperCase()}) • ${finalTranscript.split(' ').filter(Boolean).length} words`
+              'voice-to-text', resultText,
+              `Voice Recording (${backendType}) • ${resultText.split(' ').filter(Boolean).length} words`, resultText
             );
           } else {
             setRecordingState('error');
