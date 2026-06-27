@@ -76,7 +76,33 @@ def get_global_config(db: Session = Depends(get_db)):
                 "title": p.title,
                 "subtitle": p.subtitle
             } for p in pages
-        ]
+        ],
+        "admin_landing": {
+            "title": "Platform Controller",
+            "description": "Welcome to the centralized management console. Control infrastructure, oversee tenants, and monitor global usage in real-time.",
+            "features": [
+                {
+                    "icon": "Server",
+                    "title": "Infrastructure Control",
+                    "description": "Manage global AI model deployments, API keys, and system resources from a central hub."
+                },
+                {
+                    "icon": "Users",
+                    "title": "Tenant Management",
+                    "description": "Oversee all platform workspaces, monitor usage, and configure tenant-specific limits."
+                },
+                {
+                    "icon": "CreditCard",
+                    "title": "Billing & Plans",
+                    "description": "Configure subscription tiers, handle payments, and review global platform revenue."
+                },
+                {
+                    "icon": "Activity",
+                    "title": "Audit & Compliance",
+                    "description": "Track system health, review detailed audit logs, and enforce security policies."
+                }
+            ]
+        }
     }
 
 # UPDATE BRANDING (Super Admin Only)

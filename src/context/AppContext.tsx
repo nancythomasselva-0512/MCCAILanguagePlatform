@@ -3,7 +3,7 @@ import { storage } from "../utils/storage";
 
 
 export type ActiveTabType = 'dashboard' | 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription' | 'super-admin-dashboard' | 'tenant-dashboard' | 'tenant-billing' | 'sa-overview' | 'sa-tenants' | 'sa-users' | 'sa-plans' | 'sa-providers' | 'sa-usage' | 'sa-billing' | 'sa-ai-logs' | 'sa-audit-logs' | 'sa-health' | 'sa-builder' | 'sa-settings-general' | 'sa-settings-tenant' | 'sa-settings-smtp' | 'sa-settings-auth' | 'sa-settings-security' | 'sa-settings-payments' | 'sa-settings-domains' | 'sa-settings-apikeys' | 'sa-settings-backup' | 'sa-settings-notifications' | 'sa-settings-activity';
-export type ViewModeType = 'landing' | 'workspace';
+export type ViewModeType = 'landing' | 'workspace' | 'admin-login' | 'controller-landing';
 
 export interface HistoryItem {
   id: string;
@@ -163,7 +163,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeTab, setActiveTabState] = useState<ActiveTabType>(() => {
     const savedTab = storage.getItem('mcc-ai-active-tab') as ActiveTabType;
     const path = window.location.pathname;
-    
+
     // Strict Routing Validation
     const isSA = savedTab?.startsWith('sa-') || savedTab === 'super-admin-dashboard';
     if (path === '/dashboard' && isSA) {
@@ -172,7 +172,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (path === '/controller' && savedTab && !isSA) {
       return 'sa-overview';
     }
-    
+
     if (savedTab) return savedTab;
 
     const savedUser = storage.getItem('mcc-ai-user');
@@ -195,7 +195,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [viewMode, setViewMode] = useState<ViewModeType>(() => {
-    return storage.getItem('mcc-ai-token') ? 'workspace' : 'landing';
+    const path = window.location.pathname;
+    if (path === '/') return 'landing';
+    if (path === '/controller') {
+      return 'controller-landing';
+    }
+    if (path === '/dashboard') {
+      return storage.getItem('mcc-ai-token') ? 'workspace' : 'landing';
+    }
+    return 'landing';
   });
   const [history, setHistory] = useState<HistoryItem[]>(() => {
     const saved = storage.getItem('mcc-ai-history');

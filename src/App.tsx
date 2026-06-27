@@ -4,6 +4,8 @@ import { Header } from './components/common/Header';
 import { AuthModal } from './components/common/AuthModal';
 import { LandingPage } from './components/landing/LandingPage';
 import { WorkspacePage } from './components/workspace/WorkspacePage';
+import { AdminLoginPage } from './components/admin/AdminLoginPage';
+import { ControllerLandingPage } from './components/admin/ControllerLandingPage';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function App() {
@@ -21,18 +23,10 @@ function App() {
     if (!hasInitialized.current) {
       hasInitialized.current = true;
       const isSuperAdmin = user?.role === 'super_admin';
-      const isNormalUser = user && user.role !== 'super_admin';
-      
+
       if (window.location.pathname === '/controller') {
-        if (!isSuperAdmin) {
-          logout(); // Clear any non-admin session
-          setAuthModalMode('admin-login');
-          setIsAuthModalOpen(true);
-          setViewMode('landing');
-        } else {
-          // Already logged in as super admin
-          setViewMode('workspace');
-        }
+        // Always show the Controller Landing Page first
+        setViewMode('controller-landing');
       } else if (window.location.pathname === '/dashboard') {
         if (!user) { // ALLOW super_admin to access /dashboard too
           logout(); // Clear any invalid session
@@ -43,8 +37,11 @@ function App() {
           // Already logged in
           setViewMode('workspace');
         }
+      } else if (window.location.pathname === '/') {
+        // ALWAYS MUST BE LANDING PAGE
+        setViewMode('landing');
       } else {
-        // Any other path (like /) - MUST ALWAYS BE LANDING PAGE
+        // Any other path - fallback to landing
         setViewMode('landing');
       }
     }
@@ -54,28 +51,29 @@ function App() {
   useEffect(() => {
     if (viewMode === 'workspace') {
       if (!user) return;
-      
+
       const path = window.location.pathname;
       const isSA = activeTab?.startsWith('sa-') || activeTab === 'super-admin-dashboard';
-      
+
       if (user.role === 'super_admin') {
-        // Super admin can be on /controller or /dashboard. Default to /controller if somewhere else.
-        if (path !== '/controller' && path !== '/dashboard') {
-          window.history.replaceState({}, '', '/controller');
-          if (!isSA) setActiveTab('sa-overview');
-        } else if (path === '/dashboard' && isSA) {
+        // Super admin handling
+        if (path === '/dashboard' && isSA) {
           setActiveTab('text-to-speech');
         } else if (path === '/controller' && !isSA) {
           setActiveTab('sa-overview');
         }
       } else {
-        // Normal user must be on /dashboard
-        if (path !== '/dashboard') {
+        // Normal user must not be on /controller
+        if (path === '/controller') {
           window.history.replaceState({}, '', '/dashboard');
         }
         if (isSA) {
           setActiveTab('text-to-speech');
         }
+      }
+    } else if (viewMode === 'admin-login' || viewMode === 'controller-landing') {
+      if (window.location.pathname !== '/controller') {
+        window.history.replaceState({}, '', '/controller');
       }
     } else {
       // Landing mode
@@ -100,6 +98,28 @@ function App() {
             className="flex-1"
           >
             <LandingPage />
+          </motion.div>
+        ) : viewMode === 'controller-landing' ? (
+          <motion.div
+            key="controller-landing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1"
+          >
+            <ControllerLandingPage />
+          </motion.div>
+        ) : viewMode === 'admin-login' ? (
+          <motion.div
+            key="admin-login"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1"
+          >
+            <AdminLoginPage />
           </motion.div>
         ) : (
           <motion.div

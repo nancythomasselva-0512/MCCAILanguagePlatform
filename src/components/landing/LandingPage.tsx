@@ -251,9 +251,9 @@ export const LandingPage: React.FC = () => {
 
               {/* Title Word Reveal Sequence */}
               <h1 className="font-display text-4xl font-extrabold leading-[1.08] tracking-tight xs:text-5xl sm:text-6xl md:text-7xl text-slate-900 dark:text-white mb-6">
-                {globalConfig?.branding?.platform_name || 'MCC AI'} -{' '}
+                {globalConfig?.branding?.platform_name || 'Fluentia'} -{' '}
                 <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 dark:from-teal-400 dark:via-cyan-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
-                  {globalConfig?.branding?.tagline || 'Language AI Platform'}
+                  {globalConfig?.branding?.tagline || 'AI Language Platform'}
                 </span>
               </h1>
 
@@ -558,7 +558,7 @@ export const LandingPage: React.FC = () => {
 
 
 
-      {/* ── WHY MCC AI (STRIPE-STYLE GRID) ──────────────────────────────────── */}
+      {/* ── WHY FLUENTIA (STRIPE-STYLE GRID) ──────────────────────────────────── */}
       <section id="features" className="py-10 px-4 relative">
         <div className="mx-auto max-w-6xl">
           
@@ -800,7 +800,7 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2">Free Trial</h3>
                 <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mb-6">
-                  Perfect for experiencing the complete MCC AI platform workstation locally on your device.
+                  Perfect for experiencing the complete Fluentia platform workstation locally on your device.
                 </p>
                 <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-4" />
                 <ul className="space-y-4">
@@ -920,7 +920,7 @@ export const LandingPage: React.FC = () => {
           <Sparkles size={32} className="mx-auto mb-5 text-cyan-600 dark:text-cyan-400 animate-pulse" />
           
           <h2 className="font-display text-2xl font-black text-slate-900 dark:text-white sm:text-4xl md:text-5xl leading-tight">
-            Launch Your {globalConfig?.branding?.platform_name || 'MCC AI'} Workspace
+            Launch Your {globalConfig?.branding?.platform_name || 'Fluentia'} Workspace
           </h2>
           
           <p className="mx-auto mt-3.5 max-w-lg text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">

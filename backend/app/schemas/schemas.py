@@ -2,12 +2,14 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
 
+import uuid
+
 # Token Schemas
 class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
-    user_id: str
+    user_id: uuid.UUID
     role: str
     tenant_slug: Optional[str] = None
     name: str
@@ -38,7 +40,7 @@ class SubscriptionPlanUpdate(BaseModel):
     active: Optional[bool] = None
 
 class SubscriptionPlanResponse(SubscriptionPlanBase):
-    id: str
+    id: uuid.UUID
     created_at: datetime
 
     class Config:
@@ -59,9 +61,9 @@ class TenantUpdate(BaseModel):
     plan_id: Optional[str] = None
 
 class TenantResponse(TenantBase):
-    id: str
+    id: uuid.UUID
     status: str
-    plan_id: Optional[str]
+    plan_id: Optional[uuid.UUID] = None
     created_at: datetime
     plan: Optional[SubscriptionPlanResponse] = None
 
@@ -91,11 +93,11 @@ class UserUpdate(BaseModel):
     status: Optional[str] = None
 
 class UserResponse(UserBase):
-    id: str
-    tenant_id: Optional[str]
+    id: uuid.UUID
+    tenant_id: Optional[uuid.UUID] = None
     role: str
     status: str
-    last_login: Optional[datetime]
+    last_login: Optional[datetime] = None
     created_at: datetime
 
     class Config:
@@ -135,8 +137,8 @@ class ProviderConfigCreate(ProviderConfigBase):
     api_key: Optional[str] = None
 
 class ProviderConfigResponse(ProviderConfigBase):
-    id: str
-    tenant_id: Optional[str]
+    id: uuid.UUID
+    tenant_id: Optional[uuid.UUID]
     credentials_encrypted: Optional[str] = None
     updated_at: datetime
 
@@ -145,7 +147,7 @@ class ProviderConfigResponse(ProviderConfigBase):
 
 # Business data history log response
 class TranslationResponse(BaseModel):
-    id: str
+    id: uuid.UUID
     source_text: str
     translated_text: str
     source_lang: str
@@ -157,7 +159,7 @@ class TranslationResponse(BaseModel):
         from_attributes = True
 
 class TranscriptionResponse(BaseModel):
-    id: str
+    id: uuid.UUID
     file_name: str
     file_size: int
     duration_seconds: float
@@ -169,7 +171,7 @@ class TranscriptionResponse(BaseModel):
         from_attributes = True
 
 class TtsResponse(BaseModel):
-    id: str
+    id: uuid.UUID
     text: str
     voice_name: str
     characters_count: int
@@ -181,8 +183,8 @@ class TtsResponse(BaseModel):
         from_attributes = True
 
 class AuditLogResponse(BaseModel):
-    id: str
-    user_id: Optional[str]
+    id: uuid.UUID
+    user_id: Optional[uuid.UUID]
     action: str
     details: Optional[str]
     ip_address: Optional[str]
@@ -202,7 +204,7 @@ class FeatureProviderMappingCreate(FeatureProviderMappingBase):
     pass
 
 class FeatureProviderMappingResponse(FeatureProviderMappingBase):
-    id: str
+    id: uuid.UUID
     created_at: datetime
     updated_at: datetime
 

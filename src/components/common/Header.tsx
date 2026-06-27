@@ -107,7 +107,7 @@ export const Header: React.FC = () => {
     : [
       { label: 'AI Tools', id: 'ai-language-tools' },
       { label: 'How It Works', id: 'workflow' },
-      { label: 'Why MCC AI', id: 'features' },
+      { label: 'Why Fluentia', id: 'features' },
       { label: 'Languages', id: 'languages' },
       { label: 'Testimonials', id: 'testimonials' },
     ];
@@ -137,11 +137,11 @@ export const Header: React.FC = () => {
                 className="h-16 w-16 min-w-[64px] md:h-20 md:w-20 md:min-w-[80px] object-contain transform scale-125 origin-center -ml-2 -mr-4 hover:scale-[1.35] transition-transform duration-200 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180"
               />
               <div className="flex flex-col justify-center select-none">
-                <span className="font-display text-base md:text-lg font-black tracking-tight leading-none text-slate-900 dark:text-white flex items-center gap-1">
+                <span className="font-display text-xl md:text-2xl font-black tracking-tight leading-none text-emerald-900 dark:text-emerald-50 flex items-center gap-1">
                   {globalConfig?.branding?.platform_name || "Fluentia"}
                 </span>
-                <span className="text-[7px] md:text-[9px] font-bold tracking-[0.18em] uppercase mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                  {globalConfig?.branding?.tagline || "AI Workspace"}
+                <span className="text-[8px] md:text-[10px] font-bold tracking-[0.2em] uppercase mt-1 text-teal-600 dark:text-teal-400">
+                  {globalConfig?.branding?.tagline || "AI Language Platform"}
                 </span>
               </div>
             </div>

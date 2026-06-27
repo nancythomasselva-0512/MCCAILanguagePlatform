@@ -150,6 +150,21 @@ def clone_subscription_plan(plan_id: str, db: Session = Depends(get_db)):
     db.refresh(cloned)
     return cloned
 
+@router.delete("/plans/{plan_id}")
+def delete_plan(plan_id: str, db: Session = Depends(get_db)):
+    db_plan = db.query(SubscriptionPlan).filter(SubscriptionPlan.id == plan_id).first()
+    if not db_plan:
+        raise HTTPException(status_code=404, detail="Plan not found.")
+    
+    # Check if there are any active tenants on this plan
+    active_tenants = db.query(Tenant).filter(Tenant.plan_id == plan_id).count()
+    if active_tenants > 0:
+        raise HTTPException(status_code=400, detail="Cannot delete plan with active workspaces.")
+
+    db.delete(db_plan)
+    db.commit()
+    return {"status": "ok", "message": "Plan deleted successfully"}
+
 @router.patch("/plans/{plan_id}/toggle-active")
 def toggle_plan_active(plan_id: str, db: Session = Depends(get_db)):
     db_plan = db.query(SubscriptionPlan).filter(SubscriptionPlan.id == plan_id).first()

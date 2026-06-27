@@ -487,7 +487,7 @@ export const WorkspacePage: React.FC = () => {
               <div className="flex items-center justify-between px-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               <div className="flex items-center gap-0">
                   <img src={"/logo.png?v=2"} alt="Logo" className="h-14 w-14 min-w-[56px] object-contain transform scale-125 origin-center -ml-2 -mr-3 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180" />
-                  <span className="text-sm font-bold text-[var(--text-primary)]">{globalConfig?.branding?.platform_name || "MCC AI"}</span>
+                  <span className="text-sm font-bold text-[var(--text-primary)]">{globalConfig?.branding?.platform_name || "Fluentia"}</span>
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1.5 hover:bg-white/40" style={{ color: '#ffffff' }}>
                   <X size={18} />
@@ -562,7 +562,7 @@ export const WorkspacePage: React.FC = () => {
                     Fluentia
                   </span>
                   <span className="text-[11.5px] text-[var(--text-secondary)] font-bold tracking-[0.08em] truncate mt-1 opacity-80 uppercase">
-                    AI Voice & Text Studio
+                    AI Language Platform
                   </span>
                 </div>
               )}

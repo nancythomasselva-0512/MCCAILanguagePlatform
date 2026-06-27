@@ -11,20 +11,16 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 Hours
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     
-    # SQL Server Configuration
-    DB_SERVER: str = "JESUS-CHRIST\\SQLEXPRESS"
+    # PostgreSQL Configuration
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str = "postgres123"
     DB_NAME: str = "mcc_saas"
-    DB_DRIVER: str = "ODBC Driver 18 for SQL Server"
 
     @property
     def DATABASE_URL(self) -> str:
-        driver = self.DB_DRIVER.replace(" ", "+")
-        return (
-            f"mssql+pyodbc://{self.DB_SERVER}/{self.DB_NAME}"
-            f"?driver={driver}"
-            f"&TrustServerCertificate=yes"
-            f"&Trusted_Connection=yes"
-        )
+        return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     # Redis for rate limiting / session storage
     REDIS_HOST: str = "localhost"

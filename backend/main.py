@@ -1,7 +1,10 @@
 import os
 import tempfile
 import logging
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
+import traceback
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import ResponseValidationError
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -189,6 +192,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(ResponseValidationError)
+async def validation_exception_handler(request: Request, exc: ResponseValidationError):
+    import traceback
+    traceback.print_exc()
+    print("VALIDATION ERRORS:", exc.errors())
+    return JSONResponse(status_code=500, content={"message": str(exc), "errors": exc.errors()})
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    traceback.print_exc()
+    return JSONResponse(status_code=500, content={"message": str(exc), "traceback": traceback.format_exc()})
 
 # Bind new routers
 app.include_router(auth.router, prefix="/api")

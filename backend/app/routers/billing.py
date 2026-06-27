@@ -912,7 +912,7 @@ def get_admin_billing_overview(db: Session = Depends(get_db)):
         plan_name = invoice.plan.name if (invoice and invoice.plan) else "Professional"
         pay_list.append({
             "id": p.id,
-            "transaction_id": p.transaction_id or f"TXN-{p.id[:8]}",
+            "transaction_id": p.transaction_id or f"TXN-{str(p.id)[:8]}",
             "invoice_number": invoice.invoice_number if invoice else "N/A",
             "tenant_name": tenant.tenant_name if tenant else "Unknown Tenant",
             "workspace": tenant.slug if tenant else "unknown",
