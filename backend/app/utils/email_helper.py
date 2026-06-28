@@ -6,11 +6,11 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 from sqlalchemy.orm import Session
-from app.models.models import AuditLog, Tenant, User, Payment, SMTPSettings
+from app.models.models import AuditLog, Tenant, User, Payment, SMTPSettings, EmailTemplate
 
 logger = logging.getLogger("mcc-ai-saas-emails")
 
-def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str, attachment_path: str = None, recipient_email: str = None):
+def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str, attachment_path: str = None, recipient_email: str = None, from_email: str = None, reply_to: str = None, is_html: bool = False):
     """
     Sends a real email using SMTP configuration if environment variables are set,
     otherwise logs the action and appends to system Audit Logs.
@@ -61,7 +61,9 @@ def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str, 
         smtp_password = settings.SMTP_PASSWORD
         sender_email = settings.SMTP_SENDER or smtp_user or "noreply@mcc-ai.com"
 
-
+    # Override sender_email if from_email is provided
+    if from_email:
+        sender_email = from_email
     if not smtp_host:
         logger.info("SMTP_HOST not configured. Email will only be simulated in logs.")
         return
@@ -72,9 +74,15 @@ def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str, 
         msg['From'] = sender_email
         msg['To'] = recipient_email
         msg['Subject'] = subject
+        
+        if reply_to:
+            msg['Reply-To'] = reply_to
 
         # Attach text body
-        msg.attach(MIMEText(body_text, 'plain'))
+        if is_html:
+            msg.attach(MIMEText(body_text, 'html'))
+        else:
+            msg.attach(MIMEText(body_text, 'plain'))
 
         # Attach PDF if exists
         if attachment_path and os.path.exists(attachment_path):
@@ -101,13 +109,18 @@ def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str, 
         logger.error(f"Failed to send SMTP email via {smtp_host}:{smtp_port}: {smtp_err}")
 
 def send_welcome_subscription_email(db: Session, tenant: Tenant, plan_name: str):
-    subject = f"Welcome to MCC {plan_name} Plan!"
-    body = f"Hello {tenant.tenant_name},\n\nThank you for subscribing to the {plan_name} plan on Fluentia. Your workspace has been activated with new resource limits.\n\nEnjoy the platform!\nThe Fluentia Team"
-    log_email_action(db, tenant.id, subject, body)
+    t = db.query(EmailTemplate).filter(EmailTemplate.template_type == "welcome", EmailTemplate.tenant_id == None).first()
+    if t and t.is_enabled:
+        subject = t.subject.replace("{{tenant_name}}", tenant.tenant_name).replace("{{plan_name}}", plan_name)
+        body = t.body_html.replace("{{tenant_name}}", tenant.tenant_name).replace("{{plan_name}}", plan_name)
+        log_email_action(db, tenant.id, subject, body, from_email=t.from_email, reply_to=t.reply_to, is_html=True)
+    else:
+        subject = f"Welcome to MCC {plan_name} Plan!"
+        body = f"Hello {tenant.tenant_name},\n\nThank you for subscribing to the {plan_name} plan on Fluentia. Your workspace has been activated with new resource limits.\n\nEnjoy the platform!\nThe Fluentia Team"
+        log_email_action(db, tenant.id, subject, body)
 
 def send_invoice_generated_email(db: Session, tenant: Tenant, invoice_number: str, amount: float):
-    subject = f"New Invoice Generated - {invoice_number}"
-    body = f"Hello {tenant.tenant_name},\n\nA new invoice {invoice_number} has been generated for your workspace subscription. Total amount: ${amount:.2f}.\n\nPlease review it in your Billing settings.\n\nThanks,\nMCC AI Billing"
+    t = db.query(EmailTemplate).filter(EmailTemplate.template_type == "invoice_generated", EmailTemplate.tenant_id == None).first()
     
     # Locate invoice PDF to attach
     attachment_path = None
@@ -119,7 +132,14 @@ def send_invoice_generated_email(db: Session, tenant: Tenant, invoice_number: st
     except Exception as e:
         logger.error(f"Could not locate invoice PDF to attach: {e}")
 
-    log_email_action(db, tenant.id, subject, body, attachment_path)
+    if t and t.is_enabled:
+        subject = t.subject.replace("{{tenant_name}}", tenant.tenant_name).replace("{{customer_name}}", tenant.tenant_name).replace("{{invoice_number}}", invoice_number).replace("{{invoice_total}}", str(amount))
+        body = t.body_html.replace("{{tenant_name}}", tenant.tenant_name).replace("{{customer_name}}", tenant.tenant_name).replace("{{invoice_number}}", invoice_number).replace("{{invoice_total}}", str(amount))
+        log_email_action(db, tenant.id, subject, body, attachment_path=attachment_path, from_email=t.from_email, reply_to=t.reply_to, is_html=True)
+    else:
+        subject = f"New Invoice Generated - {invoice_number}"
+        body = f"Hello {tenant.tenant_name},\n\nA new invoice {invoice_number} has been generated for your workspace subscription. Total amount: ${amount:.2f}.\n\nPlease review it in your Billing settings.\n\nThanks,\nMCC AI Billing"
+        log_email_action(db, tenant.id, subject, body, attachment_path)
 
 def send_user_subscription_activated_email(
     db: Session,
@@ -202,9 +222,8 @@ def send_admin_purchase_notification_email(
     log_email_action(db, tenant.id, subject, body, recipient_email=super_admin.email)
 
 def send_payment_success_email(db: Session, tenant: Tenant, invoice_number: str, amount: float, transaction_id: str):
-    subject = f"Payment Successful! Invoice {invoice_number}"
-    body = f"Hello {tenant.tenant_name},\n\nYour payment of ${amount:.2f} for Invoice {invoice_number} was successfully processed.\nTransaction ID: {transaction_id}.\n\nYour invoice is now marked as PAID and a PDF has been generated for your records.\n\nThank you for your business!\nMCC AI Billing"
-    
+    t = db.query(EmailTemplate).filter(EmailTemplate.template_type == "payment_success", EmailTemplate.tenant_id == None).first()
+
     # Locate the receipt PDF
     attachment_path = None
     try:
@@ -217,7 +236,21 @@ def send_payment_success_email(db: Session, tenant: Tenant, invoice_number: str,
     except Exception as e:
         logger.error(f"Could not locate receipt PDF to attach: {e}")
 
-    log_email_action(db, tenant.id, subject, body, attachment_path)
+    plan_name = tenant.plan.name if tenant.plan else "Pro"
+    expiry_date = "N/A"
+    if tenant.usage and len(tenant.usage) > 0 and tenant.usage[0].billing_period_end:
+        expiry_date = tenant.usage[0].billing_period_end.strftime("%Y-%m-%d")
+    
+    payment_method = payment.payment_method.title() if payment and payment.payment_method else "Credit Card"
+
+    if t and t.is_enabled:
+        subject = t.subject.replace("{{tenant_name}}", tenant.tenant_name).replace("{{amount}}", str(amount)).replace("{{invoice_number}}", invoice_number).replace("{{transaction_id}}", transaction_id).replace("{{plan_name}}", plan_name).replace("{{expiry_date}}", expiry_date).replace("{{payment_method}}", payment_method)
+        body = t.body_html.replace("{{tenant_name}}", tenant.tenant_name).replace("{{amount}}", str(amount)).replace("{{invoice_number}}", invoice_number).replace("{{transaction_id}}", transaction_id).replace("{{plan_name}}", plan_name).replace("{{expiry_date}}", expiry_date).replace("{{payment_method}}", payment_method)
+        log_email_action(db, tenant.id, subject, body, attachment_path=attachment_path, from_email=t.from_email, reply_to=t.reply_to, is_html=True)
+    else:
+        subject = f"Payment Successful! Invoice {invoice_number}"
+        body = f"Hello {tenant.tenant_name},\n\nYour payment of ${amount:.2f} for Invoice {invoice_number} via {payment_method} was successfully processed.\nTransaction ID: {transaction_id}.\n\nYour {plan_name} subscription is now active and expires on {expiry_date}.\nYour invoice is now marked as PAID and a PDF has been generated for your records.\n\nThank you for your business!\nMCC AI Billing"
+        log_email_action(db, tenant.id, subject, body, attachment_path)
 
 def send_payment_failure_email(db: Session, tenant: Tenant, invoice_number: str, amount: float, reason: str):
     subject = f"Payment Failed: Invoice {invoice_number}"

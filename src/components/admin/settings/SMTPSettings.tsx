@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Mail, Save, Send, History } from "lucide-react";
+import { apiRequest } from "../../../utils/api";
+import { EmailTemplateModal } from "./EmailTemplateModal";
 
 export const SMTPSettings: React.FC = () => {
   const [config, setConfig] = useState({
@@ -12,8 +14,26 @@ export const SMTPSettings: React.FC = () => {
   });
 
   const [activeTab, setActiveTab] = useState<'config' | 'templates' | 'logs'>('config');
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [editingTemplate, setEditingTemplate] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (activeTab === 'templates') {
+      fetchTemplates();
+    }
+  }, [activeTab]);
+
+  const fetchTemplates = async () => {
+    try {
+      const res = await apiRequest("/super-admin/email-templates");
+      setTemplates(res || []);
+    } catch (err) {
+      console.error("Failed to fetch templates:", err);
+    }
+  };
 
   return (
+    <>
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -75,17 +95,17 @@ export const SMTPSettings: React.FC = () => {
         <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
           <h3 className="text-lg font-black mb-4">Notification Rules & Templates</h3>
           <div className="space-y-4">
-            {['Welcome Email', 'User Invitation', 'OTP Verification', 'Password Reset', 'Invoice Generated', 'Subscription Renewal'].map((tpl, i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-white/5">
+            {templates.map((tpl) => (
+              <div key={tpl.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-white/5">
                 <div>
-                  <h4 className="font-bold text-sm text-slate-900 dark:text-white">{tpl}</h4>
-                  <p className="text-xs text-slate-500 mt-1">Sent automatically on specific triggers</p>
+                  <h4 className="font-bold text-sm text-slate-900 dark:text-white capitalize">{tpl.template_type.replace('_', ' ')}</h4>
+                  <p className="text-xs text-slate-500 mt-1">Subject: {tpl.subject}</p>
                 </div>
                 <div className="flex gap-3 items-center">
-                  <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-teal-500 transition-colors cursor-pointer">
-                    <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6" />
+                  <button className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-default ${tpl.is_enabled ? 'bg-teal-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${tpl.is_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
-                  <button className="text-xs font-bold text-indigo-500 hover:text-indigo-600 underline">Edit Template</button>
+                  <button onClick={() => setEditingTemplate(tpl)} className="text-xs font-bold text-indigo-500 hover:text-indigo-600 underline">Edit Template</button>
                 </div>
               </div>
             ))}
@@ -118,5 +138,17 @@ export const SMTPSettings: React.FC = () => {
       )}
 
     </div>
+    
+    {editingTemplate && (
+      <EmailTemplateModal 
+        template={editingTemplate} 
+        onClose={() => setEditingTemplate(null)} 
+        onSaved={() => {
+          setEditingTemplate(null);
+          fetchTemplates();
+        }} 
+      />
+    )}
+    </>
   );
 };

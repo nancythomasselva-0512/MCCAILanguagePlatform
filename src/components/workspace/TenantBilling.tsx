@@ -173,6 +173,20 @@ export const TenantBilling: React.FC = () => {
     );
   }
 
+  if (!data) {
+    return (
+      <div className="flex h-96 flex-col items-center justify-center space-y-4 animate-fadeIn">
+        <div className="h-16 w-16 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center">
+          <AlertTriangle size={32} />
+        </div>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Workspace Context Missing</h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 text-center max-w-md">
+          You are currently logged in as a Super Admin or viewing this page without an active Workspace context. Please log in with a Tenant account or select a workspace to manage billing and subscriptions.
+        </p>
+      </div>
+    );
+  }
+
   const activePlan = data?.current_plan;
   const usage = data?.usage;
   const invoices = data?.invoices || [];

@@ -282,11 +282,15 @@ class DashboardWidget(Base):
 class EmailTemplate(Base):
     __tablename__ = "email_templates"
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
+    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True) # Null for global defaults
     template_type = Column(String(50), nullable=False) # welcome, reset_password, subscription, invoice, notification
     subject = Column(String(255), nullable=False)
     body_html = Column(Text, nullable=False)
     body_text = Column(Text, nullable=True)
+    from_email = Column(String(255), nullable=True)
+    reply_to = Column(String(255), nullable=True)
+    is_enabled = Column(Boolean, default=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 class CustomForm(Base):
     __tablename__ = "custom_forms"

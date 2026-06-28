@@ -1,4 +1,7 @@
 import os
+import hmac
+import hashlib
+import json
 import datetime
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Body, Request
@@ -160,6 +163,9 @@ def get_tenant_billing_overview(
     if not tenant:
         if user.tenant_id:
             tenant = db.query(Tenant).filter(Tenant.id == user.tenant_id).first()
+        elif user.role == "super_admin":
+            tenant = db.query(Tenant).filter(Tenant.status == "active").first()
+            
         if not tenant:
             raise HTTPException(status_code=400, detail="Tenant context required.")
 
@@ -288,6 +294,10 @@ def create_payment_session(
     if not tenant:
         if user.tenant_id:
             tenant = db.query(Tenant).filter(Tenant.id == user.tenant_id).first()
+        elif user.role == "super_admin":
+            # Fallback for super admin testing the checkout flow directly
+            tenant = db.query(Tenant).filter(Tenant.status == "active").first()
+            
         if not tenant:
             raise HTTPException(status_code=400, detail="Tenant context required. Please re-login and try again.")
         
@@ -393,6 +403,223 @@ def create_payment_session(
         "default_gateway": settings.default_gateway
     }
 
+
+def _process_successful_payment(
+    db: Session,
+    payment: Payment,
+    invoice: Invoice,
+    tenant: Tenant,
+    plan: SubscriptionPlan,
+    settings: BillingSettings,
+    gateway: str,
+    transaction_id: str,
+    gateway_response: str,
+    user: Optional[User] = None
+):
+    payment.status = "success"
+    invoice.status = "paid"
+    invoice.paid_at = datetime.datetime.utcnow()
+    
+    txn = PaymentTransaction(
+        payment_id=payment.id,
+        tenant_id=tenant.id,
+        gateway=gateway,
+        event_type="payment.succeeded",
+        gateway_response=gateway_response,
+        status="success"
+    )
+    db.add(txn)
+    
+    inv_history = InvoiceHistory(
+        tenant_id=tenant.id,
+        invoice_id=invoice.id,
+        invoice_number=invoice.invoice_number,
+        action="status_change",
+        old_status="pending",
+        new_status="paid",
+        amount=invoice.total_amount
+    )
+    db.add(inv_history)
+    
+    old_plan_name = tenant.plan.name if tenant.plan else "Free"
+    tenant.plan_id = plan.id
+    
+    sub = db.query(Subscription).filter(Subscription.tenant_id == tenant.id, Subscription.status == "active").first()
+    cycle_days = 365 if (invoice.billing_period_end - invoice.billing_period_start).days > 45 else 30
+    cycle_str = "yearly" if cycle_days == 365 else "monthly"
+    
+    now = datetime.datetime.utcnow()
+    expire = now + datetime.timedelta(days=cycle_days)
+    
+    if sub:
+        sub.plan_id = plan.id
+        sub.price = plan.price
+        sub.billing_cycle = cycle_str
+        sub.start_date = now
+        sub.end_date = expire
+        sub.current_period_start = now
+        sub.current_period_end = expire
+    else:
+        sub = Subscription(
+            tenant_id=tenant.id,
+            plan_id=plan.id,
+            status="active",
+            price=plan.price,
+            billing_cycle=cycle_str,
+            start_date=now,
+            end_date=expire,
+            current_period_start=now,
+            current_period_end=expire
+        )
+        db.add(sub)
+        
+    usage = db.query(UsageTracking).filter(UsageTracking.tenant_id == tenant.id).first()
+    if not usage:
+        usage = UsageTracking(tenant_id=tenant.id)
+        db.add(usage)
+    
+    usage.audio_minutes_used = 0.0
+    usage.translation_chars_used = 0
+    usage.tts_chars_used = 0
+    usage.api_calls_used = 0
+    usage.billing_period_start = now
+    usage.billing_period_end = expire
+    
+    history = SubscriptionHistory(
+        tenant_id=tenant.id,
+        plan_id=plan.id,
+        action="upgrade" if old_plan_name != plan.name else "renew",
+        price=invoice.amount,
+        start_date=now,
+        end_date=expire
+    )
+    db.add(history)
+    
+    try:
+        from app.utils.pdf_generator import generate_invoice_pdf, generate_receipt_pdf
+        pdf_file = generate_invoice_pdf(invoice, tenant.tenant_name, plan.name, settings)
+        invoice.pdf_path = pdf_file
+    except Exception as pdf_err:
+        logger.error(f"Failed to generate invoice PDF: {pdf_err}")
+        
+    try:
+        from app.utils.pdf_generator import generate_receipt_pdf
+        generate_receipt_pdf(payment, tenant.tenant_name, plan.name, settings)
+    except Exception as receipt_err:
+        logger.error(f"Failed to generate receipt PDF: {receipt_err}")
+        
+    db.commit()
+    
+    start_date_str = sub.start_date.strftime("%Y-%m-%d")
+    expiry_date_str = sub.end_date.strftime("%Y-%m-%d")
+    purchase_date_str = payment.created_at.strftime("%Y-%m-%d %H:%M:%S")
+    
+    target_user = user
+    if not target_user:
+        target_user = db.query(User).filter(User.tenant_id == tenant.id).first()
+    
+    try:
+        if target_user:
+            send_user_subscription_activated_email(
+                db=db, tenant=tenant, user=target_user, plan_name=plan.name,
+                amount_paid=payment.amount, currency=payment.currency,
+                payment_id=payment.transaction_id or payment.id,
+                invoice_number=invoice.invoice_number,
+                start_date=start_date_str, expiry_date=expiry_date_str,
+                invoice_id=invoice.id
+            )
+    except Exception as e:
+        logger.error(f"Failed to send subscription activated email: {e}")
+        
+    try:
+        if target_user:
+            send_admin_purchase_notification_email(
+                db=db, user=target_user, tenant=tenant, plan_name=plan.name,
+                amount_paid=payment.amount, currency=payment.currency,
+                payment_id=payment.transaction_id or payment.id,
+                purchase_date=purchase_date_str, expiry_date=expiry_date_str
+            )
+    except Exception as e:
+        logger.error(f"Failed to send admin purchase notification email: {e}")
+        
+    try:
+        send_payment_success_email(db, tenant, invoice.invoice_number, payment.amount, payment.transaction_id)
+    except Exception as e:
+        logger.error(f"Failed to send payment success email: {e}")
+    try:
+        if old_plan_name != plan.name:
+            send_upgrade_confirmation_email(db, tenant, old_plan_name, plan.name)
+        else:
+            send_renewal_confirmation_email(db, tenant, plan.name)
+    except Exception as e:
+        logger.error(f"Failed to send upgrade/renewal email: {e}")
+        
+    log = AuditLog(
+        tenant_id=tenant.id,
+        user_id=target_user.id if target_user else None,
+        action="subscription_activated",
+        details=f"Plan {plan.name} activated. Invoice {invoice.invoice_number} paid via {gateway}."
+    )
+    db.add(log)
+    db.commit()
+    
+    return {"status": "success", "invoice_number": invoice.invoice_number, "message": "Payment captured. Plan activated successfully."}
+
+
+def _process_failed_payment(
+    db: Session,
+    payment: Payment,
+    invoice: Invoice,
+    tenant: Tenant,
+    gateway: str,
+    gateway_response: str,
+    error_message: str,
+    user: Optional[User] = None
+):
+    payment.status = "failed"
+    invoice.status = "failed"
+    
+    txn = PaymentTransaction(
+        payment_id=payment.id,
+        tenant_id=tenant.id,
+        gateway=gateway,
+        event_type="payment.failed",
+        gateway_response=gateway_response,
+        status="failed",
+        error_message=error_message
+    )
+    db.add(txn)
+    
+    inv_history = InvoiceHistory(
+        tenant_id=tenant.id,
+        invoice_id=invoice.id,
+        invoice_number=invoice.invoice_number,
+        action="status_change",
+        old_status="pending",
+        new_status="failed",
+        amount=invoice.total_amount
+    )
+    db.add(inv_history)
+    db.commit()
+    
+    send_payment_failure_email(db, tenant, invoice.invoice_number, payment.amount, error_message)
+    
+    target_user = user
+    if not target_user:
+        target_user = db.query(User).filter(User.tenant_id == tenant.id).first()
+
+    log = AuditLog(
+        tenant_id=tenant.id,
+        user_id=target_user.id if target_user else None,
+        action="payment_failed",
+        details=f"Payment for invoice {invoice.invoice_number} failed via {gateway}."
+    )
+    db.add(log)
+    db.commit()
+    
+    return {"status": "failed", "invoice_number": invoice.invoice_number, "message": "Payment failed."}
+
+
 @router.post("/payments/complete-session")
 def complete_payment_session(
     req: PaymentCompletionRequest,
@@ -407,6 +634,9 @@ def complete_payment_session(
     if not tenant:
         if user.tenant_id:
             tenant = db.query(Tenant).filter(Tenant.id == user.tenant_id).first()
+        elif user.role == "super_admin":
+            tenant = db.query(Tenant).filter(Tenant.status == "active").first()
+            
         if not tenant:
             raise HTTPException(status_code=400, detail="Tenant context required.")
         
@@ -425,212 +655,19 @@ def complete_payment_session(
     payment.transaction_id = req.transaction_id or f"TXN-{int(datetime.datetime.utcnow().timestamp())}"
     
     if req.status == "success":
-        # 1. Update Payment status
-        payment.status = "success"
-        
-        # 2. Update Invoice status
-        invoice.status = "paid"
-        invoice.paid_at = datetime.datetime.utcnow()
-        
-        # 3. Create transaction log
-        txn = PaymentTransaction(
-            payment_id=payment.id,
-            tenant_id=tenant.id,
-            gateway=req.gateway,
-            event_type="payment.succeeded",
+        return _process_successful_payment(
+            db=db, payment=payment, invoice=invoice, tenant=tenant, plan=plan,
+            settings=settings, gateway=req.gateway, transaction_id=payment.transaction_id,
             gateway_response=req.gateway_response or '{"status": "captured", "mock": true}',
-            status="success"
+            user=user
         )
-        db.add(txn)
-        
-        inv_history = InvoiceHistory(
-            tenant_id=tenant.id,
-            invoice_id=invoice.id,
-            invoice_number=invoice.invoice_number,
-            action="status_change",
-            old_status="pending",
-            new_status="paid",
-            amount=invoice.total_amount
-        )
-        db.add(inv_history)
-        
-        # 4. Activate plan directly on Tenant
-        old_plan_name = tenant.plan.name if tenant.plan else "Free"
-        tenant.plan_id = plan.id
-        
-        # 5. Activate / Update Subscription
-        sub = db.query(Subscription).filter(Subscription.tenant_id == tenant.id, Subscription.status == "active").first()
-        cycle_days = 365 if (invoice.billing_period_end - invoice.billing_period_start).days > 45 else 30
-        cycle_str = "yearly" if cycle_days == 365 else "monthly"
-        
-        now = datetime.datetime.utcnow()
-        expire = now + datetime.timedelta(days=cycle_days)
-        
-        if sub:
-            sub.plan_id = plan.id
-            sub.price = plan.price
-            sub.billing_cycle = cycle_str
-            sub.start_date = now
-            sub.end_date = expire
-            sub.current_period_start = now
-            sub.current_period_end = expire
-        else:
-            sub = Subscription(
-                tenant_id=tenant.id,
-                plan_id=plan.id,
-                status="active",
-                price=plan.price,
-                billing_cycle=cycle_str,
-                start_date=now,
-                end_date=expire,
-                current_period_start=now,
-                current_period_end=expire
-            )
-            db.add(sub)
-            
-        # 6. Reset usage tracking limits instantly
-        usage = db.query(UsageTracking).filter(UsageTracking.tenant_id == tenant.id).first()
-        if not usage:
-            usage = UsageTracking(tenant_id=tenant.id)
-            db.add(usage)
-        
-        usage.audio_minutes_used = 0.0
-        usage.translation_chars_used = 0
-        usage.tts_chars_used = 0
-        usage.api_calls_used = 0
-        usage.billing_period_start = now
-        usage.billing_period_end = expire
-        
-        # 7. Record History
-        history = SubscriptionHistory(
-            tenant_id=tenant.id,
-            plan_id=plan.id,
-            action="upgrade" if old_plan_name != plan.name else "renew",
-            price=invoice.amount,
-            start_date=now,
-            end_date=expire
-        )
-        db.add(history)
-        
-        # 8. Generate Invoice PDF & Receipt PDF
-        try:
-            pdf_file = generate_invoice_pdf(invoice, tenant.tenant_name, plan.name, settings)
-            invoice.pdf_path = pdf_file
-        except Exception as pdf_err:
-            logger.error(f"Failed to generate invoice PDF: {pdf_err}")
-            
-        try:
-            generate_receipt_pdf(payment, tenant.tenant_name, plan.name, settings)
-        except Exception as receipt_err:
-            logger.error(f"Failed to generate receipt PDF: {receipt_err}")
-            
-        db.commit()
-        
-        # 9. Send emails
-        start_date_str = sub.start_date.strftime("%Y-%m-%d")
-        expiry_date_str = sub.end_date.strftime("%Y-%m-%d")
-        purchase_date_str = payment.created_at.strftime("%Y-%m-%d %H:%M:%S")
-        
-        try:
-            # User email notification
-            send_user_subscription_activated_email(
-                db=db,
-                tenant=tenant,
-                user=user,
-                plan_name=plan.name,
-                amount_paid=payment.amount,
-                currency=payment.currency,
-                payment_id=payment.transaction_id or payment.id,
-                invoice_number=invoice.invoice_number,
-                start_date=start_date_str,
-                expiry_date=expiry_date_str,
-                invoice_id=invoice.id
-            )
-        except Exception as e:
-            logger.error(f"Failed to send subscription activated email: {e}")
-            
-        try:
-            # Admin email notification
-            send_admin_purchase_notification_email(
-                db=db,
-                user=user,
-                tenant=tenant,
-                plan_name=plan.name,
-                amount_paid=payment.amount,
-                currency=payment.currency,
-                payment_id=payment.transaction_id or payment.id,
-                purchase_date=purchase_date_str,
-                expiry_date=expiry_date_str
-            )
-        except Exception as e:
-            logger.error(f"Failed to send admin purchase notification email: {e}")
-            
-        try:
-            send_payment_success_email(db, tenant, invoice.invoice_number, payment.amount, payment.transaction_id)
-        except Exception as e:
-            logger.error(f"Failed to send payment success email: {e}")
-        try:
-            if old_plan_name != plan.name:
-                send_upgrade_confirmation_email(db, tenant, old_plan_name, plan.name)
-            else:
-                send_renewal_confirmation_email(db, tenant, plan.name)
-        except Exception as e:
-            logger.error(f"Failed to send upgrade/renewal email: {e}")
-            
-        # 10. Write Audit Log
-        log = AuditLog(
-            tenant_id=tenant.id,
-            user_id=user.id,
-            action="subscription_activated",
-            details=f"Plan {plan.name} activated. Invoice {invoice.invoice_number} paid via {req.gateway}."
-        )
-        db.add(log)
-        db.commit()
-        
-        return {"status": "success", "invoice_number": invoice.invoice_number, "message": "Payment captured. Plan activated successfully."}
-        
     else:
-        # Payment Failed Flow
-        payment.status = "failed"
-        invoice.status = "failed"
-        
-        txn = PaymentTransaction(
-            payment_id=payment.id,
-            tenant_id=tenant.id,
-            gateway=req.gateway,
-            event_type="payment.failed",
-            gateway_response=req.gateway_response or '{"status": "failed", "mock": true}',
-            status="failed",
-            error_message=req.error_message or "Simulated checkout rejection."
+        return _process_failed_payment(
+            db=db, payment=payment, invoice=invoice, tenant=tenant,
+            gateway=req.gateway, gateway_response=req.gateway_response or '{"status": "failed", "mock": true}',
+            error_message=req.error_message or "Simulated checkout failure.",
+            user=user
         )
-        db.add(txn)
-        
-        inv_history = InvoiceHistory(
-            tenant_id=tenant.id,
-            invoice_id=invoice.id,
-            invoice_number=invoice.invoice_number,
-            action="status_change",
-            old_status="pending",
-            new_status="failed",
-            amount=invoice.total_amount
-        )
-        db.add(inv_history)
-        db.commit()
-        
-        # Send failure alert email
-        send_payment_failure_email(db, tenant, invoice.invoice_number, payment.amount, req.error_message or "Simulated checkout failure.")
-        
-        # Write Audit Log
-        log = AuditLog(
-            tenant_id=tenant.id,
-            user_id=user.id,
-            action="payment_failed",
-            details=f"Payment for invoice {invoice.invoice_number} failed via {req.gateway}."
-        )
-        db.add(log)
-        db.commit()
-        
-        return {"status": "failed", "invoice_number": invoice.invoice_number, "message": "Payment simulation failed."}
 
 @router.get("/invoices/{invoice_id}/download")
 def download_invoice_pdf(invoice_id: str, db: Session = Depends(get_db)):
@@ -1339,3 +1376,139 @@ def scan_and_send_expiry_reminders(db: Session = Depends(get_db)):
             
     db.commit()
     return {"status": "ok", "reminders_sent": reminders_sent}
+
+
+@router.post("/razorpay/webhook")
+async def razorpay_webhook(request: Request, db: Session = Depends(get_db)):
+    """Razorpay Webhook Endpoint for tracking payment status independently."""
+    secret = os.environ.get("RAZORPAY_WEBHOOK_SECRET")
+    if not secret:
+        logger.error("RAZORPAY_WEBHOOK_SECRET is not configured.")
+        raise HTTPException(status_code=500, detail="Webhook secret is not configured.")
+        
+    try:
+        body = await request.body()
+        signature = request.headers.get("X-Razorpay-Signature")
+        
+        if not signature:
+            logger.error("Missing X-Razorpay-Signature header.")
+            raise HTTPException(status_code=400, detail="Missing signature")
+            
+        expected_sig = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(expected_sig, signature):
+            logger.error("Invalid Razorpay webhook signature")
+            raise HTTPException(status_code=400, detail="Invalid signature")
+        
+        try:
+            payload = json.loads(body.decode("utf-8"))
+        except:
+            return {"status": "ok"} # malformed JSON
+            
+        event_id = payload.get("id")
+        event_type = payload.get("event")
+        
+        logger.info(f"Webhook received: {event_type} (Event ID: {event_id})")
+        
+        # Idempotency check: has this event been processed?
+        if event_id:
+            existing = db.query(PaymentTransaction).filter(
+                PaymentTransaction.gateway_response.like(f'%"{event_id}"%')
+            ).first()
+            if existing:
+                logger.info(f"Duplicate webhook ignored: {event_id}")
+                return {"status": "ok", "message": "Already processed"}
+                
+        payment_entity = payload.get("payload", {}).get("payment", {}).get("entity", {})
+        notes = payment_entity.get("notes", {})
+        
+        # Determine internal payment id
+        internal_payment_id = notes.get("payment_id")
+        payment = None
+        
+        if event_type == "refund.processed":
+            refund_entity = payload.get("payload", {}).get("refund", {}).get("entity", {})
+            rzp_payment_id = refund_entity.get("payment_id")
+            payment = db.query(Payment).filter(Payment.transaction_id == rzp_payment_id).first()
+        else:
+            if internal_payment_id:
+                payment = db.query(Payment).filter(Payment.id == internal_payment_id).first()
+            else:
+                rzp_payment_id = payment_entity.get("id")
+                payment = db.query(Payment).filter(Payment.transaction_id == rzp_payment_id).first()
+        
+        if not payment:
+            logger.warning(f"Payment record not found for webhook event: {event_type}")
+            return {"status": "ok", "message": "Payment not found"}
+            
+        tenant = db.query(Tenant).filter(Tenant.id == payment.tenant_id).first()
+        invoice = db.query(Invoice).filter(Invoice.id == payment.invoice_id).first()
+        plan = db.query(SubscriptionPlan).filter(SubscriptionPlan.id == invoice.plan_id).first()
+        settings = get_or_create_settings(db)
+        
+        gateway_response = json.dumps(payload)
+        
+        if event_type in ["payment.captured", "order.paid"]:
+            if payment.status == "success":
+                logger.info("Payment already marked as success.")
+                return {"status": "ok", "message": "Already success"}
+                
+            payment.transaction_id = payment_entity.get("id") or payment.transaction_id
+            logger.info("Payment captured. Activating subscription.")
+            _process_successful_payment(
+                db=db, payment=payment, invoice=invoice, tenant=tenant, plan=plan,
+                settings=settings, gateway="razorpay", transaction_id=payment.transaction_id,
+                gateway_response=gateway_response
+            )
+            logger.info("Invoice generated. Invoice emailed.")
+            
+        elif event_type == "payment.failed":
+            if payment.status == "failed":
+                return {"status": "ok", "message": "Already failed"}
+                
+            error_desc = payment_entity.get("error_description", "Payment failed via webhook")
+            _process_failed_payment(
+                db=db, payment=payment, invoice=invoice, tenant=tenant,
+                gateway="razorpay", gateway_response=gateway_response,
+                error_message=error_desc
+            )
+            logger.info("Payment failed recorded.")
+            
+        elif event_type == "refund.processed":
+            if payment.status == "refunded":
+                return {"status": "ok", "message": "Already refunded"}
+                
+            payment.status = "refunded"
+            refund_entity = payload.get("payload", {}).get("refund", {}).get("entity", {})
+            txn = PaymentTransaction(
+                payment_id=payment.id,
+                tenant_id=tenant.id,
+                gateway="razorpay",
+                event_type="refund.processed",
+                gateway_response=gateway_response,
+                status="refunded"
+            )
+            db.add(txn)
+            
+            inv_history = InvoiceHistory(
+                tenant_id=tenant.id,
+                invoice_id=invoice.id,
+                invoice_number=invoice.invoice_number,
+                action="refund",
+                old_status=invoice.status,
+                new_status="refunded",
+                amount=refund_entity.get("amount", 0) / 100.0  # Razorpay amounts are in paise
+            )
+            db.add(inv_history)
+            invoice.status = "refunded"
+            db.commit()
+            logger.info("Refund processed successfully.")
+
+        return {"status": "ok"}
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error processing webhook: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"status": "debug", "message": str(e)}

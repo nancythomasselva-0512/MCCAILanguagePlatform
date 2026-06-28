@@ -1,17 +1,75 @@
-import React, { useState } from "react";
-import { CreditCard, Save, CheckCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { CreditCard, Save, CheckCircle, Loader2 } from "lucide-react";
+import { apiRequest } from "../../../utils/api";
 
 export const PaymentSettings: React.FC = () => {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState({
     stripeEnabled: true,
-    stripePublic: "pk_test_...",
-    stripeSecret: "sk_test_...",
+    stripePublic: "",
+    stripeSecret: "",
     razorpayEnabled: false,
     razorpayId: "",
     razorpaySecret: "",
     currency: "USD",
     gstPercent: 18
   });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const data = await apiRequest("/billing/settings");
+        setConfig({
+          stripeEnabled: data.stripe_enabled ?? false,
+          stripePublic: data.stripe_public_key || "",
+          stripeSecret: data.stripe_secret_key || "",
+          razorpayEnabled: data.razorpay_enabled ?? false,
+          razorpayId: data.razorpay_key_id || "",
+          razorpaySecret: data.razorpay_key_secret || "",
+          currency: data.currency || "USD",
+          gstPercent: data.gst_percentage || 18
+        });
+      } catch (err) {
+        console.error("Failed to load billing settings:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await apiRequest("/billing/settings", {
+        method: "PATCH",
+        body: JSON.stringify({
+          stripe_enabled: config.stripeEnabled,
+          stripe_public_key: config.stripePublic,
+          stripe_secret_key: config.stripeSecret,
+          razorpay_enabled: config.razorpayEnabled,
+          razorpay_key_id: config.razorpayId,
+          razorpay_key_secret: config.razorpaySecret,
+          currency: config.currency,
+          gst_percentage: config.gstPercent
+        })
+      });
+      alert("Settings saved successfully!");
+    } catch (err: any) {
+      alert(err.message || "Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin text-blue-500" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -23,8 +81,13 @@ export const PaymentSettings: React.FC = () => {
           </h2>
           <p className="text-sm font-bold text-slate-500 mt-1">Configure Stripe, Razorpay, and billing details.</p>
         </div>
-        <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 transition-all">
-          <Save size={16} /> Save Changes
+        <button 
+          onClick={handleSave} 
+          disabled={saving}
+          className={`px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 transition-all ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+          {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
 
@@ -64,7 +127,7 @@ export const PaymentSettings: React.FC = () => {
             </button>
           </div>
           
-          <div className="space-y-4 opacity-50 pointer-events-none">
+          <div className={`space-y-4 ${!config.razorpayEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
             <div>
               <label className="text-xs font-bold uppercase text-slate-500">Key ID</label>
               <input type="text" value={config.razorpayId} onChange={e => setConfig({...config, razorpayId: e.target.value})} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none" />
@@ -73,7 +136,9 @@ export const PaymentSettings: React.FC = () => {
               <label className="text-xs font-bold uppercase text-slate-500">Key Secret</label>
               <input type="password" value={config.razorpaySecret} onChange={e => setConfig({...config, razorpaySecret: e.target.value})} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none" />
             </div>
-            <p className="text-xs text-slate-500 font-bold">Please enable Razorpay to configure.</p>
+            {!config.razorpayEnabled && (
+              <p className="text-xs text-slate-500 font-bold">Please enable Razorpay to configure.</p>
+            )}
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sun, Moon, Menu, X, ArrowRight, LogOut, ChevronDown, User, LogIn, Search } from 'lucide-react';
+import { Sun, Moon, Menu, X, ArrowRight, LogOut, ChevronDown, User, LogIn, Search, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PROVIDER_NAMES: Record<string, string> = {

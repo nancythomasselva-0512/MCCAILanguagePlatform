@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.dependencies.auth import get_current_user, super_admin_only
-from app.models.models import User, Tenant, SubscriptionPlan, UsageTracking, ProviderConfiguration, AuditLog, TranscriptionHistory, TranslationHistory, TtsHistory
+from app.models.models import User, Tenant, SubscriptionPlan, UsageTracking, ProviderConfiguration, AuditLog, TranscriptionHistory, TranslationHistory, TtsHistory, EmailTemplate, SMTPSettings
 from app.schemas.schemas import SubscriptionPlanCreate, SubscriptionPlanResponse, TenantCreate, TenantResponse, UserResponse, ProviderConfigCreate, ProviderConfigResponse, SubscriptionPlanUpdate, TenantRegistration, FeatureProviderMappingResponse, FeatureProviderMappingCreate
 from app.models.models import FeatureProviderMapping
 from typing import List
@@ -539,3 +539,124 @@ def get_system_health(db: Session = Depends(get_db)):
             "ElevenLabs": "Healthy"
         }
     }
+
+
+from pydantic import BaseModel
+from typing import Optional
+from app.utils.email_helper import log_email_action
+
+class EmailTemplateUpdate(BaseModel):
+    subject: str
+    body_html: str
+    from_email: Optional[str] = None
+    reply_to: Optional[str] = None
+    is_enabled: bool
+
+class TestEmailRequest(BaseModel):
+    template_type: str
+    recipient_email: str
+    sample_data: dict
+
+@router.get("/email-templates")
+def get_email_templates(db: Session = Depends(get_db)):
+    templates = db.query(EmailTemplate).filter(EmailTemplate.tenant_id == None).all()
+    DEFAULT_TEMPLATES = {
+        "welcome": {
+            "subject": "Welcome to {{company_name}}, {{user_name}}!",
+            "body": "<p>Hello <strong>{{user_name}}</strong>,</p><p>Thank you for subscribing to the <strong>{{plan_name}}</strong> plan for <strong>{{tenant_name}}</strong>. Your workspace has been activated.</p><p><a href=\"{{login_url}}\" target=\"_blank\">Click here to login</a></p><br/><p>Enjoy the platform!</p><p>The {{company_name}} Team</p>"
+        },
+        "user_invitation": {
+            "subject": "You have been invited to join {{tenant_name}}",
+            "body": "<p>Hello <strong>{{user_name}}</strong>,</p><p>You have been invited to join <strong>{{tenant_name}}</strong> on {{company_name}}!</p><p>Click the link below to accept the invitation:</p><p><a href=\"{{invite_link}}\" target=\"_blank\">Accept Invitation</a></p><br/><p>Thanks,</p><p>The {{company_name}} Team</p>"
+        },
+        "otp_verification": {
+            "subject": "Your Verification Code",
+            "body": "<p>Your OTP for verification is: <strong style=\"font-size: 24px; letter-spacing: 2px;\">{{otp}}</strong></p><p>It will expire in {{expiry_minutes}} minutes.</p>"
+        },
+        "reset_password": {
+            "subject": "Reset Your Password",
+            "body": "<p>Hello <strong>{{user_name}}</strong>,</p><p>Click the link below to reset your password:</p><p><a href=\"{{reset_link}}\" target=\"_blank\">Reset Password</a></p>"
+        },
+        "invoice_generated": {
+            "subject": "New Invoice Generated - {{invoice_number}}",
+            "body": "<p>Hello <strong>{{customer_name}}</strong>,</p><p>A new invoice <strong>{{invoice_number}}</strong> has been generated for your workspace subscription on {{invoice_date}}.</p><p>Total amount: <strong>{{currency}} {{invoice_total}}</strong>.</p><p>Please review it in your Billing settings.</p><p><a href=\"{{download_invoice_url}}\" target=\"_blank\">Download Invoice</a></p><br/><p>Thanks,</p><p>MCC AI Billing</p>"
+        },
+        "payment_success": {
+            "subject": "Payment Successful! Invoice {{invoice_number}}",
+            "body": "<p>Hello <strong>{{tenant_name}}</strong>,</p><p>Your payment of <strong>${{amount}}</strong> for Invoice {{invoice_number}} via <strong>{{payment_method}}</strong> was successfully processed.</p><p>Transaction ID: {{transaction_id}}.</p><p>Your <strong>{{plan_name}}</strong> subscription is now active and expires on {{expiry_date}}.</p><p>Your invoice is now marked as PAID and a PDF has been generated for your records.</p><br/><p>Thank you for your business!</p><p>MCC AI Billing</p>"
+        }
+    }
+
+    if len(templates) < len(DEFAULT_TEMPLATES):
+        existing_types = [t.template_type for t in templates]
+        for t_type, t_data in DEFAULT_TEMPLATES.items():
+            if t_type not in existing_types:
+                t = EmailTemplate(
+                    template_type=t_type,
+                    subject=t_data["subject"],
+                    body_html=t_data["body"],
+                    body_text="",
+                    from_email="",
+                    reply_to="",
+                    is_enabled=True
+                )
+                db.add(t)
+        db.commit()
+        templates = db.query(EmailTemplate).filter(EmailTemplate.tenant_id == None).all()
+    return templates
+
+@router.put("/email-templates/{template_type}")
+def update_email_template(template_type: str, req: EmailTemplateUpdate, db: Session = Depends(get_db)):
+    t = db.query(EmailTemplate).filter(EmailTemplate.template_type == template_type, EmailTemplate.tenant_id == None).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Template not found")
+    t.subject = req.subject
+    t.body_html = req.body_html
+    t.from_email = req.from_email
+    t.reply_to = req.reply_to
+    t.is_enabled = req.is_enabled
+    db.commit()
+    return {"message": "Template updated successfully"}
+
+@router.get("/email-senders")
+def get_email_senders(db: Session = Depends(get_db)):
+    db_smtp = db.query(SMTPSettings).first()
+    senders = []
+    if db_smtp and db_smtp.from_email:
+        senders.append(db_smtp.from_email)
+    if db_smtp and db_smtp.smtp_username and db_smtp.smtp_username not in senders:
+        senders.append(db_smtp.smtp_username)
+    if not senders:
+        senders.append("noreply@fluentia.com")
+        senders.append("support@fluentia.com")
+        senders.append("billing@fluentia.com")
+    return {"senders": senders}
+
+@router.post("/email-templates/test")
+def send_test_email(req: TestEmailRequest, db: Session = Depends(get_db)):
+    t = db.query(EmailTemplate).filter(EmailTemplate.template_type == req.template_type, EmailTemplate.tenant_id == None).first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    body = t.body_html
+    subject = t.subject
+    for key, val in req.sample_data.items():
+        placeholder = f"{{{{{key}}}}}"
+        body = body.replace(placeholder, str(val))
+        subject = subject.replace(placeholder, str(val))
+        
+    try:
+        # Note: We temporarily simulate tenant_id=None using a generic mechanism in log_email_action
+        log_email_action(
+            db=db, 
+            tenant_id=None, 
+            subject=subject, 
+            body_text=body, 
+            recipient_email=req.recipient_email, 
+            from_email=t.from_email, 
+            reply_to=t.reply_to, 
+            is_html=True
+        )
+        return {"message": "Test email sent successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
