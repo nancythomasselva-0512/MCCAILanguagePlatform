@@ -167,47 +167,47 @@ def translate_text(
             print(f"OpenAI translation error: {e}")
             
     if not translated_text:
-        # Google fallback translation URL
-        try:
-            # Google Translate client fallback simulation
-            lang_codes = {
-                "Auto Detect": "auto",
-                "English": "en",
-                "Tamil": "ta",
-                "Hindi": "hi",
-                "Spanish": "es",
-                "French": "fr",
-                "German": "de",
-                "Portuguese": "pt",
-                "Arabic": "ar",
-                "Japanese": "ja",
-                "Korean": "ko",
-                "Chinese (Simplified)": "zh-CN",
-                "Russian": "ru",
-                "Italian": "it",
-                "Dutch": "nl",
-                "Polish": "pl",
-                "Turkish": "tr",
-                "Vietnamese": "vi",
-                "Thai": "th",
-                "Indonesian": "id",
-                "Bengali": "bn",
-                "Urdu": "ur",
-                "Swahili": "sw"
-            }
-            src = lang_codes.get(source_lang, "auto")
-            tgt = lang_codes.get(target_lang, "en")
-            url = f"https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl={src}&tl={tgt}&q={requests.utils.quote(text)}"
-            res = requests.get(url)
-            if res.ok:
-                data = res.json()
-                translated_text = "".join(item[0] for item in data[0])
-                if src == "auto" and len(data) > 2:
-                    detected_lang = data[2]
-            else:
-                translated_text = f"[Fallback API Error] Simulated Translation to {target_lang}: {text}"
-        except Exception as e:
-            translated_text = f"[Simulated Translation to {target_lang}]: {text}"
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        if gemini_key:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+                prompt = f"Translate the following text to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
+                if source_lang and source_lang != "Auto Detect":
+                    prompt = f"Translate the following text from {source_lang} to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
+                prompt += f"\n\nText to translate: {text}"
+                
+                payload = {"contents": [{"parts": [{"text": prompt}]}]}
+                res = requests.post(url, json=payload)
+                if res.ok:
+                    translated_text = res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+            except Exception as e:
+                print(f"Gemini translation error: {e}")
+
+    if not translated_text:
+        nemotron_key = os.getenv("NEMOTRON_API_KEY")
+        if nemotron_key:
+            try:
+                url = "https://integrate.api.nvidia.com/v1/chat/completions"
+                headers = {"Authorization": f"Bearer {nemotron_key}", "Content-Type": "application/json"}
+                system_prompt = f"You are a professional translator. Translate the user's input text to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
+                if source_lang and source_lang != "Auto Detect":
+                    system_prompt = f"You are a professional translator. Translate the user's input text from {source_lang} to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
+                
+                payload = {
+                    "model": "nvidia/nemotron-4-340b-instruct",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": text}
+                    ]
+                }
+                res = requests.post(url, json=payload, headers=headers)
+                if res.ok:
+                    translated_text = res.json()["choices"][0]["message"]["content"].strip()
+            except Exception as e:
+                print(f"Nemotron translation error: {e}")
+
+    if not translated_text:
+        translated_text = f"[Simulated Translation to {target_lang}]: {text}"
             
     if not translated_text:
         translated_text = f"[Translation Failed] Please check API configuration for {target_lang}"

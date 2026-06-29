@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 from sqlalchemy.orm import Session
-from app.models.models import AuditLog, Tenant, User, Payment, SMTPSettings, EmailTemplate
+from app.models.models import AuditLog, Tenant, User, Payment, SMTPSettings, EmailTemplate, EmailLog
 
 logger = logging.getLogger("mcc-ai-saas-emails")
 
@@ -43,40 +43,41 @@ def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str, 
 
     logger.info(f"Attempting to send real SMTP email to: {recipient_email}")
 
-    # Load SMTP settings from database first
-    db_smtp = db.query(SMTPSettings).first()
+    # Load SMTP settings from database
+    db_smtp = db.query(SMTPSettings).filter(SMTPSettings.tenant_id == None).first()
     
-    if db_smtp and db_smtp.smtp_host:
-        smtp_host = db_smtp.smtp_host
-        smtp_port = db_smtp.smtp_port
-        smtp_user = db_smtp.smtp_username
-        smtp_password = db_smtp.smtp_password
-        sender_email = db_smtp.from_email or smtp_user or "noreply@mcc-ai.com"
-    else:
-        # Fallback to environment variables
-        from app.core.config import settings
-        smtp_host = settings.SMTP_HOST
-        smtp_port = settings.SMTP_PORT
-        smtp_user = settings.SMTP_USER
-        smtp_password = settings.SMTP_PASSWORD
-        sender_email = settings.SMTP_SENDER or smtp_user or "noreply@mcc-ai.com"
+    if not db_smtp or not db_smtp.smtp_host or not db_smtp.is_enabled:
+        logger.info("SMTP is either not configured or disabled. Email will only be simulated in logs.")
+        email_log = EmailLog(tenant_id=tenant_id, recipient=recipient_email, subject=subject, status="simulated", error_message=None)
+        db.add(email_log)
+        db.commit()
+        return
 
-    # Override sender_email if from_email is provided
+    from app.core.security import decrypt_data
+    smtp_host = db_smtp.smtp_host
+    smtp_port = db_smtp.smtp_port
+    smtp_user = db_smtp.smtp_username
+    smtp_password = decrypt_data(db_smtp.smtp_password) if db_smtp.smtp_password else None
+    
+    # Setup from address and name
     if from_email:
         sender_email = from_email
-    if not smtp_host:
-        logger.info("SMTP_HOST not configured. Email will only be simulated in logs.")
-        return
+    else:
+        sender_email = db_smtp.from_email or smtp_user or "noreply@fluentia.com"
+        
+    sender_display = f"{db_smtp.from_name} <{sender_email}>" if db_smtp.from_name and not from_email else sender_email
 
     try:
         # Create MIME message
         msg = MIMEMultipart()
-        msg['From'] = sender_email
+        msg['From'] = sender_display
         msg['To'] = recipient_email
         msg['Subject'] = subject
         
         if reply_to:
             msg['Reply-To'] = reply_to
+        elif db_smtp.reply_to_email:
+            msg['Reply-To'] = db_smtp.reply_to_email
 
         # Attach text body
         if is_html:
@@ -98,15 +99,27 @@ def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str, 
             logger.info(f"Attached receipt PDF to email: {attachment_path}")
 
         # Connect and send
-        server = smtplib.SMTP(smtp_host, smtp_port)
-        server.starttls()
-        if smtp_user and smtp_password:
+        if db_smtp.encryption_type == "SSL":
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=db_smtp.connection_timeout or 10)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=db_smtp.connection_timeout or 10)
+            if db_smtp.encryption_type == "TLS":
+                server.starttls()
+                
+        if db_smtp.enable_authentication and smtp_user and smtp_password:
             server.login(smtp_user, smtp_password)
+            
         server.sendmail(sender_email, recipient_email, msg.as_string())
         server.quit()
         logger.info(f"Real SMTP email successfully sent to {recipient_email}!")
+        email_log = EmailLog(tenant_id=tenant_id, recipient=recipient_email, subject=subject, status="success", error_message=None)
+        db.add(email_log)
+        db.commit()
     except Exception as smtp_err:
         logger.error(f"Failed to send SMTP email via {smtp_host}:{smtp_port}: {smtp_err}")
+        email_log = EmailLog(tenant_id=tenant_id, recipient=recipient_email, subject=subject, status="failed", error_message=str(smtp_err))
+        db.add(email_log)
+        db.commit()
 
 def send_welcome_subscription_email(db: Session, tenant: Tenant, plan_name: str):
     t = db.query(EmailTemplate).filter(EmailTemplate.template_type == "welcome", EmailTemplate.tenant_id == None).first()

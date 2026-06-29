@@ -257,8 +257,12 @@ export const LandingPage: React.FC = () => {
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg text-slate-700 dark:text-slate-200 max-w-2xl mb-8 leading-relaxed font-semibold">
-                {globalConfig?.branding?.footer_text || 'Experience high-performance, local client-side transcription, multi-speaker voice synthesis, and real-time document translations. Complete workspace capability loaded into a premium desktop layout.'}
+              <p className="text-xl sm:text-2xl text-slate-800 dark:text-slate-300 max-w-2xl mb-4 font-bold">
+                {globalConfig?.branding?.footer_text || 'Powering Next-Gen Language AI'}
+              </p>
+              
+              <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mb-8 leading-relaxed font-medium">
+                Experience high-performance, local client-side transcription, multi-speaker voice synthesis, and real-time document translations. Complete workspace capability loaded into a premium desktop layout.
               </p>
             </motion.div>
 

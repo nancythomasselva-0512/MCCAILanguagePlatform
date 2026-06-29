@@ -25,8 +25,11 @@ function App() {
       const isSuperAdmin = user?.role === 'super_admin';
 
       if (window.location.pathname === '/controller') {
-        // Always show the Controller Landing Page first
-        setViewMode('controller-landing');
+        if (user && isSuperAdmin) {
+          setViewMode('workspace');
+        } else {
+          setViewMode('controller-landing');
+        }
       } else if (window.location.pathname === '/dashboard') {
         if (!user) { // ALLOW super_admin to access /dashboard too
           logout(); // Clear any invalid session

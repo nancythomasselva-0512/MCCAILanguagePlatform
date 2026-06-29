@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.dependencies.auth import get_current_user, super_admin_only
-from app.models.models import User, Tenant, SubscriptionPlan, UsageTracking, ProviderConfiguration, AuditLog, TranscriptionHistory, TranslationHistory, TtsHistory, EmailTemplate, SMTPSettings
-from app.schemas.schemas import SubscriptionPlanCreate, SubscriptionPlanResponse, TenantCreate, TenantResponse, UserResponse, ProviderConfigCreate, ProviderConfigResponse, SubscriptionPlanUpdate, TenantRegistration, FeatureProviderMappingResponse, FeatureProviderMappingCreate
+from app.models.models import User, Tenant, SubscriptionPlan, UsageTracking, ProviderConfiguration, AuditLog, TranscriptionHistory, TranslationHistory, TtsHistory, EmailTemplate, SMTPSettings, EmailLog
+from app.schemas.schemas import SubscriptionPlanCreate, SubscriptionPlanResponse, TenantCreate, TenantResponse, UserResponse, ProviderConfigCreate, ProviderConfigResponse, SubscriptionPlanUpdate, TenantRegistration, FeatureProviderMappingResponse, FeatureProviderMappingCreate, EmailLogResponse, SMTPSettingsResponse, SMTPSettingsUpdate, SMTPTestEmailRequest
 from app.models.models import FeatureProviderMapping
 from typing import List
 import datetime
@@ -617,6 +617,95 @@ def update_email_template(template_type: str, req: EmailTemplateUpdate, db: Sess
     t.is_enabled = req.is_enabled
     db.commit()
     return {"message": "Template updated successfully"}
+
+@router.get("/smtp-settings", response_model=SMTPSettingsResponse)
+def get_smtp_settings(db: Session = Depends(get_db)):
+    db_smtp = db.query(SMTPSettings).filter(SMTPSettings.tenant_id == None).first()
+    if not db_smtp:
+        db_smtp = SMTPSettings(tenant_id=None)
+        db.add(db_smtp)
+        db.commit()
+        db.refresh(db_smtp)
+    
+    res = SMTPSettingsResponse.from_orm(db_smtp)
+    res.has_password = bool(db_smtp.smtp_password)
+    return res
+
+@router.put("/smtp-settings", response_model=SMTPSettingsResponse)
+def update_smtp_settings(req: SMTPSettingsUpdate, db: Session = Depends(get_db)):
+    db_smtp = db.query(SMTPSettings).filter(SMTPSettings.tenant_id == None).first()
+    if not db_smtp:
+        db_smtp = SMTPSettings(tenant_id=None)
+        db.add(db_smtp)
+    
+    db_smtp.smtp_host = req.smtp_host
+    db_smtp.smtp_port = req.smtp_port
+    db_smtp.smtp_username = req.smtp_username
+    db_smtp.from_email = req.from_email
+    db_smtp.reply_to_email = req.reply_to_email
+    db_smtp.from_name = req.from_name
+    db_smtp.encryption_type = req.encryption_type
+    db_smtp.connection_timeout = req.connection_timeout
+    db_smtp.enable_authentication = req.enable_authentication
+    db_smtp.is_enabled = req.is_enabled
+    
+    if req.smtp_password:
+        from app.core.security import encrypt_data
+        db_smtp.smtp_password = encrypt_data(req.smtp_password)
+        
+    db.commit()
+    db.refresh(db_smtp)
+    
+    res = SMTPSettingsResponse.from_orm(db_smtp)
+    res.has_password = bool(db_smtp.smtp_password)
+    return res
+
+@router.post("/smtp-settings/test")
+def test_smtp_connection(req: SMTPTestEmailRequest, db: Session = Depends(get_db)):
+    db_smtp = db.query(SMTPSettings).filter(SMTPSettings.tenant_id == None).first()
+    if not db_smtp or not db_smtp.smtp_host:
+        raise HTTPException(status_code=400, detail="SMTP is not configured")
+    
+    from app.core.security import decrypt_data
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    host = db_smtp.smtp_host
+    port = db_smtp.smtp_port
+    user = db_smtp.smtp_username
+    password = decrypt_data(db_smtp.smtp_password) if db_smtp.smtp_password else None
+    
+    msg = MIMEMultipart()
+    if db_smtp.from_name:
+        msg['From'] = f"{db_smtp.from_name} <{db_smtp.from_email or user or 'test@fluentia.com'}>"
+    else:
+        msg['From'] = db_smtp.from_email or user or "test@fluentia.com"
+        
+    msg['To'] = req.to_email
+    msg['Subject'] = "SMTP Configuration Test"
+    msg.attach(MIMEText("If you are reading this, your SMTP configuration is working correctly.", 'plain'))
+
+    try:
+        if db_smtp.encryption_type == "SSL":
+            server = smtplib.SMTP_SSL(host, port, timeout=db_smtp.connection_timeout or 10)
+        else:
+            server = smtplib.SMTP(host, port, timeout=db_smtp.connection_timeout or 10)
+            if db_smtp.encryption_type == "TLS":
+                server.starttls()
+                
+        if db_smtp.enable_authentication and user and password:
+            server.login(user, password)
+        server.sendmail(msg['From'], req.to_email, msg.as_string())
+        server.quit()
+        return {"message": "Test email sent successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send test email: {str(e)}")
+
+
+@router.get("/email-logs", response_model=List[EmailLogResponse])
+def get_email_logs(db: Session = Depends(get_db)):
+    return db.query(EmailLog).order_by(EmailLog.created_at.desc()).limit(100).all()
 
 @router.get("/email-senders")
 def get_email_senders(db: Session = Depends(get_db)):

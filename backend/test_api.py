@@ -1,38 +1,29 @@
-import requests
-import json
+import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from app.core.database import SessionLocal
-from app.models.models import User, SubscriptionPlan
+from app.models.models import User
 from app.core.security import create_access_token
+import requests
 
-db = SessionLocal()
-user = db.query(User).filter(User.email == "aachinancy@gmail.com").first()
-if not user:
-    print("User not found!")
-    sys.exit(1)
-token = create_access_token(user.id)
+def run_test():
+    db = SessionLocal()
+    # Find a superadmin user
+    admin = db.query(User).filter(User.role == "super_admin").first()
+    if not admin:
+        print("No super_admin found")
+        return
+        
+    token = create_access_token(subject=admin.id)
+    
+    headers = {"Authorization": f"Bearer {token}"}
+    payload = {"to_email": "test@example.com"}
+    
+    res = requests.post("http://localhost:8000/api/super-admin/smtp-settings/test", json=payload, headers=headers)
+    print("Status:", res.status_code)
+    print("Response:", res.json())
 
-headers = {"Authorization": f"Bearer {token}"}
-base_url = "http://127.0.0.1:8000/api"
-
-print("GET /tenant/overview")
-res1 = requests.get(f"{base_url}/billing/tenant/overview", headers=headers)
-print("Status:", res1.status_code)
-if res1.status_code == 200:
-    plan = db.query(SubscriptionPlan).first()
-    print("POST /payments/create-session for plan:", plan.id)
-    res2 = requests.post(f"{base_url}/billing/payments/create-session", headers=headers, json={
-        "plan_id": str(plan.id),
-        "billing_cycle": "monthly"
-    })
-    print("Status:", res2.status_code)
-    try:
-        print("Response:", res2.json())
-    except:
-        print("Text:", res2.text)
-else:
-    try:
-        print("GET Failed Response:", res1.json())
-    except:
-        pass
-
+if __name__ == "__main__":
+    run_test()

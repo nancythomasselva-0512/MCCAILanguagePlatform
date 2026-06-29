@@ -1,5 +1,6 @@
 import datetime
 import uuid
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -292,6 +293,18 @@ class EmailTemplate(Base):
     is_enabled = Column(Boolean, default=True)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
+class EmailLog(Base):
+    __tablename__ = "email_logs"
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(PG_UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
+    recipient = Column(String(255), nullable=False)
+    subject = Column(String(255), nullable=False)
+    status = Column(String(50), nullable=False) # success, failed
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    tenant = relationship("Tenant")
+
 class CustomForm(Base):
     __tablename__ = "custom_forms"
     id = Column(String(36), primary_key=True, default=generate_uuid)
@@ -467,11 +480,13 @@ class SMTPSettings(Base):
     smtp_password = Column(String(255), nullable=True)
     from_email = Column(String(255), nullable=True)
     reply_to_email = Column(String(255), nullable=True)
+    from_name = Column(String(255), nullable=True)
+    encryption_type = Column(String(20), default="TLS")
+    connection_timeout = Column(Integer, default=10)
+    enable_authentication = Column(Boolean, default=True)
+    is_enabled = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-import uuid
 
 class DocumentIntelligence(Base):
     __tablename__ = "document_intelligence"

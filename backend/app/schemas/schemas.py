@@ -241,3 +241,41 @@ class DocumentTranslateRequest(BaseModel):
 
 class DocumentSummarizeRequest(BaseModel):
     pass # No params needed right now, generates structured summary.
+
+class EmailLogResponse(BaseModel):
+    id: uuid.UUID
+    tenant_id: Optional[uuid.UUID]
+    recipient: str
+    subject: str
+    status: str
+    error_message: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class SMTPSettingsBase(BaseModel):
+    smtp_host: Optional[str] = None
+    smtp_port: Optional[int] = 587
+    smtp_username: Optional[str] = None
+    from_email: Optional[str] = None
+    reply_to_email: Optional[str] = None
+    from_name: Optional[str] = None
+    encryption_type: Optional[str] = "TLS"
+    connection_timeout: Optional[int] = 10
+    enable_authentication: Optional[bool] = True
+    is_enabled: Optional[bool] = True
+
+class SMTPSettingsResponse(SMTPSettingsBase):
+    id: uuid.UUID
+    tenant_id: Optional[uuid.UUID] = None
+    has_password: bool = False
+    
+    class Config:
+        from_attributes = True
+
+class SMTPSettingsUpdate(SMTPSettingsBase):
+    smtp_password: Optional[str] = None
+
+class SMTPTestEmailRequest(BaseModel):
+    to_email: str

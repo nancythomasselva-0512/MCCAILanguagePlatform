@@ -197,12 +197,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [viewMode, setViewMode] = useState<ViewModeType>(() => {
     const path = window.location.pathname;
+    const token = storage.getItem('mcc-ai-token');
+    let isSuperAdmin = false;
+    const savedUser = storage.getItem('mcc-ai-user');
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.role === 'super_admin') isSuperAdmin = true;
+      } catch (e) {}
+    }
+
     if (path === '/') return 'landing';
     if (path === '/controller') {
-      return 'controller-landing';
+      return (token && isSuperAdmin) ? 'workspace' : 'controller-landing';
     }
     if (path === '/dashboard') {
-      return storage.getItem('mcc-ai-token') ? 'workspace' : 'landing';
+      return token ? 'workspace' : 'landing';
     }
     return 'landing';
   });
