@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     
     # Provider Keys
     OPENAI_API_KEY: str | None = None
+    GEMINI_API_KEY: str | None = None
+    NEMOTRON_API_KEY: str | None = None
+    OPENROUTER_API_KEY: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

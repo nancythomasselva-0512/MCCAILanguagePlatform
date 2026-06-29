@@ -167,34 +167,17 @@ def translate_text(
             print(f"OpenAI translation error: {e}")
             
     if not translated_text:
-        gemini_key = os.getenv("GEMINI_API_KEY")
-        if gemini_key:
+        openrouter_key = settings.OPENROUTER_API_KEY
+        if openrouter_key:
             try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
-                prompt = f"Translate the following text to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
-                if source_lang and source_lang != "Auto Detect":
-                    prompt = f"Translate the following text from {source_lang} to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
-                prompt += f"\n\nText to translate: {text}"
-                
-                payload = {"contents": [{"parts": [{"text": prompt}]}]}
-                res = requests.post(url, json=payload)
-                if res.ok:
-                    translated_text = res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-            except Exception as e:
-                print(f"Gemini translation error: {e}")
-
-    if not translated_text:
-        nemotron_key = os.getenv("NEMOTRON_API_KEY")
-        if nemotron_key:
-            try:
-                url = "https://integrate.api.nvidia.com/v1/chat/completions"
-                headers = {"Authorization": f"Bearer {nemotron_key}", "Content-Type": "application/json"}
+                url = "https://openrouter.ai/api/v1/chat/completions"
+                headers = {"Authorization": f"Bearer {openrouter_key}", "Content-Type": "application/json"}
                 system_prompt = f"You are a professional translator. Translate the user's input text to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
                 if source_lang and source_lang != "Auto Detect":
                     system_prompt = f"You are a professional translator. Translate the user's input text from {source_lang} to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
                 
                 payload = {
-                    "model": "nvidia/nemotron-4-340b-instruct",
+                    "model": "google/gemini-2.5-flash",
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": text}
@@ -204,7 +187,30 @@ def translate_text(
                 if res.ok:
                     translated_text = res.json()["choices"][0]["message"]["content"].strip()
             except Exception as e:
-                print(f"Nemotron translation error: {e}")
+                print(f"Gemini (OpenRouter) translation error: {e}")
+
+    if not translated_text:
+        openrouter_key = settings.OPENROUTER_API_KEY
+        if openrouter_key:
+            try:
+                url = "https://openrouter.ai/api/v1/chat/completions"
+                headers = {"Authorization": f"Bearer {openrouter_key}", "Content-Type": "application/json"}
+                system_prompt = f"You are a professional translator. Translate the user's input text to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
+                if source_lang and source_lang != "Auto Detect":
+                    system_prompt = f"You are a professional translator. Translate the user's input text from {source_lang} to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
+                
+                payload = {
+                    "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": text}
+                    ]
+                }
+                res = requests.post(url, json=payload, headers=headers)
+                if res.ok:
+                    translated_text = res.json()["choices"][0]["message"]["content"].strip()
+            except Exception as e:
+                print(f"Nemotron (OpenRouter) translation error: {e}")
 
     if not translated_text:
         translated_text = f"[Simulated Translation to {target_lang}]: {text}"
