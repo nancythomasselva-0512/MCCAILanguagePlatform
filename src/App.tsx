@@ -24,13 +24,13 @@ function App() {
       hasInitialized.current = true;
       const isSuperAdmin = user?.role === 'super_admin';
 
-      if (window.location.pathname === '/controller') {
+      if (window.location.pathname.startsWith('/controller')) {
         if (user && isSuperAdmin) {
           setViewMode('workspace');
         } else {
           setViewMode('controller-landing');
         }
-      } else if (window.location.pathname === '/dashboard') {
+      } else if (window.location.pathname.startsWith('/dashboard')) {
         if (!user) { // ALLOW super_admin to access /dashboard too
           logout(); // Clear any invalid session
           setAuthModalMode('login');
@@ -60,27 +60,31 @@ function App() {
 
       if (user.role === 'super_admin') {
         // Super admin handling
-        if (path === '/dashboard' && isSA) {
+        if (path.startsWith('/dashboard') && isSA) {
           setActiveTab('text-to-speech');
-        } else if (path === '/controller' && !isSA) {
+        } else if (path.startsWith('/controller') && !isSA) {
           setActiveTab('sa-overview');
+        } else {
+          window.history.replaceState({}, '', isSA ? `/controller/${activeTab}` : `/dashboard/${activeTab}`);
         }
       } else {
         // Normal user must not be on /controller
-        if (path === '/controller') {
-          window.history.replaceState({}, '', '/dashboard');
+        if (path.startsWith('/controller')) {
+          window.history.replaceState({}, '', `/dashboard/${activeTab}`);
         }
         if (isSA) {
           setActiveTab('text-to-speech');
+        } else {
+          window.history.replaceState({}, '', `/dashboard/${activeTab}`);
         }
       }
     } else if (viewMode === 'admin-login' || viewMode === 'controller-landing') {
-      if (window.location.pathname !== '/controller') {
+      if (!window.location.pathname.startsWith('/controller')) {
         window.history.replaceState({}, '', '/controller');
       }
     } else {
       // Landing mode
-      if (window.location.pathname !== '/' && window.location.pathname !== '/controller' && window.location.pathname !== '/dashboard') {
+      if (window.location.pathname !== '/') {
         window.history.replaceState({}, '', '/');
       }
     }

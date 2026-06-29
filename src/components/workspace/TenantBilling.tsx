@@ -6,6 +6,88 @@ import {
   TrendingUp, Info, Download, QrCode, X
 } from 'lucide-react';
 
+interface ThreeDInteractiveCardProps {
+  children: React.ReactNode;
+  className?: string;
+  glowColor?: string;
+  onClick?: () => void;
+}
+
+const ThreeDInteractiveCard: React.FC<ThreeDInteractiveCardProps> = ({
+  children,
+  className = '',
+  glowColor = 'rgba(37,99,235,0.15)',
+  onClick
+}) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const xc = rect.width / 2;
+    const yc = rect.height / 2;
+
+    const rY = ((x - xc) / xc) * 10;
+    const rX = -((y - yc) / yc) * 10;
+
+    // Direct DOM manipulation to avoid React re-renders on mousemove
+    cardRef.current.style.transform = `perspective(1000px) rotateX(${rX}deg) rotateY(${rY}deg) scale3d(1.025, 1.025, 1.025)`;
+    
+    if (contentRef.current) {
+      contentRef.current.style.transform = 'translateZ(25px)';
+    }
+
+    const glow = cardRef.current.querySelector('.card-3d-glow') as HTMLDivElement;
+    if (glow) {
+      glow.style.background = `radial-gradient(circle 220px at ${x}px ${y}px, ${glowColor}, transparent 80%)`;
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (cardRef.current) {
+      cardRef.current.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+    }
+    if (contentRef.current) {
+      contentRef.current.style.transform = 'translateZ(0px)';
+    }
+    const glow = cardRef.current?.querySelector('.card-3d-glow') as HTMLDivElement;
+    if (glow) {
+      glow.style.background = 'transparent';
+    }
+  };
+
+  return (
+    <div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      style={{
+        transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
+        transformStyle: 'preserve-3d',
+      }}
+      className={`bg-white dark:bg-[#0a1120]/85 border border-[#DDE5F0] dark:border-white/5 rounded-[28px] shadow-lg dark:shadow-2xl transition-all duration-300 relative overflow-hidden group select-none ${className}`}
+    >
+      <div className="card-3d-glow absolute inset-0 pointer-events-none transition-all duration-300" />
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#2563eb]/10 dark:via-white/10 to-transparent" />
+      <div
+        ref={contentRef}
+        style={{
+          transform: 'translateZ(0px)',
+          transformStyle: 'preserve-3d',
+        }}
+        className="transition-transform duration-300 h-full w-full"
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
+
 const getCurrencySymbol = (currencyCode: string) => {
   return currencyCode === 'INR' ? '₹' : currencyCode === 'USD' ? '$' : currencyCode;
 };
@@ -234,111 +316,137 @@ export const TenantBilling: React.FC = () => {
           </button>
         </div>
 
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-[1400px] mx-auto pt-4 w-full">
-          {plans.map((p, idx) => {
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto pt-4 items-stretch">
+          {/* Free Trial Card */}
+          {plans.filter(p => p.price === 0).map(p => {
             const isCurrent = activePlan?.name.toLowerCase() === p.name.toLowerCase();
-            const isFree = p.price === 0;
-            // Compute displayed price: yearly = base * 12 * 0.7 (30% off), show per-month
-            const monthlyPrice = p.price;
-            const yearlyPerMonth = +(p.price * 0.7).toFixed(0);
-            const displayPrice = billingCycle === 'yearly' ? yearlyPerMonth : monthlyPrice;
-            const currSymbol = getCurrencySymbol(data?.currency || 'INR');
-            
             return (
-              <div 
+              <ThreeDInteractiveCard
                 key={p.id}
-                className={`p-6 xl:p-8 rounded-[2.5rem] flex flex-col justify-between transition-all duration-300 relative overflow-hidden group backdrop-blur-2xl w-full scale-100 hover:scale-105 hover:z-20 ${
-                  isCurrent 
-                    ? 'shadow-[0_10px_40px_rgba(20,184,166,0.25)] bg-white/95 border-2 border-teal-400/60' 
-                    : 'shadow-[0_5px_20px_rgba(20,184,166,0.1)] bg-white/80 border border-teal-200/50 hover:border-teal-400/50 hover:bg-white/90'
-                }`}
+                glowColor="rgba(59, 130, 246, 0.15)"
+                className="p-8 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/90 border border-slate-200 dark:border-white/5 rounded-3xl shadow-xl relative w-full"
               >
-                {/* Glossy top reflection */}
-                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white to-transparent rounded-t-[2.5rem] pointer-events-none opacity-60" />
-
-                {/* Free Trial Badge on free plan */}
-                {isFree && (
-                  <div className="absolute top-4 right-4 z-20">
-                    <span className="px-2.5 py-1 bg-emerald-400 text-white text-[9px] font-black uppercase tracking-[0.15em] rounded-full shadow-md">
-                      Free 7 Days
+                <div className="w-full">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-teal-500/10 text-teal-600 dark:text-teal-400 tracking-wider">
+                      Most Popular
                     </span>
+                    <span className="text-sm font-bold text-slate-500 dark:text-slate-400">14 Days Trial</span>
                   </div>
-                )}
-
-                <div className="relative z-10 text-center space-y-6">
-                  <div>
-                    <h4 className="text-2xl font-extrabold text-teal-950 capitalize tracking-wider">{p.name}</h4>
-                    {isCurrent && (
-                       <span className="inline-block mt-2 px-3 py-1 bg-teal-100 text-teal-700 text-[9px] font-black uppercase tracking-[0.15em] rounded-full border border-teal-200 shadow-sm">
-                         Current Plan
-                       </span>
-                    )}
-                    {isFree && !isCurrent && (
-                      <p className="mt-1 text-[10px] text-emerald-600 font-bold">Try free for 7 days, no card needed</p>
-                    )}
-                  </div>
-
-                  <ul className="space-y-4 text-[11px] font-medium text-slate-600 text-left w-max mx-auto py-4">
+                  <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2">{p.name}</h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mb-6">
+                    Perfect for experiencing the complete Fluentia platform workstation locally on your device.
+                  </p>
+                  <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-4" />
+                  <ul className="space-y-4">
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-teal-500 drop-shadow-sm" />
-                      <span><strong className="text-teal-950">{p.transcription_limit} mins</strong> Audio Transcriptions</span>
+                      <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-white">Audio Processing</p>
+                        <p className="text-[10px] text-slate-500">{p.transcription_limit} minutes of translation & transcription</p>
+                      </div>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-teal-500 drop-shadow-sm" />
-                      <span><strong className="text-teal-950">{(p.translation_limit || 0).toLocaleString()}</strong> Translation Chars</span>
+                      <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-white">Translation Services</p>
+                        <p className="text-[10px] text-slate-500">{(p.translation_limit || 0).toLocaleString()} characters processed</p>
+                      </div>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-teal-500 drop-shadow-sm" />
-                      <span><strong className="text-teal-950">{(p.tts_limit || 0).toLocaleString()}</strong> TTS Voice Chars</span>
+                      <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-white">Text-to-Speech (TTS)</p>
+                        <p className="text-[10px] text-slate-500">{(p.tts_limit || 0).toLocaleString()} synthesis characters</p>
+                      </div>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-teal-500 drop-shadow-sm" />
-                      <span><strong className="text-teal-950">{p.storage_limit} MB</strong> Cloud Storage</span>
+                      <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-white">Cloud Storage Allocation</p>
+                        <p className="text-[10px] text-slate-500">{p.storage_limit} MB secure isolated storage</p>
+                      </div>
                     </li>
                   </ul>
-                  
-                  <div className="pt-2">
-                    <div className="text-[2rem] leading-none font-black text-teal-950 drop-shadow-sm flex items-end justify-center gap-1.5">
-                      {isFree ? (
-                        <span>{currSymbol}0</span>
-                      ) : (
-                        <>
-                          <span>{currSymbol}{displayPrice}</span>
-                          {billingCycle === 'yearly' && (
-                            <span className="text-xs text-slate-400 line-through pb-1">{currSymbol}{monthlyPrice}</span>
-                          )}
-                        </>
-                      )}
-                      <span className="text-sm font-bold text-slate-400 tracking-widest uppercase pb-1">/ mo</span>
-                    </div>
-                    {billingCycle === 'yearly' && !isFree && (
-                      <p className="text-[9px] text-emerald-600 font-bold mt-1 tracking-wider">
-                        Billed as {currSymbol}{+(p.price * 12 * 0.7).toFixed(0)} / year
-                      </p>
-                    )}
-                  </div>
                 </div>
-
-                <div className="mt-8 relative z-10 flex justify-center">
+                <div className="w-full mt-8">
                   {isCurrent ? (
-                    <button 
+                    <button
                       disabled
-                      className="px-10 py-3 rounded-full bg-slate-100 text-slate-400 text-xs font-black uppercase tracking-[0.2em] border border-slate-200 shadow-inner cursor-default"
+                      className="w-full py-3 px-6 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-default text-center block"
                     >
-                      Active
+                      Active Plan
                     </button>
                   ) : (
                     <button
                       onClick={() => handleStartCheckout(p, billingCycle)}
-                      className="px-10 py-3 rounded-full bg-teal-500 hover:bg-teal-400 text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-[0_5px_15px_rgba(20,184,166,0.4)] hover:shadow-[0_8px_25px_rgba(20,184,166,0.5)] transition-all transform hover:-translate-y-0.5"
+                      className="w-full py-3 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-lg text-center block"
                     >
-                      {isFree ? 'Start Free Trial' : 'Get Started ↗'}
+                      Start 14-Day Free Trial
                     </button>
                   )}
                 </div>
-              </div>
+              </ThreeDInteractiveCard>
             );
           })}
+
+          {/* Upgrade Plans Card */}
+          <ThreeDInteractiveCard
+            glowColor="rgba(168, 85, 247, 0.15)"
+            className="p-8 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/90 border border-slate-200 dark:border-white/5 rounded-3xl shadow-xl w-full"
+          >
+            <div className="w-full">
+              <div className="flex justify-between items-center mb-4">
+                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 tracking-wider">
+                  Paid Tiers
+                </span>
+                <span className="text-sm font-bold text-slate-500 dark:text-slate-400">Post-Trial Options</span>
+              </div>
+              <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2">Upgrade Plans</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mb-6">
+                After your 14-day trial concludes, select one of our premium enterprise tiers:
+              </p>
+              <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-4" />
+              <div className="space-y-4">
+                {plans.filter(p => p.price > 0).map(p => {
+                  const isCurrent = activePlan?.name.toLowerCase() === p.name.toLowerCase();
+                  const monthlyPrice = p.price;
+                  const yearlyPerMonth = +(p.price * 0.7).toFixed(0);
+                  const displayPrice = billingCycle === 'yearly' ? yearlyPerMonth : monthlyPrice;
+                  const currSymbol = getCurrencySymbol(data?.currency || 'INR');
+                  
+                  return (
+                    <div key={p.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 flex justify-between items-center">
+                      <div>
+                        <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">{p.name} Plan</h4>
+                        <p className="text-[10px] text-slate-500">{p.transcription_limit} mins audio / {(p.translation_limit/1000).toFixed(0)}k translation / {(p.tts_limit/1000).toFixed(0)}k TTS</p>
+                      </div>
+                      {isCurrent ? (
+                        <button disabled className="px-4 py-2 bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400 rounded-lg text-sm font-black cursor-default">
+                          Active
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => handleStartCheckout(p, billingCycle)}
+                          className="px-4 py-2 bg-teal-100 dark:bg-teal-500/20 hover:bg-teal-200 dark:hover:bg-teal-500/30 text-teal-700 dark:text-teal-400 rounded-lg text-sm font-black transition-colors cursor-pointer"
+                        >
+                          {currSymbol}{displayPrice}/mo
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="w-full mt-8">
+              <button
+                  onClick={() => document.getElementById('billing-history')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="w-full py-3 px-6 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-900 dark:text-white text-xs font-bold cursor-pointer transition-colors text-center block"
+              >
+                Explore Billing Details
+              </button>
+            </div>
+          </ThreeDInteractiveCard>
         </div>
       </div>
 

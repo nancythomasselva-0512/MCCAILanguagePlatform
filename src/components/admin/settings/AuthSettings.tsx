@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Key, Save, Lock, Mail, Users } from "lucide-react";
+import { Key, Save, Lock, Mail, Users, UserPlus, Loader2 } from "lucide-react";
+import { apiRequest } from "../../../utils/api";
 
 export const AuthSettings: React.FC = () => {
   const [config, setConfig] = useState({
@@ -12,6 +13,29 @@ export const AuthSettings: React.FC = () => {
     adminApproval: false,
     sessionTimeout: 120,
   });
+
+  const [newAdmin, setNewAdmin] = useState({ name: '', email: '', password: '' });
+  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
+  const [adminMessage, setAdminMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
+
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAdmin.name || !newAdmin.email || !newAdmin.password) return;
+    setIsCreatingAdmin(true);
+    setAdminMessage(null);
+    try {
+      await apiRequest('/super-admin/admins', {
+        method: 'POST',
+        body: JSON.stringify(newAdmin)
+      });
+      setAdminMessage({ type: 'success', text: 'Super Admin created successfully!' });
+      setNewAdmin({ name: '', email: '', password: '' });
+    } catch (err: any) {
+      setAdminMessage({ type: 'error', text: err.message || 'Failed to create admin.' });
+    } finally {
+      setIsCreatingAdmin(false);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -102,6 +126,64 @@ export const AuthSettings: React.FC = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Administrator Management */}
+      <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
+        <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+          <UserPlus size={18} className="text-blue-500" />
+          Administrator Management
+        </h3>
+        <p className="text-sm text-slate-500 mb-6">Create new Super Admin accounts with full platform access.</p>
+        
+        <form onSubmit={handleCreateAdmin} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div>
+            <label className="text-xs font-bold uppercase text-slate-500">Full Name</label>
+            <input 
+              type="text" 
+              required
+              value={newAdmin.name} 
+              onChange={e => setNewAdmin({...newAdmin, name: e.target.value})} 
+              className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none focus:border-blue-500/50" 
+              placeholder="Admin Name"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold uppercase text-slate-500">Email Address</label>
+            <input 
+              type="email" 
+              required
+              value={newAdmin.email} 
+              onChange={e => setNewAdmin({...newAdmin, email: e.target.value})} 
+              className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none focus:border-blue-500/50" 
+              placeholder="admin@fluentia.com"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold uppercase text-slate-500">Password</label>
+            <input 
+              type="password" 
+              required
+              value={newAdmin.password} 
+              onChange={e => setNewAdmin({...newAdmin, password: e.target.value})} 
+              className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none focus:border-blue-500/50" 
+              placeholder="••••••••"
+            />
+          </div>
+          <button 
+            type="submit"
+            disabled={isCreatingAdmin || !newAdmin.name || !newAdmin.email || !newAdmin.password}
+            className="w-full h-[38px] bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+          >
+            {isCreatingAdmin ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
+            Create Admin
+          </button>
+        </form>
+        {adminMessage && (
+          <div className={`mt-4 p-3 rounded-xl text-sm font-bold ${adminMessage.type === 'success' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+            {adminMessage.text}
+          </div>
+        )}
       </div>
     </div>
   );

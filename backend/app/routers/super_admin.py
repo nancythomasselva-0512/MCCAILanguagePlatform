@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.dependencies.auth import get_current_user, super_admin_only
@@ -380,6 +381,30 @@ def set_feature_provider_mapping(mapping: FeatureProviderMappingCreate, db: Sess
     return db_mapping
 
 # --- USER MONITORING & ACTIONS ---
+class SuperAdminCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+
+@router.post("/admins", response_model=UserResponse)
+def create_super_admin(admin: SuperAdminCreate, db: Session = Depends(get_db)):
+    from app.core.security import get_password_hash
+    existing = db.query(User).filter(User.email == admin.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="User with this email already exists.")
+    
+    db_user = User(
+        name=admin.name,
+        email=admin.email,
+        password_hash=get_password_hash(admin.password),
+        role="super_admin",
+        status="active"
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
 @router.get("/users", response_model=List[UserResponse])
 def list_all_platform_users(db: Session = Depends(get_db)):
     return db.query(User).all()

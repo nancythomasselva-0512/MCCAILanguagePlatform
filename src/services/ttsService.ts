@@ -247,10 +247,18 @@ class TTSService {
         audioUrl = ttsAudioCache.get(cacheKey)!;
         console.log(`TTS: Cache Hit! Reusing previously generated audio for chunk.`);
       } else {
+        // Priority 0: Free Google TTS Fallback for Tamil
+        if (baseLang === 'ta') {
+          console.log(`TTS: Using Free Google TTS fallback for Tamil`);
+          audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ta&client=tw-ob&q=${encodeURIComponent(chunk.substring(0, 200))}`;
+          ttsAudioCache.set(cacheKey, audioUrl);
+        }
+
         const errors: string[] = [];
         
         // Priority 1: Backend TTS (Proxy to OpenAI)
-        try {
+        if (!audioUrl) {
+          try {
           console.log(`TTS: Sending request... [Provider: Backend / OpenAI]`);
           audioUrl = await providerManager.synthesizeSpeech(chunk, 'alloy');
           console.log(`TTS: Response received... [Provider: Backend / OpenAI]`);
@@ -273,6 +281,8 @@ class TTSService {
              console.error(`TTS: Provider ElevenLabs failed:`, e.message);
              errors.push(`ElevenLabs: ${e.message}`);
           }
+        }
+        
         }
         
         if (!audioUrl) {

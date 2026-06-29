@@ -85,51 +85,6 @@ def seed_database():
         existing_platform = db.query(PlatformSettings).filter(PlatformSettings.tenant_id == None).first()
         if not existing_platform:
             platform = PlatformSettings(
-                invite_only=False,
-                enable_email_login=True
-            )
-            db.add(platform)
-            logger.info("Seeded global platform settings.")
-
-        # 4. Feature Flags
-        features_data = [
-            {"name": "voice-to-text", "display_name": "Voice To Text"},
-            {"name": "text-to-speech", "display_name": "Text To Speech"},
-            {"name": "translation", "display_name": "Translation"},
-            {"name": "audio-upload", "display_name": "Audio Upload"},
-        ]
-        for f in features_data:
-            existing = db.query(FeatureFlag).filter(FeatureFlag.tenant_id == None, FeatureFlag.name == f["name"]).first()
-            if not existing:
-                db_feature = FeatureFlag(**f)
-                db.add(db_feature)
-                logger.info(f"Seeded feature flag: {f['name']}")
-
-        # 5. Default Navigation Items
-        default_navs = [
-            {"label": "Home", "route": "landing", "order": 1, "is_visible": True},
-            {"label": "AI Tools", "route": "ai-language-tools", "order": 2, "is_visible": True},
-            {"label": "Pricing", "route": "pricing", "order": 3, "is_visible": True},
-            {"label": "Testimonials", "route": "testimonials", "order": 4, "is_visible": True},
-            {"label": "Contact", "route": "contact", "order": 5, "is_visible": True},
-        ]
-        for n in default_navs:
-            existing = db.query(NavigationItem).filter(NavigationItem.tenant_id == None, NavigationItem.label == n["label"]).first()
-            if not existing:
-                db_nav = NavigationItem(**n)
-                db.add(db_nav)
-                logger.info(f"Seeded default navigation: {n['label']}")
-
-        # Seed default billing settings
-        existing_billing = db.query(BillingSettings).filter(BillingSettings.tenant_id == None).first()
-        if not existing_billing:
-            billing_s = BillingSettings(
-                currency="INR",
-                gst_percentage=18.0,
-                invoice_prefix="INV",
-                invoice_footer="For any subscription questions, contact billing@mcc-ai.com.",
-                company_name="Fluentia",
-                company_address="123 Tech Campus, Bangalore, India",
                 company_email="billing@mcc-ai.com",
                 stripe_enabled=True,
                 stripe_public_key="pk_test_51MccAiStripePubKeyFake",

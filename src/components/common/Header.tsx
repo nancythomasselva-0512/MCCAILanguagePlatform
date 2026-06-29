@@ -107,11 +107,11 @@ export const Header: React.FC = () => {
   const menuItems = dbNavs && dbNavs.length > 0
     ? dbNavs.filter((n: any) => n.is_visible).map((n: any) => ({ label: n.label, id: n.route }))
     : [
+      { label: 'Home', id: 'landing' },
+      { label: 'About', id: 'about' },
       { label: 'AI Tools', id: 'ai-language-tools' },
-      { label: 'How It Works', id: 'workflow' },
-      { label: 'Why Fluentia', id: 'features' },
-      { label: 'Languages', id: 'languages' },
-      { label: 'Testimonials', id: 'testimonials' },
+      { label: 'Plans', id: 'pricing' },
+      { label: 'Contacts', id: 'contact' },
     ];
 
   return (

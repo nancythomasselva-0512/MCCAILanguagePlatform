@@ -167,6 +167,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Strict Routing Validation
     const isSA = savedTab?.startsWith('sa-') || savedTab === 'super-admin-dashboard';
+
+    if (path.startsWith('/dashboard/')) {
+       const tabFromUrl = path.replace('/dashboard/', '');
+       if (tabFromUrl) return tabFromUrl as ActiveTabType;
+    }
+    if (path.startsWith('/controller/')) {
+       const tabFromUrl = path.replace('/controller/', '');
+       if (tabFromUrl) return tabFromUrl as ActiveTabType;
+    }
+
     if (path === '/dashboard' && isSA) {
       return 'dashboard';
     }

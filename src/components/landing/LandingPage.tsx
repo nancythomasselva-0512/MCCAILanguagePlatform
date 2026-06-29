@@ -4,7 +4,8 @@ import {
   Mic, Volume2, Languages, FileAudio, ArrowRight, Sparkles,
   Zap, Globe, Shield, Clock, Star, ChevronRight, Play,
   CheckCircle2, Users, BarChart3, Headphones, Plus, Activity,
-  Server, Database, ArrowRightLeft, FileCode
+  Server, Database, ArrowRightLeft, FileCode, X,
+  Mail, Phone, MapPin
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { ActiveTabType } from '../../context/AppContext';
@@ -159,27 +160,6 @@ const STATS = [
   { icon: <Clock size={20} />, value: '<1s', label: 'Response Time', percent: 88, color: '#a855f7' },
 ];
 
-const TESTIMONIALS = [
-  {
-    name: 'Ananya Sharma',
-    role: 'Content Specialist',
-    text: 'The Voice to Text accuracy is mind-blowing. It handles my bilingual transitions perfectly!',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-  },
-  {
-    name: 'Carlos Mendez',
-    role: 'Research Lead',
-    text: 'Instant translation combined with audio narration is a game-changer for international study.',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-  },
-  {
-    name: 'Priya Nair',
-    role: 'Podcast Editor',
-    text: 'The transcript timestamps are clean, and the editor lets me patch errors in seconds.',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  },
-];
-
 // const VIDEO_CHAPTERS = [
 //   { time: 5, label: 'Voice To Text', displayTime: '00:05' },
 //   { time: 15, label: 'Translation', displayTime: '00:15' },
@@ -189,28 +169,22 @@ const TESTIMONIALS = [
 // ];
 
 export const LandingPage: React.FC = () => {
-  const { setViewMode, setActiveTab, globalConfig } = useApp();
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-
-  useEffect(() => {
-    // Testimonials Auto Loop
-    const testimonialTimer = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
-    }, 5500);
-
-    return () => {
-      clearInterval(testimonialTimer);
-    };
-  }, []);
-
+  const { user, setViewMode, setActiveTab, globalConfig, setIsAuthModalOpen, setAuthModalMode } = useApp();
+  const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const launchTool = (tab: ActiveTabType) => {
     setActiveTab(tab);
+    if (!user) {
+      setAuthModalMode('login');
+      setIsAuthModalOpen(true);
+      return;
+    }
     setViewMode('workspace');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <main className="overflow-x-hidden relative min-h-screen text-slate-900 dark:text-slate-100" style={{ background: 'var(--bg-base)' }}>
+    <main id="landing" className="overflow-x-hidden relative min-h-screen text-slate-900 dark:text-slate-100" style={{ background: 'var(--bg-base)' }}>
       {/* ── LIVE BACKGROUND EFFECTS ── */}
       <NeuralBackground />
 
@@ -270,7 +244,7 @@ export const LandingPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <button
                 id="hero-launch-btn"
-                onClick={() => { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                onClick={() => { if (!user) { setAuthModalMode('login'); setIsAuthModalOpen(true); } else { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
                 className="group flex items-center justify-center gap-2.5 rounded-full px-8 py-4 text-base font-extrabold text-white transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] cursor-pointer shadow-lg"
                 style={{ 
                   background: 'linear-gradient(135deg, #0D9488, #10B981)', 
@@ -358,6 +332,199 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+
+
+      {/* ── ABOUT SECTION (Process, Features, Languages) ─────────────────────────── */}
+      <div id="about">
+        {/* ── HOW IT WORKS (INTERACTIVE PROCESS ROW) ─────────────────────────── */}
+        <section className="py-10 px-4 relative overflow-hidden">
+        <div className="mx-auto max-w-5xl">
+          
+          <div className="mb-14 text-center">
+            <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
+              Interactive AI{' '}
+              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
+                Process Flow
+              </span>
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-semibold">
+              Watch your voice files transform inside our client-side pipelines. Minimal network latencies, complete privacy.
+            </p>
+          </div>
+
+          <div className="relative grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            
+            {/* Dotted vector connector line */}
+            <div className="pointer-events-none absolute top-12 left-[12%] hidden h-0.5 w-[76%] lg:block"
+              style={{ background: 'linear-gradient(to right, #14b8a6, #0d9488, #10b981, #059669)' }} />
+
+            {[
+              { idx: '01', title: 'Input Capture', desc: 'Speak, type, or drag-and-drop raw audio streams directly inside the web browser.', icon: <Mic size={16} /> },
+              { idx: '02', title: 'AI Processing', desc: 'Our ONNX runtime extracts acoustic spectrogram parameters locally.', icon: <Server size={16} /> },
+              { idx: '03', title: 'Neural Translation', desc: 'Transformers map tokens and semantic fields into target accent dictionaries.', icon: <Languages size={16} /> },
+              { idx: '04', title: 'Output Generation', desc: 'Export formatted transcripts, download MP3 synthesis, or copy translations.', icon: <Plus size={16} /> },
+            ].map((w) => (
+              <ThreeDInteractiveCard
+                key={w.idx}
+                glowColor="rgba(168, 85, 247, 0.12)"
+                className="p-5"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-display text-sm font-black shadow-lg"
+                    style={{ background: 'linear-gradient(135deg, #14b8a6, #10b981)' }}>
+                    {w.idx}
+                  </div>
+                  <div className="text-slate-600 dark:text-slate-400 group-hover:scale-105 transition-transform">{w.icon}</div>
+                </div>
+                <h3 className="mb-2 font-bold text-slate-900 dark:text-white text-base">{w.title}</h3>
+                <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300 font-semibold">{w.desc}</p>
+              </ThreeDInteractiveCard>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+
+
+      {/* ── WHY FLUENTIA (STRIPE-STYLE GRID) ──────────────────────────────────── */}
+      <section className="py-10 px-4 relative">
+        <div className="mx-auto max-w-6xl">
+          
+          <div className="mb-14 text-center">
+            <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
+              Enterprise{' '}
+              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
+                Infrastructure
+              </span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-semibold">
+              Engineered with modern browser compilation tools for maximum execution efficiency.
+            </p>
+          </div>
+
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { icon: <Zap size={18} />, title: 'Sub-Second Latencies', desc: 'Localized models process acoustic pipelines with zero routing handshakes.', color: '#f59e0b' },
+              { icon: <Shield size={18} />, title: 'Privacy Sandbox', desc: 'Executes safely on device. No voice data or documents ever leave your machine.', color: '#10b981' },
+              { icon: <Globe size={18} />, title: 'Global Translations', desc: 'Integrated transformer networks support regional dialects and Tamil accents.', color: '#3b82f6' },
+              { icon: <Headphones size={18} />, title: 'Speech Intonation', desc: 'Diverse presets simulate human prosody, volume waves, and intonations.', color: '#a855f7' },
+              { icon: <Database size={18} />, title: 'Zero Cache Logging', desc: 'No accounts, cookies, or credentials are required. Load the URL and work.', color: '#f97316' },
+              { icon: <FileCode size={18} />, title: 'ONNX Accelerations', desc: 'Uses WASM assembly vectors to run models at native GPU/CPU limits.', color: '#ec4899' },
+            ].map((feat) => (
+              <ThreeDInteractiveCard
+                key={feat.title}
+                glowColor={`color-mix(in srgb, ${feat.color} 18%, transparent)`}
+                className="p-5"
+              >
+                <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl text-white shadow"
+                  style={{ background: feat.color }}>
+                  {feat.icon}
+                </div>
+                <h3 className="mb-1.5 font-bold text-slate-900 dark:text-white text-base">{feat.title}</h3>
+                <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300 font-semibold">{feat.desc}</p>
+              </ThreeDInteractiveCard>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+
+
+      {/* ── SUPPORTED LANGUAGES INTERACTIVE MAP ─────────────────────────────── */}
+      <section className="py-10 px-4 relative overflow-hidden">
+        <div className="mx-auto max-w-5xl text-center relative z-10">
+          
+          <div className="mb-10 text-center">
+            <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
+              Supported{' '}
+              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
+                Languages Network
+              </span>
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-semibold">
+              Dotted connection paths track our regional translation relays and Tamil dictionary synchronizers.
+            </p>
+          </div>
+
+          {/* Interactive World Map SVG */}
+          <div className="relative h-64 sm:h-80 w-full max-w-4xl mx-auto bg-white dark:bg-black/40 border border-[#DDE5F0] dark:border-white/5 rounded-[28px] p-4 shadow-lg flex items-center justify-center overflow-hidden mb-8">
+            <div className="absolute inset-0 bg-radial from-cyan-500/5 via-transparent to-transparent pointer-events-none" />
+            
+            {/* World outline SVG */}
+            <svg className="w-4/5 h-full opacity-20 dark:opacity-15 text-slate-500 dark:text-slate-400" viewBox="0 0 1000 500" fill="currentColor">
+              <path d="M150,150 Q180,100 240,120 Q300,140 280,220 Q240,280 180,240 Z" />
+              <path d="M220,280 Q250,340 280,420 Q250,450 200,410 Q160,350 180,300 Z" />
+              <path d="M500,120 Q550,80 620,100 Q680,120 650,200 Q580,260 520,210 Z" />
+              <path d="M550,220 Q600,280 580,360 Q530,380 490,340 Z" />
+              <path d="M720,150 Q780,120 850,160 Q880,220 820,280 Q760,250 740,180 Z" />
+              <path d="M800,320 Q850,300 890,340 Q840,410 790,380 Z" />
+            </svg>
+
+            {/* Glowing nodes overlay */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* US Node */}
+              <span className="absolute top-[28%] left-[25%] flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-60"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+              </span>
+              {/* Europe Node */}
+              <span className="absolute top-[25%] left-[56%] flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-60"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
+              </span>
+              {/* India Node */}
+              <span className="absolute top-[42%] left-[64%] flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              {/* Japan Node */}
+              <span className="absolute top-[32%] left-[82%] flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-60"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+              </span>
+
+              {/* Vector connection paths */}
+              <svg className="absolute inset-0 w-full h-full">
+                <motion.path 
+                  d="M 255 145 Q 400 80 565 130" 
+                  fill="none" stroke="rgba(6, 182, 212, 0.45)" strokeWidth="1.5" strokeDasharray="5 3"
+                />
+                <motion.path 
+                  d="M 565 130 Q 600 200 645 215" 
+                  fill="none" stroke="rgba(16, 185, 129, 0.45)" strokeWidth="1.5" strokeDasharray="5 3"
+                />
+                <motion.path 
+                  d="M 825 165 Q 750 180 645 215" 
+                  fill="none" stroke="rgba(20, 184, 166, 0.45)" strokeWidth="1.5" strokeDasharray="5 3"
+                />
+              </svg>
+            </div>
+
+            {/* Live activity indicator badge */}
+            <div className="absolute bottom-4 px-3.5 py-1.5 rounded-full bg-white/95 dark:bg-black/80 border border-[#DDE5F0] dark:border-white/10 text-[10px] font-extrabold text-slate-800 dark:text-slate-200 backdrop-blur-md flex items-center gap-1.5 shadow-lg select-none">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Translating Live Speech Stream (Tamil ➔ English)</span>
+            </div>
+          </div>
+
+          {/* Languages list pills */}
+          <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto">
+            {['English', 'Tamil (தமிழ்)', 'Hindi (हिन्दी)', 'Spanish', 'French', 'German', 'Italian', 'Japanese', 'Arabic', 'Russian', 'Dutch', 'Korean', '+80 more'].map((lang) => (
+              <span 
+                key={lang} 
+                className="rounded-full px-4 py-2 text-xs font-bold bg-white dark:bg-white/[0.02] border border-[#DDE5F0] dark:border-white/[0.06] text-slate-800 dark:text-slate-300 transition-all hover:scale-105 shadow-sm"
+              >
+                {lang}
+              </span>
+            ))}
+          </div>
+
+        </div>
+      </section>
+      </div>
 
 
 
@@ -511,265 +678,8 @@ export const LandingPage: React.FC = () => {
 
 
 
-      {/* ── HOW IT WORKS (INTERACTIVE PROCESS ROW) ─────────────────────────── */}
-      <section id="workflow" className="py-10 px-4 relative overflow-hidden">
-        <div className="mx-auto max-w-5xl">
-          
-          <div className="mb-14 text-center">
-            <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
-              Interactive AI{' '}
-              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
-                Process Flow
-              </span>
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-semibold">
-              Watch your voice files transform inside our client-side pipelines. Minimal network latencies, complete privacy.
-            </p>
-          </div>
-
-          <div className="relative grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            
-            {/* Dotted vector connector line */}
-            <div className="pointer-events-none absolute top-12 left-[12%] hidden h-0.5 w-[76%] lg:block"
-              style={{ background: 'linear-gradient(to right, #14b8a6, #0d9488, #10b981, #059669)' }} />
-
-            {[
-              { idx: '01', title: 'Input Capture', desc: 'Speak, type, or drag-and-drop raw audio streams directly inside the web browser.', icon: <Mic size={16} /> },
-              { idx: '02', title: 'AI Processing', desc: 'Our ONNX runtime extracts acoustic spectrogram parameters locally.', icon: <Server size={16} /> },
-              { idx: '03', title: 'Neural Translation', desc: 'Transformers map tokens and semantic fields into target accent dictionaries.', icon: <Languages size={16} /> },
-              { idx: '04', title: 'Output Generation', desc: 'Export formatted transcripts, download MP3 synthesis, or copy translations.', icon: <Plus size={16} /> },
-            ].map((w) => (
-              <ThreeDInteractiveCard
-                key={w.idx}
-                glowColor="rgba(168, 85, 247, 0.12)"
-                className="p-5"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl text-white font-display text-sm font-black shadow-lg"
-                    style={{ background: 'linear-gradient(135deg, #14b8a6, #10b981)' }}>
-                    {w.idx}
-                  </div>
-                  <div className="text-slate-600 dark:text-slate-400 group-hover:scale-105 transition-transform">{w.icon}</div>
-                </div>
-                <h3 className="mb-2 font-bold text-slate-900 dark:text-white text-base">{w.title}</h3>
-                <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300 font-semibold">{w.desc}</p>
-              </ThreeDInteractiveCard>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-
-
-      {/* ── WHY FLUENTIA (STRIPE-STYLE GRID) ──────────────────────────────────── */}
-      <section id="features" className="py-10 px-4 relative">
-        <div className="mx-auto max-w-6xl">
-          
-          <div className="mb-14 text-center">
-            <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
-              Enterprise{' '}
-              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
-                Infrastructure
-              </span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-semibold">
-              Engineered with modern browser compilation tools for maximum execution efficiency.
-            </p>
-          </div>
-
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { icon: <Zap size={18} />, title: 'Sub-Second Latencies', desc: 'Localized models process acoustic pipelines with zero routing handshakes.', color: '#f59e0b' },
-              { icon: <Shield size={18} />, title: 'Privacy Sandbox', desc: 'Executes safely on device. No voice data or documents ever leave your machine.', color: '#10b981' },
-              { icon: <Globe size={18} />, title: 'Global Translations', desc: 'Integrated transformer networks support regional dialects and Tamil accents.', color: '#3b82f6' },
-              { icon: <Headphones size={18} />, title: 'Speech Intonation', desc: 'Diverse presets simulate human prosody, volume waves, and intonations.', color: '#a855f7' },
-              { icon: <Database size={18} />, title: 'Zero Cache Logging', desc: 'No accounts, cookies, or credentials are required. Load the URL and work.', color: '#f97316' },
-              { icon: <FileCode size={18} />, title: 'ONNX Accelerations', desc: 'Uses WASM assembly vectors to run models at native GPU/CPU limits.', color: '#ec4899' },
-            ].map((feat) => (
-              <ThreeDInteractiveCard
-                key={feat.title}
-                glowColor={`color-mix(in srgb, ${feat.color} 18%, transparent)`}
-                className="p-5"
-              >
-                <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl text-white shadow"
-                  style={{ background: feat.color }}>
-                  {feat.icon}
-                </div>
-                <h3 className="mb-1.5 font-bold text-slate-900 dark:text-white text-base">{feat.title}</h3>
-                <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300 font-semibold">{feat.desc}</p>
-              </ThreeDInteractiveCard>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-
-
-      {/* ── SUPPORTED LANGUAGES INTERACTIVE MAP ─────────────────────────────── */}
-      <section id="languages" className="py-10 px-4 relative overflow-hidden">
-        <div className="mx-auto max-w-5xl text-center relative z-10">
-          
-          <div className="mb-10 text-center">
-            <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
-              Supported{' '}
-              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
-                Languages Network
-              </span>
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-semibold">
-              Dotted connection paths track our regional translation relays and Tamil dictionary synchronizers.
-            </p>
-          </div>
-
-          {/* Interactive World Map SVG */}
-          <div className="relative h-64 sm:h-80 w-full max-w-4xl mx-auto bg-white dark:bg-black/40 border border-[#DDE5F0] dark:border-white/5 rounded-[28px] p-4 shadow-lg flex items-center justify-center overflow-hidden mb-8">
-            <div className="absolute inset-0 bg-radial from-cyan-500/5 via-transparent to-transparent pointer-events-none" />
-            
-            {/* World outline SVG */}
-            <svg className="w-4/5 h-full opacity-20 dark:opacity-15 text-slate-500 dark:text-slate-400" viewBox="0 0 1000 500" fill="currentColor">
-              <path d="M150,150 Q180,100 240,120 Q300,140 280,220 Q240,280 180,240 Z" />
-              <path d="M220,280 Q250,340 280,420 Q250,450 200,410 Q160,350 180,300 Z" />
-              <path d="M500,120 Q550,80 620,100 Q680,120 650,200 Q580,260 520,210 Z" />
-              <path d="M550,220 Q600,280 580,360 Q530,380 490,340 Z" />
-              <path d="M720,150 Q780,120 850,160 Q880,220 820,280 Q760,250 740,180 Z" />
-              <path d="M800,320 Q850,300 890,340 Q840,410 790,380 Z" />
-            </svg>
-
-            {/* Glowing nodes overlay */}
-            <div className="absolute inset-0 pointer-events-none">
-              {/* US Node */}
-              <span className="absolute top-[28%] left-[25%] flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-60"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
-              </span>
-              {/* Europe Node */}
-              <span className="absolute top-[25%] left-[56%] flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-60"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-500"></span>
-              </span>
-              {/* India Node */}
-              <span className="absolute top-[42%] left-[64%] flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-              </span>
-              {/* Japan Node */}
-              <span className="absolute top-[32%] left-[82%] flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-60"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
-              </span>
-
-              {/* Vector connection paths */}
-              <svg className="absolute inset-0 w-full h-full">
-                <motion.path 
-                  d="M 255 145 Q 400 80 565 130" 
-                  fill="none" stroke="rgba(6, 182, 212, 0.45)" strokeWidth="1.5" strokeDasharray="5 3"
-                />
-                <motion.path 
-                  d="M 565 130 Q 600 200 645 215" 
-                  fill="none" stroke="rgba(16, 185, 129, 0.45)" strokeWidth="1.5" strokeDasharray="5 3"
-                />
-                <motion.path 
-                  d="M 825 165 Q 750 180 645 215" 
-                  fill="none" stroke="rgba(20, 184, 166, 0.45)" strokeWidth="1.5" strokeDasharray="5 3"
-                />
-              </svg>
-            </div>
-
-            {/* Live activity indicator badge */}
-            <div className="absolute bottom-4 px-3.5 py-1.5 rounded-full bg-white/95 dark:bg-black/80 border border-[#DDE5F0] dark:border-white/10 text-[10px] font-extrabold text-slate-800 dark:text-slate-200 backdrop-blur-md flex items-center gap-1.5 shadow-lg select-none">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Translating Live Speech Stream (Tamil ➔ English)</span>
-            </div>
-          </div>
-
-          {/* Languages list pills */}
-          <div className="flex flex-wrap justify-center gap-2 max-w-4xl mx-auto">
-            {['English', 'Tamil (தமிழ்)', 'Hindi (हिन्दी)', 'Spanish', 'French', 'German', 'Italian', 'Japanese', 'Arabic', 'Russian', 'Dutch', 'Korean', '+80 more'].map((lang) => (
-              <span 
-                key={lang} 
-                className="rounded-full px-4 py-2 text-xs font-bold bg-white dark:bg-white/[0.02] border border-[#DDE5F0] dark:border-white/[0.06] text-slate-800 dark:text-slate-300 transition-all hover:scale-105 shadow-sm"
-              >
-                {lang}
-              </span>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-
-
-      {/* ── TESTIMONIALS CAROUSEL ───────────────────────────────────────────── */}
-      <section id="testimonials" className="py-10 px-4 relative">
-        <div className="mx-auto max-w-4xl">
-          
-          <div className="mb-12 text-center">
-            <h2 className="font-display text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white">
-              Loved by{' '}
-              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent font-black">
-                Creators
-              </span>
-            </h2>
-          </div>
-
-          {/* Premium testimonial slider deck */}
-          <div className="relative h-44 sm:h-36 flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              {TESTIMONIALS.map((t, idx) => {
-                if (idx !== activeTestimonial) return null;
-                return (
-                  <motion.div
-                    key={t.name}
-                    initial={{ opacity: 0, scale: 0.96, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.96, y: -10 }}
-                    transition={{ duration: 0.35 }}
-                    className="bg-white dark:bg-[#0a1120]/80 border border-[#DDE5F0] dark:border-white/10 rounded-[28px] p-6 w-full absolute shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 select-none"
-                  >
-                    <div className="flex-1">
-                      <p className="text-sm italic leading-relaxed text-slate-800 dark:text-slate-200 font-bold mb-3">
-                        "{t.text}"
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <img src={t.avatar} alt={t.name} className="h-9 w-9 rounded-full object-cover border border-[#DDE5F0] dark:border-cyan-500/20 shadow-sm" />
-                        <div>
-                          <h4 className="text-xs font-extrabold text-slate-900 dark:text-white leading-none">{t.name}</h4>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block mt-0.5">{t.role}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: 5 }).map((_, j) => (
-                        <Star key={j} size={13} className="fill-amber-400 text-amber-400" />
-                      ))}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-
-          {/* Slider indicator dots */}
-          <div className="flex justify-center gap-2 mt-8">
-            {TESTIMONIALS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveTestimonial(i)}
-                className={`h-2 rounded-full transition-all duration-200 cursor-pointer ${i === activeTestimonial ? 'w-8 bg-cyan-500' : 'w-2 bg-slate-300 dark:bg-white/20'}`}
-                aria-label={`Testimonial ${i + 1}`}
-              />
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-
-
       {/* ── PRICING & PLAN DETAILS SECTION ───────────────────────────────────── */}
-      <section className="py-20 sm:py-28 px-4 relative overflow-hidden bg-slate-50/50 dark:bg-[#070d1e]/20 border-y border-slate-200 dark:border-white/5">
+      <section id="pricing" className="py-20 sm:py-28 px-4 relative overflow-hidden bg-slate-50/50 dark:bg-[#070d1e]/20 border-y border-slate-200 dark:border-white/5">
         {/* Cinematic ambient background glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-teal-500/10 via-emerald-500/10 to-cyan-500/10 dark:from-teal-500/15 dark:via-emerald-500/20 dark:to-cyan-500/15 rounded-full blur-[120px] pointer-events-none" />
 
@@ -789,6 +699,34 @@ export const LandingPage: React.FC = () => {
             </p>
           </div>
 
+          <div className="relative z-10 flex items-center justify-center gap-3 pt-2 mb-10">
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${
+                billingCycle === 'monthly'
+                  ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
+                  : 'bg-white/70 dark:bg-white/5 text-slate-500 dark:text-slate-400 border border-teal-200/60 dark:border-teal-900/40 hover:border-teal-300'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingCycle('yearly')}
+              className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 flex items-center gap-2 ${
+                billingCycle === 'yearly'
+                  ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
+                  : 'bg-white/70 dark:bg-white/5 text-slate-500 dark:text-slate-400 border border-teal-200/60 dark:border-teal-900/40 hover:border-teal-300'
+              }`}
+            >
+              Yearly
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider ${
+                billingCycle === 'yearly' ? 'bg-white/30 text-white' : 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+              }`}>
+                Save 30%
+              </span>
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
             {/* Free Trial Card */}
             <ThreeDInteractiveCard
@@ -800,7 +738,7 @@ export const LandingPage: React.FC = () => {
                   <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-teal-500/10 text-teal-600 dark:text-teal-400 tracking-wider">
                     Most Popular
                   </span>
-                  <span className="text-sm font-bold text-slate-500 dark:text-slate-400">14 Days Trial</span>
+                  <span className="text-sm font-bold text-slate-500 dark:text-slate-400">7 Days Trial</span>
                 </div>
                 <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2">Free Trial</h3>
                 <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mb-6">
@@ -811,7 +749,7 @@ export const LandingPage: React.FC = () => {
                   <li className="flex items-center gap-3">
                     <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-bold text-slate-800 dark:text-white">14 Days Trial Period</p>
+                      <p className="text-xs font-bold text-slate-800 dark:text-white">7 Days Trial Period</p>
                       <p className="text-[10px] text-slate-500">Unrestricted system access</p>
                     </div>
                   </li>
@@ -847,10 +785,10 @@ export const LandingPage: React.FC = () => {
               </div>
               <div className="w-full mt-8">
                 <button
-                  onClick={() => { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  onClick={() => { if (!user) { setAuthModalMode('login'); setIsAuthModalOpen(true); } else { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
                   className="w-full py-3 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-lg text-center block"
                 >
-                  Start 14-Day Free Trial
+                  Start 7-Day Free Trial
                 </button>
               </div>
             </ThreeDInteractiveCard>
@@ -869,7 +807,7 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2">Upgrade Plans</h3>
                 <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mb-6">
-                  After your 14-day trial concludes, select one of our premium enterprise tiers:
+                  After your 7-day trial concludes, select one of our premium enterprise tiers:
                 </p>
                 <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-4" />
                 <div className="space-y-4">
@@ -878,7 +816,7 @@ export const LandingPage: React.FC = () => {
                       <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Starter Plan</h4>
                       <p className="text-[10px] text-slate-500">60 mins audio / 100k translation / 50k TTS</p>
                     </div>
-                    <span className="text-base font-black text-teal-600 dark:text-teal-400">$19/mo</span>
+                    <span className="text-base font-black text-teal-600 dark:text-teal-400">{billingCycle === "yearly" ? "$13/mo" : "$19/mo"}</span>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 flex justify-between items-center">
@@ -886,7 +824,7 @@ export const LandingPage: React.FC = () => {
                       <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Professional Plan</h4>
                       <p className="text-[10px] text-slate-500">300 mins audio / 500k translation / 250k TTS</p>
                     </div>
-                    <span className="text-base font-black text-teal-600 dark:text-teal-400">$49/mo</span>
+                    <span className="text-base font-black text-teal-600 dark:text-teal-400">{billingCycle === "yearly" ? "$34/mo" : "$49/mo"}</span>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 flex justify-between items-center">
@@ -894,13 +832,13 @@ export const LandingPage: React.FC = () => {
                       <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Enterprise Plan</h4>
                       <p className="text-[10px] text-slate-500">1200 mins audio / 2M translation / 1M TTS</p>
                     </div>
-                    <span className="text-base font-black text-teal-600 dark:text-teal-400">$149/mo</span>
+                    <span className="text-base font-black text-teal-600 dark:text-teal-400">{billingCycle === "yearly" ? "$104/mo" : "$149/mo"}</span>
                   </div>
                 </div>
               </div>
               <div className="w-full mt-8">
                 <button
-                  onClick={() => { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  onClick={() => setIsPlansModalOpen(true)}
                   className="w-full py-3 px-6 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-900 dark:text-white text-xs font-bold cursor-pointer transition-colors text-center block"
                 >
                   Explore Pricing Details
@@ -912,7 +850,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ── MASSIVE PREMIUM CALL TO ACTION ──────────────────────────────────── */}
-      <section className="py-14 px-4 relative">
+      <section id="contact" className="py-14 px-4 relative">
         <div className="mx-auto max-w-4xl overflow-hidden rounded-[36px] p-8 sm:p-12 text-center relative border border-[#DDE5F0] dark:border-white/10 shadow-2xl bg-white dark:bg-[#070d1e]/85"
           style={{
             backdropFilter: 'blur(25px)',
@@ -921,27 +859,86 @@ export const LandingPage: React.FC = () => {
           <div className="pointer-events-none absolute inset-0 rounded-[36px]"
             style={{ background: 'radial-gradient(ellipse at top right, rgba(6, 182, 212, 0.08), transparent 50%)' }} />
           
-          <Sparkles size={32} className="mx-auto mb-5 text-cyan-600 dark:text-cyan-400 animate-pulse" />
-          
-          <h2 className="font-display text-2xl font-black text-slate-900 dark:text-white sm:text-4xl md:text-5xl leading-tight">
-            Launch Your {globalConfig?.branding?.platform_name || 'Fluentia'} Workspace
-          </h2>
-          
-          <p className="mx-auto mt-3.5 max-w-lg text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
-            {globalConfig?.branding?.copyright_text || 'Join developers, creators, and researchers using our platform. Complete document translation, audio speech synthesis, and transcripts in seconds.'}
-          </p>
-          
-          <button
-            id="cta-launch-btn"
-            onClick={() => { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className="mt-8 inline-flex items-center gap-2.5 rounded-full bg-slate-900 dark:bg-white px-8 py-4 text-sm font-extrabold text-white dark:text-teal-900 transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] shadow-lg cursor-pointer"
-          >
-            <Play size={13} className="fill-current" />
-            Launch Workspace Free
-          </button>
+          <div className="flex flex-col items-center justify-center space-y-6">
+            <h2 className="font-display text-3xl font-black text-slate-900 dark:text-white sm:text-5xl">
+              Get in Touch
+            </h2>
+            <p className="text-slate-600 dark:text-slate-300 max-w-2xl text-center mb-8">
+              Have questions about our enterprise plans, custom integrations, or need technical support? Our team is ready to help you build the future of AI language processing.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl mt-4">
+              <a href="https://mail.google.com/mail/?view=cm&fs=1&to=aachinancy@gmail.com" target="_blank" rel="noopener noreferrer" className="block p-6 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 flex flex-col items-center text-center transition-transform hover:scale-105 cursor-pointer">
+                <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mb-4">
+                  <Mail className="text-teal-600 dark:text-teal-400" size={24} />
+                </div>
+                <h4 className="font-bold text-slate-900 dark:text-white mb-1">Email Us</h4>
+                <span className="text-sm text-teal-600 dark:text-teal-400 hover:underline">aachinancy@gmail.com</span>
+              </a>
+              
+              <a href="tel:+18005550199" className="block p-6 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 flex flex-col items-center text-center transition-transform hover:scale-105 cursor-pointer">
+                <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mb-4">
+                  <Phone className="text-teal-600 dark:text-teal-400" size={24} />
+                </div>
+                <h4 className="font-bold text-slate-900 dark:text-white mb-1">Call Us</h4>
+                <span className="text-sm text-teal-600 dark:text-teal-400 hover:underline">+1 (800) 555-0199</span>
+              </a>
+
+              <a href="https://maps.google.com/?q=123+AI+Boulevard,Tech+District,CA+94103" target="_blank" rel="noopener noreferrer" className="block p-6 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 flex flex-col items-center text-center transition-transform hover:scale-105 cursor-pointer">
+                <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mb-4">
+                  <MapPin className="text-teal-600 dark:text-teal-400" size={24} />
+                </div>
+                <h4 className="font-bold text-slate-900 dark:text-white mb-1">Office</h4>
+                <span className="text-sm text-slate-600 dark:text-slate-400">123 AI Boulevard<br/>Tech District, CA 94103</span>
+              </a>
+            </div>
+          </div>
         </div>
       </section>
-    </main>
+    
+      {isPlansModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-2xl w-full shadow-2xl relative border border-[#DDE5F0] dark:border-white/10">
+            <button onClick={() => setIsPlansModalOpen(false)} className="absolute top-4 right-4 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer">
+              <X size={24} />
+            </button>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Premium Plan Details</h3>
+            
+            <div className="space-y-4">
+              <div className="p-4 border border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+                <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">Starter Plan - {billingCycle === "yearly" ? "$13/mo" : "$19/mo"}</h4>
+                <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1">
+                  <li>• 60 minutes of audio processing</li>
+                  <li>• 100,000 characters translation</li>
+                  <li>• 50,000 characters Text-to-Speech</li>
+                  <li>• Secure isolated storage included</li>
+                </ul>
+              </div>
+              
+              <div className="p-4 border border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+                <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">Professional Plan - {billingCycle === "yearly" ? "$34/mo" : "$49/mo"}</h4>
+                <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1">
+                  <li>• 300 minutes of audio processing</li>
+                  <li>• 500,000 characters translation</li>
+                  <li>• 250,000 characters Text-to-Speech</li>
+                  <li>• Secure isolated storage included</li>
+                </ul>
+              </div>
+
+              <div className="p-4 border border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+                <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">Enterprise Plan - {billingCycle === "yearly" ? "$104/mo" : "$149/mo"}</h4>
+                <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1">
+                  <li>• 1200 minutes of audio processing</li>
+                  <li>• 2,000,000 characters translation</li>
+                  <li>• 1,000,000 characters Text-to-Speech</li>
+                  <li>• Secure isolated storage included</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+</main>
   );
 };
 
