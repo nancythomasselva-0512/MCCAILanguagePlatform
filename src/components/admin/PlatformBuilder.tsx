@@ -3,13 +3,13 @@ import { apiRequest } from '../../utils/api';
 import { 
   Settings, Paintbrush, FileText, Menu, Sliders, Play, FormInput, 
   Mail, ShieldCheck, Code2, Users, FolderOpen, Plus, Trash2, 
-  Save, Loader2, Image, Video, FileText as DocIcon
+  Save, Loader2, Image, Video, FileText as DocIcon, Languages
 } from 'lucide-react';
 
 type SectionType = 
   | 'branding' | 'theme' | 'website' | 'navigation' | 'landing' 
   | 'cms' | 'features' | 'dashboard' | 'forms' | 'emails' 
-  | 'auth' | 'custom_code' | 'white_label' | 'media';
+  | 'auth' | 'custom_code' | 'white_label' | 'media' | 'translation';
 
 export const PlatformBuilder: React.FC = () => {
   const [activeSec, setActiveSec] = useState<SectionType>('branding');
@@ -40,7 +40,7 @@ export const PlatformBuilder: React.FC = () => {
     enable_email_login: true, enable_google_login: false,
     enable_microsoft_login: false, enable_otp_login: false,
     enable_magic_link: false, custom_css: '', custom_js: '',
-    tracking_scripts: ''
+    tracking_scripts: '', allowed_document_extensions: '.doc,.docx,.xls,.xlsx'
   });
 
   // Website Pages
@@ -420,6 +420,7 @@ export const PlatformBuilder: React.FC = () => {
     { id: 'custom_code', label: 'Custom CSS/JS', icon: Code2 },
     { id: 'white_label', label: 'White-Label Manager', icon: Users },
     { id: 'media', label: 'Media Library', icon: FolderOpen },
+    { id: 'translation', label: 'Translation Config', icon: Languages },
   ];
 
   return (
@@ -1160,10 +1161,67 @@ export const PlatformBuilder: React.FC = () => {
             <button
               onClick={handleSavePlatformSettings}
               disabled={saving}
-              className="mt-2 py-2 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="mt-4 py-2 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
-              Save Access Control Settings
+              Save Platform Settings
+            </button>
+          </div>
+        )}
+
+        {/* TRANSLATION CONFIG SECTION */}
+        {activeSec === 'translation' && (
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white">Translation Tools Config</h3>
+            <p className="text-[10px] text-slate-500">Configure global settings for the document translator.</p>
+            
+            <div className="p-4 rounded-2xl bg-slate-100/50 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase mb-3 block">Allowed Document Upload Extensions</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                {[
+                  { label: 'Word Documents', exts: ['.doc', '.docx'] },
+                  { label: 'Excel Spreadsheets', exts: ['.xls', '.xlsx'] },
+                  { label: 'PDF Documents', exts: ['.pdf'] },
+                  { label: 'Text Files', exts: ['.txt'] },
+                  { label: 'CSV Files', exts: ['.csv'] },
+                ].map(opt => {
+                  const currentExts = (platformForm.allowed_document_extensions || '').split(',').map(e => e.trim()).filter(Boolean);
+                  const isChecked = opt.exts.every(e => currentExts.includes(e));
+                  
+                  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                    let updated = [...currentExts];
+                    if (e.target.checked) {
+                      opt.exts.forEach(ext => { if (!updated.includes(ext)) updated.push(ext); });
+                    } else {
+                      updated = updated.filter(ext => !opt.exts.includes(ext));
+                    }
+                    setPlatformForm({ ...platformForm, allowed_document_extensions: updated.join(',') });
+                  };
+
+                  return (
+                    <label key={opt.label} className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-200/50 dark:hover:bg-white/5 cursor-pointer transition-colors border border-transparent hover:border-slate-300 dark:hover:border-white/10">
+                      <input 
+                        type="checkbox" 
+                        checked={isChecked} 
+                        onChange={onChange} 
+                        className="h-4 w-4 rounded text-teal-600 focus:ring-teal-500 border-slate-300 bg-slate-100 dark:bg-slate-900" 
+                      />
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        {opt.label} <span className="text-slate-400 font-normal">({opt.exts.join(', ')})</span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              onClick={handleSavePlatformSettings}
+              disabled={saving}
+              className="mt-4 py-2 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+              Save Platform Settings
             </button>
           </div>
         )}

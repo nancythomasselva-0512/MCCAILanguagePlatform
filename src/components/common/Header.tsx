@@ -166,7 +166,7 @@ export const Header: React.FC = () => {
               <button
                 key={item.id}
                 onClick={() => navigateToSection(item.id)}
-                className="relative text-sm font-bold transition-all duration-200 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white py-1.5 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-teal-500 dark:after:bg-emerald-500 after:transition-all after:duration-200 after:ease-out"
+                className="relative text-lg font-bold transition-all duration-200 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white py-1.5 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-teal-500 dark:after:bg-emerald-500 after:transition-all after:duration-200 after:ease-out"
               >
                 {item.label}
               </button>

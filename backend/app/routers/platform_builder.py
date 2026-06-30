@@ -51,7 +51,8 @@ def get_global_config(db: Session = Depends(get_db)):
             "enable_email_login": platform.enable_email_login if platform else True,
             "enable_google_login": platform.enable_google_login if platform else False,
             "enable_otp_login": platform.enable_otp_login if platform else False,
-            "enable_magic_link": platform.enable_magic_link if platform else False
+            "enable_magic_link": platform.enable_magic_link if platform else False,
+            "allowed_document_extensions": platform.allowed_document_extensions if platform else ".doc,.docx,.xls,.xlsx"
         } if platform else {},
         "navigation": [
             {

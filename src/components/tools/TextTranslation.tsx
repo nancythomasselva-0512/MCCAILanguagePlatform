@@ -5,13 +5,14 @@ import {
   ChevronDown, AlertCircle, CheckCircle2, Loader2, X, Cpu, Languages,
   Globe, Activity, Award, FileText, Download,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  Play, Pause, Square
+  Play, Pause, Square, UploadCloud, File as FileIcon
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { providerManager } from '../../providers/providerManager';
 import { FontPicker } from '../common/FontPicker';
 import { ttsService } from '../../services/ttsService';
 import type { TTSState } from '../../services/ttsService';
+import { apiRequest } from '../../utils/api';
 
 const LANGUAGES = [
   'Auto Detect', 'English', 'Tamil', 'Hindi', 'Spanish', 'French', 'German',
@@ -27,7 +28,7 @@ const TARGET_LANGUAGES = LANGUAGES.filter(l => l !== 'Auto Detect');
 type TranslateState = 'idle' | 'translating' | 'done' | 'error';
 
 export const TextTranslation: React.FC = () => {
-  const { history, billingOverview, addHistoryItem, openAiApiKey, fetchBillingOverview } = useApp();
+  const { history, billingOverview, addHistoryItem, openAiApiKey, fetchBillingOverview, globalConfig } = useApp();
   const [sourceText, setSourceText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [sourceLang, setSourceLang] = useState('Auto Detect');
@@ -52,10 +53,65 @@ export const TextTranslation: React.FC = () => {
   const [srcTtsState, setSrcTtsState] = useState<TTSState>('idle');
   const [tgtTtsState, setTgtTtsState] = useState<TTSState>('idle');
 
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const setSourceFont = (font: string) => { setSourceFontState(font); localStorage.setItem('mcc-ai-source-font', font); };
   const setTargetFont = (font: string) => { setTargetFontState(font); localStorage.setItem('mcc-ai-target-font', font); };
   
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const processFile = async (file: File) => {
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      setErrorMsg('File exceeds 50MB limit.');
+      return;
+    }
+    setUploadedFile(file);
+    setIsExtracting(true);
+    setErrorMsg('');
+    setUploadProgress(20);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      setUploadProgress(50);
+      const data = await apiRequest("/tools/extract-text", {
+        method: 'POST',
+        body: formData,
+      });
+      setUploadProgress(80);
+      
+      const extractedText = data.text;
+      const truncatedText = extractedText.slice(0, 5000);
+      setSourceText(truncatedText);
+      setCharCount(truncatedText.length);
+      setUploadProgress(100);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'File extraction failed.');
+      setUploadedFile(null);
+    } finally {
+      setTimeout(() => {
+        setIsExtracting(false);
+        setUploadProgress(0);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }, 500);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleRemoveFile = () => {
+    setUploadedFile(null);
+    setSourceText('');
+    setTranslatedText('');
+    setCharCount(0);
+  };
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -198,6 +254,7 @@ export const TextTranslation: React.FC = () => {
     ttsService.stop();
     setSourceText(''); setTranslatedText(''); setState('idle');
     setDetectedLang(''); setCharCount(0); setErrorMsg('');
+    setUploadedFile(null);
   };
 
   const selectStyle = {
@@ -325,6 +382,37 @@ export const TextTranslation: React.FC = () => {
           <div className="grid gap-6 md:grid-cols-2">
             {/* Source */}
             <div className="app-card rounded-2xl p-5 flex flex-col border border-slate-200/60 dark:border-white/5">
+              
+              {/* Hidden File Input */}
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                className="hidden" 
+                accept={globalConfig?.platform?.allowed_document_extensions || ".doc,.docx,.xls,.xlsx"}
+              />
+
+              {isExtracting && (
+                <div className="mb-4 w-full p-3 border border-teal-200 dark:border-teal-900/50 rounded-xl flex flex-col gap-2 bg-teal-50 dark:bg-teal-900/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Loader2 size={16} className="text-teal-500 animate-spin" />
+                      <span className="text-xs font-semibold text-teal-700 dark:text-teal-400">
+                        Extracting {uploadedFile?.name}...
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold text-teal-600 dark:text-teal-500">{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full h-1 bg-teal-100 dark:bg-teal-950 rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-teal-500" 
+                      initial={{ width: 0 }} 
+                      animate={{ width: `${uploadProgress}%` }} 
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="mb-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
                   <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Source Text</span>
@@ -332,25 +420,30 @@ export const TextTranslation: React.FC = () => {
                     <FontPicker value={sourceFont} onChange={setSourceFont} hideLabel />
                   </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-2">
+                  <button onClick={() => fileInputRef.current?.click()}
+                    title={`Upload Document (${globalConfig?.platform?.allowed_document_extensions || '.doc, .docx, .xls, .xlsx'})`}
+                    className="btn-ghost flex items-center justify-center rounded-lg p-2 text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 transition-all duration-300 hover:scale-125 hover:-translate-y-1 hover:drop-shadow-md active:scale-90">
+                    <UploadCloud size={18} />
+                  </button>
                   <button id="trans-copy-src-btn" onClick={() => copyText(sourceText, 'src')}
                     disabled={!sourceText}
                     title="Copy"
-                    className="btn-ghost flex items-center justify-center rounded-lg p-1.5 disabled:opacity-40">
-                    {copiedSrc ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                    className="btn-ghost flex items-center justify-center rounded-lg p-2 disabled:cursor-not-allowed disabled:!opacity-100 text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 transition-all duration-300 hover:scale-125 hover:-translate-y-1 hover:drop-shadow-md active:scale-90">
+                    {copiedSrc ? <CheckCircle2 size={18} className="text-emerald-500" /> : <Copy size={18} />}
                   </button>
                   <button id="trans-listen-src-btn"
                     onClick={handleSrcListen}
                     disabled={!sourceText}
                     title={srcTtsState === 'playing' ? "Pause" : (srcTtsState === 'paused' ? "Resume" : "Listen")}
-                    className="btn-ghost flex items-center justify-center rounded-lg p-1.5 disabled:opacity-40">
-                    {srcTtsState === 'playing' ? <Pause size={14} /> : (srcTtsState === 'paused' ? <Play size={14} /> : <Volume2 size={14} />)}
+                    className="btn-ghost flex items-center justify-center rounded-lg p-2 disabled:cursor-not-allowed disabled:!opacity-100 text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 transition-all duration-300 hover:scale-125 hover:-translate-y-1 hover:drop-shadow-md active:scale-90">
+                    {srcTtsState === 'playing' ? <Pause size={18} /> : (srcTtsState === 'paused' ? <Play size={18} /> : <Volume2 size={18} />)}
                   </button>
                   {srcTtsState !== 'idle' && srcTtsState !== 'error' && (
                     <button id="trans-stop-src-btn" onClick={handleSrcStop}
                       title="Stop"
-                      className="btn-ghost flex items-center justify-center rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
-                      <Square size={14} fill="currentColor" />
+                      className="btn-ghost flex items-center justify-center rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                      <Square size={18} fill="currentColor" />
                     </button>
                   )}
                 </div>
@@ -388,31 +481,31 @@ export const TextTranslation: React.FC = () => {
                     <FontPicker value={targetFont} onChange={setTargetFont} hideLabel />
                   </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-2">
                   <button id="trans-copy-tgt-btn" onClick={() => copyText(translatedText, 'tgt')}
                     disabled={!translatedText}
                     title="Copy"
-                    className="btn-ghost flex items-center justify-center rounded-lg p-1.5 disabled:opacity-40">
-                    {copiedTgt ? <CheckCircle2 size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                    className="btn-ghost flex items-center justify-center rounded-lg p-2 disabled:cursor-not-allowed disabled:!opacity-100 text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 transition-all duration-300 hover:scale-125 hover:-translate-y-1 hover:drop-shadow-md active:scale-90">
+                    {copiedTgt ? <CheckCircle2 size={18} className="text-emerald-500" /> : <Copy size={18} />}
                   </button>
                   <button id="trans-listen-tgt-btn" onClick={handleTgtListen}
                     disabled={!translatedText}
                     title={tgtTtsState === 'playing' ? "Pause" : (tgtTtsState === 'paused' ? "Resume" : "Listen")}
-                    className="btn-ghost flex items-center justify-center rounded-lg p-1.5 disabled:opacity-40">
-                    {tgtTtsState === 'playing' ? <Pause size={14} /> : (tgtTtsState === 'paused' ? <Play size={14} /> : <Volume2 size={14} />)}
+                    className="btn-ghost flex items-center justify-center rounded-lg p-2 disabled:cursor-not-allowed disabled:!opacity-100 text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 transition-all duration-300 hover:scale-125 hover:-translate-y-1 hover:drop-shadow-md active:scale-90">
+                    {tgtTtsState === 'playing' ? <Pause size={18} /> : (tgtTtsState === 'paused' ? <Play size={18} /> : <Volume2 size={18} />)}
                   </button>
                   {tgtTtsState !== 'idle' && tgtTtsState !== 'error' && (
                     <button id="trans-stop-tgt-btn" onClick={handleTgtStop}
                       title="Stop"
-                      className="btn-ghost flex items-center justify-center rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
-                      <Square size={14} fill="currentColor" />
+                      className="btn-ghost flex items-center justify-center rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-300 hover:scale-125 hover:-translate-y-1 hover:drop-shadow-md active:scale-90">
+                      <Square size={18} fill="currentColor" />
                     </button>
                   )}
                   <button id="trans-export-btn" onClick={exportTranslation}
                     disabled={!translatedText}
                     title="Export"
-                    className="btn-ghost flex items-center justify-center rounded-lg p-1.5 disabled:opacity-40">
-                    <Download size={14} />
+                    className="btn-ghost flex items-center justify-center rounded-lg p-2 disabled:cursor-not-allowed disabled:!opacity-100 text-slate-700 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 transition-all duration-300 hover:scale-125 hover:-translate-y-1 hover:drop-shadow-md active:scale-90">
+                    <Download size={18} />
                   </button>
                 </div>
               </div>

@@ -24,9 +24,14 @@ function App() {
       hasInitialized.current = true;
       const isSuperAdmin = user?.role === 'super_admin';
 
-      if (window.location.pathname.startsWith('/controller')) {
+      if (window.location.pathname === '/controller' || window.location.pathname === '/controller/') {
+        setViewMode('controller-landing');
+      } else if (window.location.pathname.startsWith('/controller/')) {
         if (user && isSuperAdmin) {
           setViewMode('workspace');
+          // Update active tab based on URL
+          const sub = window.location.pathname.replace('/controller/', '');
+          if (sub) setActiveTab(`sa-${sub}`);
         } else {
           setViewMode('controller-landing');
         }
@@ -65,7 +70,8 @@ function App() {
         } else if (path.startsWith('/controller') && !isSA) {
           setActiveTab('sa-overview');
         } else {
-          window.history.replaceState({}, '', isSA ? `/controller/${activeTab}` : `/dashboard/${activeTab}`);
+          const saPath = activeTab === 'sa-overview' ? '/controller' : `/controller/${activeTab.replace('sa-', '')}`;
+          window.history.replaceState({}, '', isSA ? saPath : `/dashboard/${activeTab}`);
         }
       } else {
         // Normal user must not be on /controller

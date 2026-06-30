@@ -411,3 +411,62 @@ def get_tts_history(
 ):
     if not tenant: return []
     return db.query(TtsHistory).filter(TtsHistory.tenant_id == tenant.id).order_by(TtsHistory.created_at.desc()).all()
+
+# --- TOOL 4: TEXT EXTRACTION FROM FILE ---
+@router.post("/extract-text")
+async def extract_text_from_upload(
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user)
+):
+    try:
+        content = await file.read()
+        filename = file.filename.lower()
+        ext = filename.split('.')[-1]
+        text = ""
+
+        if ext in ["txt", "csv", "json"]:
+            text = content.decode("utf-8", errors="ignore")
+        elif ext == "pdf":
+            import PyPDF2
+            import io
+            reader = PyPDF2.PdfReader(io.BytesIO(content))
+            for page in reader.pages:
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + "\n\n"
+        elif ext in ["doc", "docx"]:
+            import docx
+            import io
+            doc = docx.Document(io.BytesIO(content))
+            for para in doc.paragraphs:
+                if para.text.strip():
+                    text += para.text + "\n\n"
+        elif ext in ["xls", "xlsx"]:
+            import pandas as pd
+            import io
+            df = pd.read_excel(io.BytesIO(content))
+            text = df.to_string(index=False)
+        elif ext in ["ppt", "pptx"]:
+            from pptx import Presentation
+            import io
+            prs = Presentation(io.BytesIO(content))
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if hasattr(shape, "text"):
+                        text += shape.text + "\n\n"
+        elif ext in ["png", "jpg", "jpeg", "webp"]:
+            import pytesseract
+            from PIL import Image
+            import io
+            image = Image.open(io.BytesIO(content))
+            text = pytesseract.image_to_string(image)
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
+
+        if not text.strip():
+            raise HTTPException(status_code=400, detail="No readable text found in the file.")
+
+        return {"text": text.strip()}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error extracting text: {str(e)}")

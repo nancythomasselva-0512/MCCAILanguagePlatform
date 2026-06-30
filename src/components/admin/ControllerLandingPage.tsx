@@ -31,7 +31,7 @@ const DynamicIcon = ({ name, size = 24 }: { name: string, size?: number }) => {
 };
 
 export const ControllerLandingPage: React.FC = () => {
-  const { setViewMode, globalConfig, theme, toggleTheme } = useApp();
+  const { setViewMode, globalConfig, theme, toggleTheme, user, logout } = useApp();
 
   const adminLandingConfig = globalConfig?.admin_landing || {
     title: "Platform Controller",
@@ -133,14 +133,17 @@ export const ControllerLandingPage: React.FC = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={() => setViewMode('admin-login')}
-              className="group flex items-center justify-center gap-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-4 rounded-2xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-slate-900/20 dark:shadow-white/10"
-            >
-              <Lock size={18} className="text-teal-400 dark:text-teal-600" />
-              <span>Super Admin Sign In</span>
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform opacity-70" />
-            </button>
+              <button
+                onClick={() => {
+                  logout(); // Wipe any existing session for security
+                  setViewMode('admin-login');
+                }}
+                className="group flex items-center justify-center gap-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-4 rounded-2xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-slate-900/20 dark:shadow-white/10"
+              >
+                <Lock size={18} className="text-teal-400 dark:text-teal-600" />
+                <span>Super Admin Sign In</span>
+                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform opacity-70" />
+              </button>
             <a
               href="/"
               onClick={(e) => { e.preventDefault(); setViewMode('landing'); window.history.pushState({}, '', '/'); }}

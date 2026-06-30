@@ -4,7 +4,7 @@ import { Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle, X } from 'lucide-react'
 import { motion } from 'framer-motion';
 
 export const AdminLoginPage: React.FC = () => {
-  const { theme, setViewMode, login: saveLoginSession } = useApp();
+  const { theme, setViewMode, login: saveLoginSession, setActiveTab } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -39,6 +39,7 @@ export const AdminLoginPage: React.FC = () => {
 
       setTimeout(() => {
         saveLoginSession(data.name, email, data.role, data.access_token, data.refresh_token, data.tenant_slug);
+        setActiveTab('sa-overview');
         setViewMode('workspace');
       }, 500);
 
@@ -70,7 +71,7 @@ export const AdminLoginPage: React.FC = () => {
         }}
       >
         <button
-          onClick={() => { setViewMode('controller-landing'); window.history.pushState({}, '', '/controller'); }}
+          onClick={() => { setViewMode('landing'); window.history.pushState({}, '', '/'); }}
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors cursor-pointer"
           aria-label="Close"
         >

@@ -177,6 +177,7 @@ class PlatformSettings(Base):
     enable_microsoft_login = Column(Boolean, default=False)
     enable_otp_login = Column(Boolean, default=False)
     enable_magic_link = Column(Boolean, default=False)
+    allowed_document_extensions = Column(String(255), default=".doc,.docx,.xls,.xlsx")
     custom_css = Column(Text, nullable=True)
     custom_js = Column(Text, nullable=True)
     tracking_scripts = Column(Text, nullable=True)
@@ -504,6 +505,7 @@ class DocumentIntelligence(Base):
     translated_text = Column(Text, nullable=True)
     summary = Column(Text, nullable=True) # Could store JSON for structured summary
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     user = relationship("User")

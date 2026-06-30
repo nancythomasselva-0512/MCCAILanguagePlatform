@@ -180,23 +180,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (path === '/dashboard' && isSA) {
       return 'dashboard';
     }
-    if (path === '/controller' && savedTab && !isSA) {
-      return 'sa-overview';
-    }
-
-    if (savedTab) return savedTab;
 
     const savedUser = storage.getItem('mcc-ai-user');
+    const token = storage.getItem('mcc-ai-token');
+    let isSuperAdmin = false;
     if (savedUser) {
       try {
         const parsed = JSON.parse(savedUser);
-        if (parsed.role === 'super_admin') {
-          return 'sa-overview';
-        }
-      } catch (e) {
-        // ignore
-      }
+        if (parsed.role === 'super_admin') isSuperAdmin = true;
+      } catch (e) {}
     }
+
+    if (path === '/controller') {
+      if (token && isSuperAdmin && savedTab && isSA) {
+        return savedTab;
+      }
+      return 'sa-overview';
+    }
+
+    if (savedTab && (!isSA || (isSA && isSuperAdmin && token))) {
+      return savedTab;
+    }
+
     return 'dashboard';
   });
 
@@ -219,7 +224,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (path === '/') return 'landing';
     if (path === '/controller') {
-      return (token && isSuperAdmin) ? 'workspace' : 'controller-landing';
+      return (token && isSuperAdmin) ? 'workspace' : 'admin-login';
     }
     if (path === '/dashboard') {
       return token ? 'workspace' : 'landing';
@@ -393,11 +398,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     storage.removeItem('mcc-ai-refresh-token');
     storage.removeItem('mcc-ai-tenant-slug');
     storage.removeItem('mcc-ai-active-tab');
-    // Also clear raw keys
+    storage.removeItem('mcc-ai-sidebar-expanded');
     localStorage.removeItem('mcc-ai-tenant-slug');
-    localStorage.removeItem('mcc-ai-user');
-    localStorage.removeItem('mcc-ai-token');
-    setViewMode('landing');
+    setHistory([]);
+
+    const isController = window.location.pathname.startsWith('/controller');
+    setActiveTab('dashboard');
+    if (isController) {
+      setViewMode('admin-login');
+      window.history.pushState({}, '', '/controller');
+    } else {
+      setViewMode('landing');
+      window.history.pushState({}, '', '/');
+    }
     setNotification({ message: 'Logged out successfully.', type: 'info' });
   };
 

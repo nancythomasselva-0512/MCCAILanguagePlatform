@@ -150,7 +150,7 @@ export const WorkspacePage: React.FC = () => {
       }
     ];
 
-    if (user?.role === 'super_admin' && window.location.pathname === '/controller') {
+    if (user?.role === 'super_admin' && window.location.pathname.startsWith('/controller')) {
       return [
         {
           title: '',
@@ -220,7 +220,6 @@ export const WorkspacePage: React.FC = () => {
     if (user) {
       const workspaceItems: SidebarMenuItem[] = [];
       workspaceItems.push({ id: 'tenant-billing-menu', label: 'Plans & Billing', icon: 'CreditCard', action: 'tab', tabId: 'tenant-billing' });
-      workspaceItems.push({ id: 'document-intelligence', label: 'Document Intelligence', icon: 'FileText', action: 'tab', tabId: 'document-intelligence' });
 
       sections.push({
         title: 'Workspace',
@@ -264,10 +263,8 @@ export const WorkspacePage: React.FC = () => {
   }, [notification, setNotification]);
 
   React.useEffect(() => {
-    if (activeTab === 'super-admin-dashboard') {
-      setActiveTab('sa-overview');
-    }
-  }, [activeTab, setActiveTab]);
+    // Only perform actions if required by a specific route later.
+  }, [activeTab]);
 
   const handleSaveSettings = () => {
     setOpenAiApiKey(tempKey);
@@ -275,7 +272,7 @@ export const WorkspacePage: React.FC = () => {
   };
 
   const isSuperAdminTab = activeTab.startsWith('sa-');
-  const isValidSuperAdminView = isSuperAdminTab && window.location.pathname === '/controller' && user?.role === 'super_admin';
+  const isValidSuperAdminView = isSuperAdminTab && window.location.pathname.startsWith('/controller') && user?.role === 'super_admin';
   const getSuperAdminSubTab = (): any => {
     if (!isSuperAdminTab) return 'overview';
     const sub = activeTab.replace('sa-', '');
