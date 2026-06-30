@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, MicOff, Copy, Download, Edit3, Check, Play, Trash2,
   AlertCircle, CheckCircle2, RefreshCw, X, Calendar, Globe, Clock, ChevronDown, Cpu,
-  Award, Activity
+  Award, Activity, History, MoreVertical
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { providerManager } from '../../providers/providerManager';
@@ -57,7 +57,8 @@ export const VoiceToText: React.FC = () => {
     setNotification,
     fetchBillingOverview,
     contentFontFamily,
-    setContentFontFamily
+    setContentFontFamily,
+    clearHistory
   } = useApp();
   
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
@@ -71,6 +72,7 @@ export const VoiceToText: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('en-US');
   const [isInsecureOrigin, setIsInsecureOrigin] = useState(false);
   const [fontSize, setFontSize] = useState('14px');
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState<any | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -226,11 +228,11 @@ useEffect(() => {
               timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
               day: new Date().toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' }),
               language: langName,
-              text: resultText
+              text: finalTranscript
             }]);
             addHistoryItem(
-              'voice-to-text', resultText,
-              `Voice Recording (${backendType}) • ${resultText.split(' ').filter(Boolean).length} words`, resultText
+              'voice-to-text', finalTranscript,
+              `Voice Recording (${activeProvider}) • ${finalTranscript.split(' ').filter(Boolean).length} words`, finalTranscript
             );
           } else {
             setRecordingState('error');
@@ -340,24 +342,16 @@ useEffect(() => {
   const remainingMinutes = Math.max(0, audioLimit - (billingOverview?.usage?.audio_minutes_used || 0));
 
   return (
-    <div className="space-y-6 w-full animate-fadeIn">
-      {/* Header with Provider Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-            <Mic className="text-teal-500" size={20} />
-            Voice Transcription
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Record voice from your microphone and transcribe using AI models
-          </p>
-        </div>
-        
-        {/* Managed Provider Badge */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-200" style={{ background: 'var(--bg-card)' }}>
-          <Cpu size={14} className="text-teal-500" />
-          <span>Managed by Platform Administrator</span>
-        </div>
+    <div className="space-y-6 w-full animate-fadeIn max-w-[1200px] mx-auto">
+      {/* Header */}
+      <div className="mb-6 text-left">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+          <Mic className="text-teal-500" size={24} />
+          Voice Transcription
+        </h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
+          Record voice from your microphone and transcribe using AI models
+        </p>
       </div>
 
       {/* Insecure Origin Alert */}
@@ -407,42 +401,9 @@ useEffect(() => {
       </AnimatePresence>
 
       {/* 2-Column Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Column - Forms & Overview */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Info Banner */}
-          <div 
-            className="relative overflow-hidden rounded-3xl p-6 md:p-8 flex items-center justify-between min-h-[140px] border border-teal-100 dark:border-white/5 shadow-sm"
-            style={{
-              background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.1) 0%, rgba(15, 118, 110, 0.05) 100%)',
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 via-emerald-500/5 to-transparent pointer-events-none" />
-            
-            <div className="flex items-center gap-5 relative z-10 max-w-[70%] text-left">
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-teal-600 to-emerald-500 shadow-md shadow-teal-500/20 text-white">
-                <Mic size={24} />
-              </div>
-              <div>
-                <h3 className="font-display text-lg md:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-snug">
-                  Voice Transcription
-                </h3>
-                <p className="mt-1.5 text-xs md:text-sm text-slate-600 dark:text-slate-350 leading-relaxed font-medium">
-                  Record your voice via the microphone and transcribe it in real-time. Choose your speech input language for accurate translation.
-                </p>
-              </div>
-            </div>
-            
-            {/* Banner Illustration on the Right */}
-            <div className="absolute right-0 top-0 bottom-0 w-1/3 max-w-[220px] flex items-center justify-end select-none pointer-events-none pr-4 overflow-hidden">
-              <img 
-                src="/banner_illustration.png" 
-                alt="Voice recording illustration" 
-                className="h-[120%] object-contain mt-2 opacity-95 filter drop-shadow-md hue-rotate-[250deg] dark:brightness-95 dark:contrast-105"
-              />
-            </div>
-          </div>
-
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-4">
           {/* Speech Input Language Selector */}
           <div className="app-card rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -786,144 +747,101 @@ useEffect(() => {
             )}
           </AnimatePresence>
 
-          {/* Usage Overview Row */}
-          <div className="space-y-4 pt-2 text-left">
-            <h3 className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Usage Overview</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              {/* Recordings Today */}
-              <div className="glass-card rounded-2xl p-4.5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Recordings Count</span>
-                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{vttHistory.length}</h4>
-                  </div>
-                  <div className="h-7 w-7 rounded-lg bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0">
-                    <Mic size={14} />
-                  </div>
-                </div>
-                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
-                  Total voice sessions
-                </div>
-              </div>
-
-              {/* Recorded Minutes */}
-              <div className="glass-card rounded-2xl p-4.5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Recorded Minutes</span>
-                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{(billingOverview?.usage?.audio_minutes_used || 0).toFixed(1)} mins</h4>
-                  </div>
-                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
-                    <Clock size={14} />
-                  </div>
-                </div>
-                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
-                  Transcription time used
-                </div>
-              </div>
-
-              {/* Remaining Minutes */}
-              <div className="glass-card rounded-2xl p-4.5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Remaining Minutes</span>
-                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{remainingMinutes.toFixed(1)} mins</h4>
-                  </div>
-                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
-                    <Activity size={14} />
-                  </div>
-                </div>
-                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
-                  Out of {audioLimit.toFixed(0)} mins limit
-                </div>
-              </div>
-
-              {/* Active Provider */}
-              <div className="glass-card rounded-2xl p-4.5 border border-slate-250 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 flex flex-col justify-between min-h-[105px]">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Engine</span>
-                    <h4 className="text-xl font-black text-slate-900 dark:text-white mt-1">{activeProvider}</h4>
-                  </div>
-                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 flex-shrink-0">
-                    <Award size={14} />
-                  </div>
-                </div>
-                <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-2.5">
-                  Current STT provider
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Right Column - Banners & Recent Activity */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Mic Banner */}
-          <div className="relative overflow-hidden rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-gradient-to-br from-teal-600/10 to-emerald-500/10 dark:from-teal-600/5 dark:to-emerald-500/5 min-h-[120px] flex flex-col justify-center text-left">
-            <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
-            <div className="relative z-10">
-              <span className="text-[8px] font-black uppercase text-teal-500 dark:text-teal-400 tracking-wider">Live Mic</span>
-              <h4 className="font-display text-sm font-black text-slate-955 dark:text-white mt-1 leading-snug">High-accuracy Real-time</h4>
-              <p className="mt-1 text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                Stream live recording through Whisper & Deepgram engines.
-              </p>
-            </div>
-            <Mic size={52} className="absolute right-[-10px] bottom-[-10px] opacity-10 text-teal-500" />
-          </div>
-
-          {/* Recent Recordings Card */}
-          <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-3 text-left">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2">
-              <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Recent recordings</h4>
-              <span className="text-[9px] text-teal-500 dark:text-teal-400 font-bold cursor-pointer hover:underline" onClick={() => fetchBillingOverview()}>Refresh</span>
+        {/* Right Column - History */}
+        <div className="space-y-4 text-left">
+          <div className="bg-white dark:bg-[#111827] rounded-[16px] p-6 shadow-sm border border-slate-100 dark:border-white/5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <History size={16} className="text-slate-400" />
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide">Recent History</h3>
+              </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {vttHistory.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-[10px] font-medium font-sans">
+                <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs font-medium">
                   No recent recordings.
                 </div>
               ) : (
-                vttHistory.slice(0, 4).map(item => (
-                  <div key={item.id} className="p-2.5 rounded-xl bg-slate-100/50 dark:bg-slate-950/20 border border-slate-200 dark:border-white/5 flex items-start gap-3 hover:border-slate-300 dark:hover:border-white/10 transition-colors">
-                    <span className="text-[9px] font-black text-teal-600 bg-teal-500/10 rounded px-1.5 py-0.5 mt-0.5">REC</span>
-                    <div className="flex-1 min-w-0 text-left font-sans">
-                      <p className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">{item.title}</p>
-                      <span className="text-[8px] text-slate-500 font-medium">{item.details} · {item.timestamp}</span>
+                vttHistory.slice(0, 5).map(item => (
+                  <div
+                    key={item.id}
+                    onClick={() => setSelectedHistoryItem(item)}
+                    className="p-3.5 rounded-[12px] bg-slate-50 hover:bg-slate-100 dark:bg-[#111827] dark:hover:bg-white/[0.02] border border-slate-100 dark:border-white/5 flex items-start gap-3 transition-colors cursor-pointer group"
+                  >
+                    <div className="mt-0.5 h-10 w-10 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-500 flex-shrink-0 group-hover:scale-110 transition-transform">
+                      <Mic size={18} />
                     </div>
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200 truncate">{item.title}</p>
+                      <span className="text-[11px] text-slate-500 font-medium">{item.details} · {item.timestamp}</span>
+                    </div>
+                    <button className="text-slate-400 hover:text-slate-600 px-1 mt-1">
+                      <MoreVertical size={16} />
+                    </button>
                   </div>
                 ))
               )}
             </div>
-          </div>
 
-          {/* Recent Activity Timeline */}
-          <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white/40 dark:bg-[#111827]/40 space-y-3 text-left">
-            <h4 className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest border-b border-slate-200 dark:border-white/5 pb-2">Recent Activity</h4>
-            <div className="relative border-l border-slate-200 dark:border-white/5 ml-2 pl-4 space-y-4 text-[10px] font-semibold text-slate-500">
-              {vttHistory.length === 0 ? (
-                <div className="text-center py-4 text-slate-400 dark:text-slate-500 text-[10px] font-medium font-sans">
-                  No recent activity.
-                </div>
-              ) : (
-                vttHistory.slice(0, 3).map(item => (
-                  <div key={item.id} className="relative text-left">
-                    <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full bg-slate-50 dark:bg-[#0B1020] border-2 border-teal-500 flex items-center justify-center z-10" />
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="text-slate-900 dark:text-white block font-bold truncate max-w-[120px]">{item.title}</span>
-                        <span className="text-[9px] text-slate-550 dark:text-slate-400 mt-0.5 block">{item.details}</span>
-                      </div>
-                      <span className="text-[8px] text-slate-450 dark:text-slate-500 font-mono flex-shrink-0">{item.timestamp}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+            <button 
+              onClick={() => clearHistory()}
+              className="w-full bg-white dark:bg-[#111827] border border-red-100 dark:border-red-500/20 text-red-500 font-bold py-3.5 rounded-[16px] shadow-sm flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors mt-2 text-xs"
+            >
+              <Trash2 size={16} /> Clear History
+            </button>
           </div>
         </div>
       </div>
+
+      {/* History Detail Modal */}
+      <AnimatePresence>
+        {selectedHistoryItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setSelectedHistoryItem(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-[#111827] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 flex flex-col"
+              style={{ maxHeight: '80vh' }}
+            >
+              <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02]">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-500">
+                    <Mic size={16} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">{selectedHistoryItem.title}</h3>
+                    <p className="text-[10px] text-slate-500 font-medium">{selectedHistoryItem.details}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedHistoryItem(null)}
+                  className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto flex-1 custom-scrollbar text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                {selectedHistoryItem.content || selectedHistoryItem.title}
+              </div>
+              <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02] flex justify-between items-center text-xs text-slate-500 font-medium">
+                <span>{selectedHistoryItem.details.split(' · ')[0]}</span>
+                <span>Created: {selectedHistoryItem.timestamp}</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

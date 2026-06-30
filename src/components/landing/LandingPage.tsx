@@ -169,18 +169,14 @@ const STATS = [
 // ];
 
 export const LandingPage: React.FC = () => {
-  const { user, setViewMode, setActiveTab, globalConfig, setIsAuthModalOpen, setAuthModalMode } = useApp();
+  const { user, setViewMode, setActiveTab, globalConfig, setIsAuthModalOpen, setAuthModalMode, logout } = useApp();
   const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const launchTool = (tab: ActiveTabType) => {
     setActiveTab(tab);
-    if (!user) {
-      setAuthModalMode('login');
-      setIsAuthModalOpen(true);
-      return;
-    }
-    setViewMode('workspace');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (user) logout(); // Wipe session to force re-login
+    setAuthModalMode('login');
+    setIsAuthModalOpen(true);
   };
 
   return (
@@ -244,7 +240,11 @@ export const LandingPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <button
                 id="hero-launch-btn"
-                onClick={() => { if (!user) { setAuthModalMode('login'); setIsAuthModalOpen(true); } else { setViewMode('workspace'); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
+                onClick={() => { 
+                  if (user) logout(); // Wipe session to force re-login
+                  setAuthModalMode('login'); 
+                  setIsAuthModalOpen(true); 
+                }}
                 className="group flex items-center justify-center gap-2.5 rounded-full px-8 py-4 text-base font-extrabold text-white transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] cursor-pointer shadow-lg"
                 style={{ 
                   background: 'linear-gradient(135deg, #0D9488, #10B981)', 

@@ -92,9 +92,18 @@ export const Header: React.FC = () => {
 
   const handleLaunchWorkspace = (tabName?: any) => {
     setMobileMenuOpen(false);
-    setViewMode('workspace');
     if (tabName) setActiveTab(tabName);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // If we are already in workspace, just stay there
+    if (viewMode === 'workspace') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // Otherwise, force login to enter workspace
+    if (user) logout(); // Wipe session to enforce strict login
+    setAuthModalMode('login');
+    setIsAuthModalOpen(true);
   };
 
   const handleOpenAuth = (mode: 'login' | 'signup') => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { apiRequest } from '../../utils/api';
 import { useApp } from '../../context/AppContext';
 import { 
@@ -19,8 +19,8 @@ const ThreeDInteractiveCard: React.FC<ThreeDInteractiveCardProps> = ({
   glowColor = 'rgba(37,99,235,0.15)',
   onClick
 }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const cardRef = React.useRef<HTMLDivElement>(null);
+  const contentRef = React.useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -316,55 +316,67 @@ export const TenantBilling: React.FC = () => {
           </button>
         </div>
 
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto pt-4 items-stretch">
-          {/* Free Trial Card */}
-          {plans.filter(p => p.price === 0).map(p => {
-            const isCurrent = activePlan?.name.toLowerCase() === p.name.toLowerCase();
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto pt-4 items-stretch">
+          {plans.map((p, index) => {
+            const isCurrent = activePlan?.name?.toLowerCase() === p.name.toLowerCase();
+            const monthlyPrice = p.price;
+            const yearlyPerMonth = +(p.price * 0.7).toFixed(0);
+            const displayPrice = billingCycle === 'yearly' ? yearlyPerMonth : monthlyPrice;
+            const currSymbol = getCurrencySymbol(data?.currency || 'INR');
+            
+            const isFree = p.price === 0;
+            const isPopular = index === 1; // Middle card is usually popular
+
             return (
               <ThreeDInteractiveCard
                 key={p.id}
-                glowColor="rgba(59, 130, 246, 0.15)"
-                className="p-8 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/90 border border-slate-200 dark:border-white/5 rounded-3xl shadow-xl relative w-full"
+                glowColor={isFree ? "rgba(59, 130, 246, 0.15)" : isPopular ? "rgba(16, 185, 129, 0.15)" : "rgba(168, 85, 247, 0.15)"}
+                className="p-8 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/90 border border-slate-200 dark:border-white/5 rounded-3xl shadow-xl relative w-full h-full"
               >
                 <div className="w-full">
                   <div className="flex justify-between items-center mb-4">
-                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-teal-500/10 text-teal-600 dark:text-teal-400 tracking-wider">
-                      Most Popular
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      isFree ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400' :
+                      isPopular ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+                      'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                    }`}>
+                      {isFree ? 'Basic' : isPopular ? 'Most Popular' : 'Premium'}
                     </span>
-                    <span className="text-sm font-bold text-slate-500 dark:text-slate-400">14 Days Trial</span>
+                    {isFree && <span className="text-sm font-bold text-slate-500 dark:text-slate-400">7 Days Trial</span>}
                   </div>
-                  <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2">{p.name}</h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mb-6">
-                    Perfect for experiencing the complete Fluentia platform workstation locally on your device.
-                  </p>
+                  <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2 capitalize">{p.name}</h3>
+                  <div className="flex items-end gap-1 mb-6">
+                    <span className="text-4xl font-black text-slate-900 dark:text-white">{currSymbol}{displayPrice}</span>
+                    <span className="text-sm font-bold text-slate-500 mb-1">/mo</span>
+                  </div>
                   <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-4" />
                   <ul className="space-y-4">
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                      <CheckCircle2 size={16} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0`} />
                       <div>
                         <p className="text-xs font-bold text-slate-800 dark:text-white">Audio Processing</p>
-                        <p className="text-[10px] text-slate-500">{p.transcription_limit} minutes of translation & transcription</p>
+                        <p className="text-[10px] text-slate-500">{p.transcription_limit} mins audio included</p>
                       </div>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                      <CheckCircle2 size={16} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0`} />
                       <div>
                         <p className="text-xs font-bold text-slate-800 dark:text-white">Translation Services</p>
-                        <p className="text-[10px] text-slate-500">{(p.translation_limit || 0).toLocaleString()} characters processed</p>
+                        <p className="text-[10px] text-slate-500">{(p.translation_limit / 1000).toFixed(0)}k chars limit</p>
                       </div>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                      <CheckCircle2 size={16} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0`} />
                       <div>
                         <p className="text-xs font-bold text-slate-800 dark:text-white">Text-to-Speech (TTS)</p>
-                        <p className="text-[10px] text-slate-500">{(p.tts_limit || 0).toLocaleString()} synthesis characters</p>
+                        <p className="text-[10px] text-slate-500">{(p.tts_limit / 1000).toFixed(0)}k chars limit</p>
                       </div>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                      <CheckCircle2 size={16} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0`} />
                       <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-white">Cloud Storage Allocation</p>
-                        <p className="text-[10px] text-slate-500">{p.storage_limit} MB secure isolated storage</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-white">Cloud Storage</p>
+                        <p className="text-[10px] text-slate-500">{p.storage_limit} MB secure isolated</p>
                       </div>
                     </li>
                   </ul>
@@ -373,80 +385,24 @@ export const TenantBilling: React.FC = () => {
                   {isCurrent ? (
                     <button
                       disabled
-                      className="w-full py-3 px-6 rounded-xl bg-slate-100 text-slate-400 text-xs font-bold cursor-default text-center block"
+                      className="w-full py-3 px-6 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 text-xs font-bold cursor-default text-center block"
                     >
                       Active Plan
                     </button>
                   ) : (
                     <button
                       onClick={() => handleStartCheckout(p, billingCycle)}
-                      className="w-full py-3 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-lg text-center block"
+                      className={`w-full py-3 px-6 rounded-xl text-white text-xs font-bold cursor-pointer transition-colors shadow-lg text-center block ${
+                        isPopular ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-teal-600 hover:bg-teal-700'
+                      }`}
                     >
-                      Start 14-Day Free Trial
+                      {isFree ? 'Start 7-Day Free Trial' : 'Upgrade Plan'}
                     </button>
                   )}
                 </div>
               </ThreeDInteractiveCard>
             );
           })}
-
-          {/* Upgrade Plans Card */}
-          <ThreeDInteractiveCard
-            glowColor="rgba(168, 85, 247, 0.15)"
-            className="p-8 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/90 border border-slate-200 dark:border-white/5 rounded-3xl shadow-xl w-full"
-          >
-            <div className="w-full">
-              <div className="flex justify-between items-center mb-4">
-                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 tracking-wider">
-                  Paid Tiers
-                </span>
-                <span className="text-sm font-bold text-slate-500 dark:text-slate-400">Post-Trial Options</span>
-              </div>
-              <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2">Upgrade Plans</h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mb-6">
-                After your 14-day trial concludes, select one of our premium enterprise tiers:
-              </p>
-              <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-4" />
-              <div className="space-y-4">
-                {plans.filter(p => p.price > 0).map(p => {
-                  const isCurrent = activePlan?.name.toLowerCase() === p.name.toLowerCase();
-                  const monthlyPrice = p.price;
-                  const yearlyPerMonth = +(p.price * 0.7).toFixed(0);
-                  const displayPrice = billingCycle === 'yearly' ? yearlyPerMonth : monthlyPrice;
-                  const currSymbol = getCurrencySymbol(data?.currency || 'INR');
-                  
-                  return (
-                    <div key={p.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-white/5 flex justify-between items-center">
-                      <div>
-                        <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">{p.name} Plan</h4>
-                        <p className="text-[10px] text-slate-500">{p.transcription_limit} mins audio / {(p.translation_limit/1000).toFixed(0)}k translation / {(p.tts_limit/1000).toFixed(0)}k TTS</p>
-                      </div>
-                      {isCurrent ? (
-                        <button disabled className="px-4 py-2 bg-slate-200 dark:bg-white/10 text-slate-500 dark:text-slate-400 rounded-lg text-sm font-black cursor-default">
-                          Active
-                        </button>
-                      ) : (
-                        <button 
-                          onClick={() => handleStartCheckout(p, billingCycle)}
-                          className="px-4 py-2 bg-teal-100 dark:bg-teal-500/20 hover:bg-teal-200 dark:hover:bg-teal-500/30 text-teal-700 dark:text-teal-400 rounded-lg text-sm font-black transition-colors cursor-pointer"
-                        >
-                          {currSymbol}{displayPrice}/mo
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="w-full mt-8">
-              <button
-                  onClick={() => document.getElementById('billing-history')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="w-full py-3 px-6 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-900 dark:text-white text-xs font-bold cursor-pointer transition-colors text-center block"
-              >
-                Explore Billing Details
-              </button>
-            </div>
-          </ThreeDInteractiveCard>
         </div>
       </div>
 

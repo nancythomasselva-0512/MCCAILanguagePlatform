@@ -119,8 +119,8 @@ export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDash
   ];
 
   const handleNavigation = (id: string) => {
-    if (id === 'history' && setHistoryOpen) {
-      setHistoryOpen(true);
+    if (id === 'history') {
+      setActiveTab('history-page');
     } else {
       setActiveTab(id);
     }

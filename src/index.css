@@ -93,13 +93,13 @@
   --error: #f87171;
 
   /* Sidebar (Glassmorphic Enforced) */
-  --sidebar-bg:                 rgba(255, 255, 255, 0.4);
+  --sidebar-bg:                 rgba(10, 17, 32, 0.5);
   --sidebar-panel-bg:           transparent;
-  --sidebar-panel-text:         #0F766E;
-  --sidebar-panel-text-active:  #FFFFFF;
-  --sidebar-panel-active-bg:    linear-gradient(to right, #0D9488, #14B8A6);
-  --sidebar-panel-hover-bg:     rgba(255, 255, 255, 0.5);
-  --sidebar-panel-border:       rgba(255, 255, 255, 0.5);
+  --sidebar-panel-text:         #94a3b8;
+  --sidebar-panel-text-active:  #ffffff;
+  --sidebar-panel-active-bg:    linear-gradient(to right, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.1));
+  --sidebar-panel-hover-bg:     rgba(255, 255, 255, 0.05);
+  --sidebar-panel-border:       rgba(255, 255, 255, 0.05);
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);

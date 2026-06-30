@@ -268,24 +268,16 @@ export const TextTranslation: React.FC = () => {
   const remainingChars = Math.max(0, translationLimit - (billingOverview?.usage?.translation_chars_used || 0));
 
   return (
-    <div className="space-y-6 w-full animate-fadeIn">
-      {/* Header with Provider Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-            <Languages className="text-emerald-500" size={20} />
-            Text Translation
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Translate text across languages using advanced AI translation models
-          </p>
-        </div>
-        
-        {/* Managed Provider Badge */}
-        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-700 dark:text-slate-200" style={{ background: 'var(--bg-card)' }}>
-          <Cpu size={14} className="text-emerald-500" />
-          <span>Managed by Platform Administrator</span>
-        </div>
+    <div className="space-y-6 w-full animate-fadeIn max-w-[1200px] mx-auto">
+      {/* Header */}
+      <div className="mb-6 text-left">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+          <Languages className="text-teal-500" size={24} />
+          Text Translation
+        </h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
+          Translate text across languages using advanced AI translation models
+        </p>
       </div>
 
       {/* Error */}
