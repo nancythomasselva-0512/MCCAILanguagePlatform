@@ -75,7 +75,7 @@ def _call_openai_llm(payload: LLMPayload, api_key: str) -> str:
             "temperature": payload.temperature,
         },
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        timeout=30,
+        timeout=120,
     )
     res.raise_for_status()
     return res.json()["choices"][0]["message"]["content"].strip()
@@ -85,9 +85,12 @@ def _call_gemini_llm(payload: LLMPayload, api_key: str) -> str:
     prompt = f"{payload.system_prompt}\n\n{payload.user_message}"
     res = requests.post(
         f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}",
-        json={"contents": [{"parts": [{"text": prompt}]}]},
+        json={
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"maxOutputTokens": payload.max_tokens},
+        },
         headers={"Content-Type": "application/json"},
-        timeout=30,
+        timeout=120,
     )
     res.raise_for_status()
     return res.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
@@ -108,7 +111,7 @@ def _make_openrouter_llm(model: str) -> Callable:
                 "temperature": payload.temperature,
             },
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            timeout=30,
+            timeout=120,
         )
         res.raise_for_status()
         return res.json()["choices"][0]["message"]["content"].strip()

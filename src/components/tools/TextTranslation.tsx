@@ -65,6 +65,8 @@ export const TextTranslation: React.FC = () => {
   const setTargetFont = (font: string) => { setTargetFontState(font); localStorage.setItem('mcc-ai-target-font', font); };
   
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTranslatingRef = useRef<boolean>(false);
+  const translationSeqRef = useRef<number>(0);
 
   const processFile = async (file: File) => {
     if (!file) return;
@@ -87,7 +89,7 @@ export const TextTranslation: React.FC = () => {
       setUploadProgress(80);
       
       const extractedText = data.text;
-      const truncatedText = extractedText.slice(0, 5000);
+      const truncatedText = extractedText.slice(0, 500000);
       setSourceText(truncatedText);
       setCharCount(truncatedText.length);
       setUploadProgress(100);
@@ -119,9 +121,11 @@ export const TextTranslation: React.FC = () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     
     if (sourceText.trim()) {
+      // Use longer debounce for large texts to avoid hammering the API mid-paste
+      const delay = sourceText.length > 5000 ? 1500 : 800;
       debounceRef.current = setTimeout(() => {
         translate(sourceText, targetLang);
-      }, 800);
+      }, delay);
     } else {
       setTranslatedText('');
       setState('idle');
@@ -163,6 +167,12 @@ export const TextTranslation: React.FC = () => {
 
   const translate = async (text: string, target: string) => {
     if (!text.trim()) { setTranslatedText(''); setState('idle'); return; }
+
+    // If a translation is already in-flight, skip — the debounce will re-fire when text changes
+    if (isTranslatingRef.current) return;
+
+    const seq = ++translationSeqRef.current;
+    isTranslatingRef.current = true;
     setState('translating');
     setErrorMsg('');
     try {
@@ -172,6 +182,8 @@ export const TextTranslation: React.FC = () => {
         target,
         openAiApiKey
       );
+      // Discard stale results from out-of-order responses
+      if (seq !== translationSeqRef.current) return;
       setTranslatedText(result.text);
       if (sourceLang === 'Auto Detect' && result.detectedLang) {
         setDetectedLang(result.detectedLang);
@@ -182,13 +194,16 @@ export const TextTranslation: React.FC = () => {
       fetchBillingOverview();
       addHistoryItem('translation', `${sourceLang === 'Auto Detect' ? (result.detectedLang || 'Detected') : sourceLang} → ${target}`, `${text.split(' ').filter(Boolean).length} words`, `Original:\n${text}\n\nTranslation:\n${result.text}`);
     } catch (err: any) {
+      if (seq !== translationSeqRef.current) return;
       setErrorMsg(err.message || 'Translation failed. Please check your connection.');
       setState('error');
+    } finally {
+      isTranslatingRef.current = false;
     }
   };
 
   const handleSourceChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value.slice(0, 5000);
+    const val = e.target.value.slice(0, 500000);
     setSourceText(val);
     setCharCount(val.length);
   };
@@ -266,7 +281,7 @@ export const TextTranslation: React.FC = () => {
   };
 
   const translationHistory = (history || []).filter(item => item.type === 'translation');
-  const translationLimit = billingOverview?.usage?.translation_chars_limit || 50000;
+  const translationLimit = billingOverview?.usage?.translation_chars_limit || 500000;
   const remainingChars = Math.max(0, translationLimit - (billingOverview?.usage?.translation_chars_used || 0));
 
   return (
@@ -446,7 +461,7 @@ export const TextTranslation: React.FC = () => {
                 id="trans-source-input"
                 value={sourceText}
                 onChange={handleSourceChange}
-                placeholder="Type or paste text to translate…"
+                placeholder="Type or paste text to translate… (up to 500,000 characters)"
                 rows={15}
                 className="flex-1 resize-none rounded-xl px-4 py-3 text-sm focus:outline-none"
                 style={{
@@ -458,9 +473,12 @@ export const TextTranslation: React.FC = () => {
                 }}
               />
               <div className="mt-3 flex items-center justify-between">
-                <div className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                  {charCount} / 5,000
+                <div className={`text-xs font-medium ${charCount > 500000 ? 'text-red-500 font-bold' : ''}`} style={{ color: charCount > 500000 ? undefined : 'var(--text-muted)' }}>
+                  {charCount.toLocaleString()} / 500,000
                 </div>
+                {charCount > 500000 && (
+                  <span className="text-xs text-red-500 font-semibold">Exceeds 500,000 character limit</span>
+                )}
               </div>
             </div>
 

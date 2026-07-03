@@ -125,6 +125,49 @@ def increment_usage(db: Session, tenant_id: str, metric: str, amount: float):
     usage.api_calls_used += 1
     db.commit()
 
+# ── Chunked translation helper ─────────────────────────────────────────────
+CHUNK_SIZE = 3000  # characters per chunk — safely within all LLM context windows
+
+def _split_into_chunks(text: str, chunk_size: int = CHUNK_SIZE) -> list[str]:
+    """
+    Split text into chunks of at most `chunk_size` characters.
+    Tries to split on paragraph boundaries (double newlines), then on
+    single newlines, and finally on the hard character limit.
+    """
+    if len(text) <= chunk_size:
+        return [text]
+
+    chunks = []
+    paragraphs = text.split("\n\n")
+    current = ""
+
+    for para in paragraphs:
+        candidate = (current + "\n\n" + para).lstrip("\n") if current else para
+        if len(candidate) <= chunk_size:
+            current = candidate
+        else:
+            # Para itself may be too long — split on single newlines
+            if current:
+                chunks.append(current)
+                current = ""
+            lines = para.split("\n")
+            for line in lines:
+                candidate = (current + "\n" + line).lstrip("\n") if current else line
+                if len(candidate) <= chunk_size:
+                    current = candidate
+                else:
+                    if current:
+                        chunks.append(current)
+                    # Line itself too long — hard split
+                    for i in range(0, len(line), chunk_size):
+                        chunks.append(line[i : i + chunk_size])
+                    current = ""
+    if current:
+        chunks.append(current)
+
+    return chunks or [text]
+
+
 # --- TOOL 1: TEXT TRANSLATION ---
 @router.post("/translate")
 def translate_text(
@@ -136,9 +179,13 @@ def translate_text(
     tenant: Tenant = Depends(get_current_tenant_context)
 ):
     char_len = len(text)
+    # Silently cap at 500,000 chars \u2014 frontend enforces this too, but guard here as well
+    if char_len > 500000:
+        text = text[:500000]
+        char_len = 500000
     verify_limit(db, tenant, "translation", char_len)
 
-    # Build translation prompt
+    # Build translation system prompt
     if source_lang and source_lang != "Auto Detect":
         system_prompt = (
             f"You are a professional translator. "
@@ -152,21 +199,28 @@ def translate_text(
             f"Output ONLY the translated text with no quotes, explanations, or extra commentary."
         )
 
-    # Delegate to provider manager — automatic fallback + circuit breaker
-    translated_text = provider_manager.call_llm(
-        system_prompt=system_prompt,
-        user_message=text,
-        feature="translation",
-        db=db,
-        tenant=tenant,
-    )
+    # --- Chunked translation for large texts ---
+    chunks = _split_into_chunks(text, CHUNK_SIZE)
+    translated_parts = []
+    for chunk in chunks:
+        part = provider_manager.call_llm(
+            system_prompt=system_prompt,
+            user_message=chunk,
+            feature="translation",
+            db=db,
+            tenant=tenant,
+            max_tokens=4096,
+        )
+        translated_parts.append(part)
+
+    translated_text = "\n\n".join(translated_parts)
 
     # Persist history and usage
     history = TranslationHistory(
         tenant_id=tenant.id if tenant else None,
         user_id=user.id,
-        source_text=text,
-        translated_text=translated_text,
+        source_text=text[:5000],  # store first 5000 chars to avoid DB column overflow
+        translated_text=translated_text[:5000],
         source_lang=source_lang if source_lang != "Auto Detect" else "Auto",
         target_lang=target_lang,
         provider="auto",  # actual provider tracked in ProviderLog
@@ -181,6 +235,7 @@ def translate_text(
         "target_lang": target_lang,
         "detected_lang": "en",
     }
+
 
 # --- TOOL 2: VOICE & AUDIO TRANSCRIPTION ---
 @router.post("/transcribe")
