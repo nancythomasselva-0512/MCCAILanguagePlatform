@@ -30,7 +30,7 @@ export const GeneralSettings: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
-          <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
             <Type size={18} className="text-blue-500" />
             Platform Details
           </h3>
@@ -47,7 +47,7 @@ export const GeneralSettings: React.FC = () => {
         </div>
 
         <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
-          <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
             <Upload size={18} className="text-indigo-500" />
             Media & Assets
           </h3>
@@ -70,7 +70,7 @@ export const GeneralSettings: React.FC = () => {
         </div>
 
         <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
-          <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
             <Globe size={18} className="text-emerald-500" />
             Localization
           </h3>
@@ -110,7 +110,7 @@ export const GeneralSettings: React.FC = () => {
         </div>
 
         <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
-          <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
             <Type size={18} className="text-purple-500" />
             Footer & Legal
           </h3>

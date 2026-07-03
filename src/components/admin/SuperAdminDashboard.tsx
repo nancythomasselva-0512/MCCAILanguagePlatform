@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../utils/api';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, Users, CreditCard, Cpu, Check, 
   Loader2, Sparkles, Server, Trash2, ShieldCheck,
@@ -22,6 +23,7 @@ import { APIKeys } from './settings/APIKeys';
 import { BackupRestore } from './settings/BackupRestore';
 import { NotificationCenter } from './settings/NotificationCenter';
 import { ActivityCenter } from './settings/ActivityCenter';
+import { ProviderManager } from './settings/ProviderManager';
 
 type TabType = 'overview' | 'tenants' | 'providers' | 'plans' | 'users' | 'usage_analytics' | 'billing' | 'ai_logs' | 'audit_logs' | 'system_health' | 'settings' | 'builder' | 'settings-general' | 'settings-tenant' | 'settings-smtp' | 'settings-auth' | 'settings-security' | 'settings-payments' | 'settings-domains' | 'settings-apikeys' | 'settings-backup' | 'settings-notifications' | 'settings-activity';
 
@@ -50,6 +52,70 @@ const Sparkline: React.FC<{ points: number[]; color: string }> = ({ points, colo
     </svg>
   );
 };
+
+interface CustomDropdownProps {
+  value: string;
+  onChange: (val: string) => void;
+  options: { value: string; label: string }[];
+}
+
+const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(opt => opt.value === value) || options[0];
+
+  return (
+    <div ref={containerRef} className="relative inline-block text-left min-w-[180px]">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-1.5 outline-none font-semibold text-slate-800 dark:text-slate-200 cursor-pointer flex items-center justify-between gap-2"
+      >
+        <span className="truncate">{selectedOption?.label}</span>
+        <svg className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 right-0 z-[100] mt-1 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-xl overflow-hidden py-1 max-h-[250px] overflow-y-auto">
+          {options.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2 text-sm font-semibold cursor-pointer transition-colors block ${
+                  isSelected
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white'
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 interface SuperAdminDashboardProps {
   subTab?: TabType;
@@ -122,6 +188,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   const [subSearchTerm, setSubSearchTerm] = useState('');
   const [subStatusFilter, setSubStatusFilter] = useState('');
   const [subCycleFilter, setSubCycleFilter] = useState('');
+  const [logTimeFilter, setLogTimeFilter] = useState<'all' | 'today' | 'weekly' | 'monthly'>('all');
   
   const [loading, setLoading] = useState(true);
   // const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -179,32 +246,70 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
     { feature: "Audio To Text", provider: "Deepgram", enabled: true, priority: 1 },
     { feature: "Text To Speech", provider: "ElevenLabs", enabled: true, priority: 1 },
     { feature: "Translation", provider: "OpenAI", enabled: true, priority: 1 },
-    { feature: "Web Search", provider: "Tavily", enabled: true, priority: 1 },
-    { feature: "Image Generation", provider: "OpenAI", enabled: true, priority: 1 },
-    { feature: "Chat Assistant", provider: "Gemini", enabled: true, priority: 1 }
+    { feature: "Transcription", provider: "OpenAI", enabled: true, priority: 1 }
   ]);
-  const [webSearchConfig, setWebSearchConfig] = useState({
-    provider: 'Tavily',
-    apiKey: '',
-    searchDepth: 'basic',
-    resultLimit: 10,
-    safeSearch: true
-  });
   
   useEffect(() => {
     if (activeTab === 'providers') {
       apiRequest("/super-admin/providers/mappings").then(data => {
         if (data && data.length > 0) {
-          // map to state if backend provides it
+          const mapped = data.map((item: any) => ({
+            feature: item.feature_name,
+            provider: item.provider_name,
+            enabled: item.is_enabled,
+            priority: item.priority
+          }));
+          
+          const filtered = mapped.filter((item: any) => 
+            item.feature === "Audio To Text" || 
+            item.feature === "Text To Speech" || 
+            item.feature === "Translation" ||
+            item.feature === "Transcription"
+          );
+
+          setFeatureMappings(prev => {
+            const current = [...prev];
+            filtered.forEach((item: any) => {
+              const idx = current.findIndex(c => c.feature === item.feature);
+              if (idx !== -1) {
+                current[idx] = item;
+              } else {
+                current.push(item);
+              }
+            });
+            return current;
+          });
         }
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error("Error loading provider mappings:", err);
+      });
     }
   }, [activeTab]);
+
+  const handleSaveMapping = async (idx: number) => {
+    const mapping = featureMappings[idx];
+    try {
+      await apiRequest("/super-admin/providers/mappings", {
+        method: "POST",
+        body: JSON.stringify({
+          feature_name: mapping.feature,
+          provider_name: mapping.provider,
+          priority: mapping.priority,
+          is_enabled: mapping.enabled
+        })
+      });
+      showToast("Saved successfully.", 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to save mapping', 'error');
+    }
+  };
 
   const [selectedProvider, setSelectedProvider] = useState('openai');
   const [providerKey, setProviderKey] = useState('');
   const [providerPriority, setProviderPriority] = useState(1);
   const [providerEnabled, setProviderEnabled] = useState(true);
+  const [configuringProvider, setConfiguringProvider] = useState<any | null>(null);
+  const [resetPasswordInfo, setResetPasswordInfo] = useState<{ userName: string, tempPass: string } | null>(null);
 
   // Sync prop tab selection to local state
   useEffect(() => {
@@ -343,22 +448,39 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   // Provider actions
   const handleConfigureProvider = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!configuringProvider) return;
+    const providerName = configuringProvider.isNew ? selectedProvider : configuringProvider.provider_name;
+    if (!providerName) {
+      showToast("Please select a provider name.", "error");
+      return;
+    }
     try {
       await apiRequest("/super-admin/providers", {
         method: "POST",
         body: JSON.stringify({
-          provider_name: selectedProvider,
+          provider_name: providerName,
           api_key: providerKey || null,
           priority: Number(providerPriority),
           is_enabled: providerEnabled
         })
       });
       setProviderKey('');
-      showToast("AI Provider updated successfully!", 'success');
+      showToast("Saved successfully.", 'success');
+      setConfiguringProvider(null);
       loadData();
     } catch (err) {
       showToast("Failed to update provider configuration.", 'error');
     }
+  };
+
+  const handleTestConnectionInModal = async () => {
+    if (!configuringProvider) return;
+    const providerName = configuringProvider.isNew ? selectedProvider : configuringProvider.provider_name;
+    if (!providerName) {
+      showToast("Please select a provider name first.", "error");
+      return;
+    }
+    await handleTestProviderConnection(providerName);
   };
 
   const handleTestProviderConnection = async (provName: string) => {
@@ -411,26 +533,47 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
     }
   };
 
-  const handleResetUserPassword = async (userId: string) => {
+  const handleResetUserPassword = async (userId: string, userName: string) => {
     try {
       const res = await apiRequest(`/super-admin/users/${userId}/reset-password`, {
         method: "POST"
       });
-      showToast(res.message || "Password reset successfully.", 'success');
+      let tempPass = "TempPass123!";
+      if (res.message) {
+        const match = res.message.match(/'([^']+)'/);
+        if (match && match[1]) {
+          tempPass = match[1];
+        }
+      }
+      setResetPasswordInfo({
+        userName,
+        tempPass
+      });
+      showToast("Password reset successfully.", 'success');
     } catch (err) {
       showToast("Failed to reset password.", 'error');
     }
   };
 
-  const handleForceLogoutUser = async (userId: string) => {
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
     try {
-      const res = await apiRequest(`/super-admin/users/${userId}/force-logout`, {
-        method: "POST"
+      const res = await apiRequest(`/super-admin/users/${userToDelete}`, {
+        method: "DELETE"
       });
-      showToast(res.message || "User session terminated.", 'success');
+      showToast(res.message || "User deleted successfully.", 'success');
+      loadData();
     } catch (err) {
-      showToast("Failed to force logout user.", 'error');
+      showToast("Failed to delete user.", 'error');
+    } finally {
+      setUserToDelete(null);
     }
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    setUserToDelete(userId);
   };
 
   // Billing Actions
@@ -1085,15 +1228,15 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                             {user.status === 'active' ? 'Disable' : 'Enable'}
                           </button>
                           <button
-                            onClick={() => handleResetUserPassword(user.id)}
+                            onClick={() => handleResetUserPassword(user.id, user.name || user.email)}
                             className="bg-teal-600/10 hover:bg-teal-600/20 text-teal-400 px-2 py-1 rounded text-sm font-bold cursor-pointer"
                           >
                             Reset Password
                           </button>
                           <button
-                            onClick={() => handleForceLogoutUser(user.id)}
+                            onClick={() => handleDeleteUser(user.id)}
                             className="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-2 py-1 rounded text-sm font-bold cursor-pointer"
-                           title="Force Logout"><PowerOff size={16} /></button>
+                           title="Delete User"><Trash2 size={16} /></button>
                         </td>
                       </tr>
                     ))}
@@ -1110,168 +1253,210 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           <div className="flex flex-col items-center gap-6 pb-6">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white self-start w-full border-b border-slate-200 dark:border-white/5 pb-3">Subscription Limit Catalog</h3>
             
-            {/* Monthly / Yearly Toggle */}
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setBillingCycle('monthly')}
+                  className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 cursor-pointer ${
+                    billingCycle === 'monthly'
+                      ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
+                      : 'bg-white/70 dark:bg-slate-900 text-slate-500 border border-teal-200/60 dark:border-white/10 hover:border-teal-300 dark:hover:border-white/30'
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingCycle('yearly')}
+                  className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+                    billingCycle === 'yearly'
+                      ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
+                      : 'bg-white/70 dark:bg-slate-900 text-slate-500 border border-teal-200/60 dark:border-white/10 hover:border-teal-300 dark:hover:border-white/30'
+                  }`}
+                >
+                  Yearly
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider ${
+                    billingCycle === 'yearly' ? 'bg-white/30 text-white' : 'bg-emerald-100 text-emerald-600 border border-emerald-200'
+                  }`}>
+                    Save 30%
+                  </span>
+                </button>
+              </div>
+
               <button
-                onClick={() => setBillingCycle('monthly')}
-                className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${
-                  billingCycle === 'monthly'
-                    ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
-                    : 'bg-white/70 dark:bg-slate-900 text-slate-500 border border-teal-200/60 dark:border-white/10 hover:border-teal-300 dark:hover:border-white/30'
-                }`}
+                onClick={() => {
+                  setEditingPlan({ id: 'new', name: '', price: 0, transcription_limit: 0, translation_limit: 0, tts_limit: 0, storage_limit: 0, isNew: true });
+                  setEditPlanName('');
+                  setEditPlanPrice(0);
+                  setEditPlanAudio(0);
+                  setEditPlanTranslation(0);
+                  setEditPlanTTS(0);
+                  setEditPlanStorage(0);
+                }}
+                className="px-5 py-2.5 rounded-xl bg-teal-600/10 dark:bg-teal-600 hover:bg-teal-700 hover:text-slate-800 dark:hover:text-white text-teal-600 dark:text-teal-400 text-xs font-bold uppercase tracking-wider cursor-pointer shadow-sm transition-all active:scale-95 flex items-center gap-1.5 border border-teal-500/20"
               >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle('yearly')}
-                className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 flex items-center gap-2 ${
-                  billingCycle === 'yearly'
-                    ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
-                    : 'bg-white/70 dark:bg-slate-900 text-slate-500 border border-teal-200/60 dark:border-white/10 hover:border-teal-300 dark:hover:border-white/30'
-                }`}
-              >
-                Yearly
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider ${
-                  billingCycle === 'yearly' ? 'bg-white/30 text-white' : 'bg-emerald-100 text-emerald-600 border border-emerald-200'
-                }`}>
-                  Save 30%
-                </span>
+                <span>+ Create Plan</span>
               </button>
             </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[...plans].sort((a, b) => a.price - b.price).map((p) => {
-              const activeCustomers = p.name === 'Free' ? 12 : p.name === 'Starter' ? 8 : p.name === 'Professional' ? 4 : 1;
-              const revenueGenerated = activeCustomers * p.price;
-              
-              const monthlyPrice = p.price;
-              const yearlyPerMonth = +(p.price * 0.7).toFixed(0);
-              const displayPrice = billingCycle === 'yearly' ? yearlyPerMonth : monthlyPrice;
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...plans]
+              .map(p => {
+                if (p.name === 'Professional') return { ...p, name: 'Premium' };
+                return p;
+              })
+              .filter(p => p.name === 'Free' || p.name === 'Starter' || p.name === 'Premium')
+              .sort((a, b) => a.price - b.price)
+              .map((p) => {
+                const activeCustomers = p.name === 'Free' ? 12 : p.name === 'Starter' ? 8 : 4;
+                const revenueGenerated = activeCustomers * p.price;
+                
+                const monthlyPrice = p.price;
+                const yearlyPerMonth = +(p.price * 0.7).toFixed(0);
+                const displayPrice = billingCycle === 'yearly' ? yearlyPerMonth : monthlyPrice;
 
-              return (
-                <div 
-                  key={p.id}
-                  className="p-8 rounded-[2.5rem] flex flex-col justify-between transition-all duration-300 relative overflow-hidden group shadow-[0_5px_20px_rgba(20,184,166,0.1)] bg-white/80 dark:bg-slate-900 border border-teal-200/50 dark:border-white/5 hover:border-teal-400/50 hover:bg-white/90 dark:hover:bg-slate-800"
-                >
-                  <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white dark:from-white/5 to-transparent rounded-t-[2.5rem] pointer-events-none opacity-60" />
+                const subtitle = p.name === 'Free' ? 'Individual (Trial)' : p.name === 'Starter' ? 'Individual' : 'Business';
+                const iconName = p.name === 'Free' ? 'box' : p.name === 'Starter' ? 'trending' : 'diamond';
 
-                  {p.price === 0 && (
-                    <div className="absolute top-4 right-4 z-20">
-                      <span className="px-2.5 py-1 bg-emerald-400 text-white text-[9px] font-black uppercase tracking-[0.15em] rounded-full shadow-md">
-                        Free 7 Days
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className="relative z-10 text-center mb-6">
-                    <h4 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">{p.name}</h4>
-                    <span className={`px-2 py-0.5 rounded text-sm font-black uppercase ${
-                      p.active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
-                    }`}>
-                      {p.active ? 'Active' : 'Disabled'}
-                    </span>
-                  </div>
+                return (
+                  <div 
+                    key={p.id}
+                    className="flex flex-col justify-between transition-all duration-300 relative overflow-hidden rounded-[2.5rem] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 shadow-xl max-w-[340px] mx-auto w-full"
+                    style={{ minHeight: '520px' }}
+                  >
+                    <div className="bg-slate-50 dark:bg-slate-900/40 p-6 pt-8 pb-8 flex flex-col items-center relative border-b-4 border-emerald-500 rounded-b-[2rem]">
+                      <div className="flex justify-between items-start w-full mb-1">
+                        <div className="text-left">
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="text-xl font-extrabold text-slate-900 dark:text-white">{p.name}</h4>
+                            {p.name === 'Free' && (
+                              <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-[8px] font-black uppercase tracking-wider rounded-md shadow-sm">
+                                7 Days
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{subtitle}</p>
+                        </div>
+                        <div className="text-emerald-500 opacity-80">
+                          {iconName === 'box' && <Building2 size={24} />}
+                          {iconName === 'trending' && <TrendingUp size={24} />}
+                          {iconName === 'diamond' && <Sparkles size={24} />}
+                        </div>
+                      </div>
 
-                  <ul className="relative z-10 space-y-3 mb-6">
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 size={16} className="text-teal-500 shrink-0" />
-                      <span className="font-bold text-slate-900 dark:text-white mr-1">{p.transcription_limit} mins</span> Audio Transcriptions
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 size={16} className="text-teal-500 shrink-0" />
-                      <span className="font-bold text-slate-900 dark:text-white mr-1">{(p.translation_limit || 0).toLocaleString()}</span> Translation Chars
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 size={16} className="text-teal-500 shrink-0" />
-                      <span className="font-bold text-slate-900 dark:text-white mr-1">{(p.tts_limit || 0).toLocaleString()}</span> TTS Voice Chars
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                      <CheckCircle2 size={16} className="text-teal-500 shrink-0" />
-                      <span className="font-bold text-slate-900 dark:text-white mr-1">{p.storage_limit} MB</span> Cloud Storage
-                    </li>
-                  </ul>
+                      <div className="flex items-baseline justify-center gap-1 mt-6">
+                        <span className="text-4xl font-black text-slate-900 dark:text-white">${displayPrice}</span>
+                        <span className="text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider">/ Month</span>
+                      </div>
 
-                  <div className="relative z-10 mt-auto pt-2 text-center">
-                    <div className="flex items-center justify-center gap-2 mb-1">
                       {billingCycle === 'yearly' && p.price > 0 && (
-                        <span className="text-sm font-bold text-slate-400 line-through pb-1">${monthlyPrice}</span>
+                        <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mt-1.5">
+                          Billed as ${(displayPrice * 12).toFixed(0)} / year
+                        </p>
                       )}
-                      <span className="text-3xl font-black text-slate-800 dark:text-white">${displayPrice}</span>
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">/ MO</span>
-                    </div>
-                    {billingCycle === 'yearly' && p.price > 0 && (
-                      <p className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider mb-2">
-                        Billed as ${(displayPrice * 12).toFixed(0)} / year
-                      </p>
-                    )}
-                  </div>
 
-                  <div className="relative z-10 mt-4 p-3 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-white/5 space-y-1 text-sm font-bold text-slate-400">
-                    <div className="flex justify-between">
-                      <span>Active Workspaces:</span>
-                      <span className="text-slate-900 dark:text-white">{activeCustomers}</span>
+                      <div className="mt-3">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                          p.active ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-550/20'
+                        }`}>
+                          {p.active ? 'Active' : 'Disabled'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Revenue Generated:</span>
-                      <span className="text-emerald-500">${revenueGenerated.toLocaleString()}/mo</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-5 grid grid-cols-3 gap-1 pt-3 border-t border-slate-200 dark:border-white/5">
-                    <button 
-                      onClick={() => {
-                        setEditingPlan(p);
-                        setEditPlanName(p.name);
-                        setEditPlanPrice(p.price);
-                        setEditPlanAudio(p.transcription_limit);
-                        setEditPlanTranslation(p.translation_limit || 0);
-                        setEditPlanTTS(p.tts_limit || 0);
-                        setEditPlanStorage(p.storage_limit);
-                      }}
-                      className="bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white py-1.5 rounded-lg text-sm font-bold cursor-pointer border border-slate-300 dark:border-white/5 flex justify-center items-center"
-                     title="Edit Plan"><Edit size={18} /></button>
-                    <button 
-                      onClick={() => {
-                        setConfirmDialog({
-                          isOpen: true,
-                          title: "Delete Plan",
-                          message: "Are you sure you want to delete this plan? Workspaces using this plan might be affected.",
-                          confirmText: "Yes, Delete Plan",
-                          cancelText: "Cancel",
-                          onConfirm: () => {
-                            apiRequest(`/super-admin/plans/${p.id}`, { method: "DELETE" }).then(() => {
-                              showToast("Plan deleted successfully.", "success");
-                              loadData();
-                            }).catch(err => {
-                              showToast(err.message || "Failed to delete plan", "error");
-                            }).finally(() => {
-                              setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+
+                    <div className="p-6 flex-1 flex flex-col justify-between">
+                      <ul className="space-y-3.5 mb-6 text-left">
+                        <li className="flex items-center gap-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          <Check size={14} className="text-emerald-500 shrink-0 stroke-[3]" />
+                          <span className="font-extrabold text-slate-900 dark:text-white mr-0.5">{p.transcription_limit} mins</span> Audio Transcriptions
+                        </li>
+                        <li className="flex items-center gap-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          <Check size={14} className="text-emerald-500 shrink-0 stroke-[3]" />
+                          <span className="font-extrabold text-slate-900 dark:text-white mr-0.5">{(p.translation_limit || 0).toLocaleString()}</span> Translation Chars
+                        </li>
+                        <li className="flex items-center gap-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          <Check size={14} className="text-emerald-500 shrink-0 stroke-[3]" />
+                          <span className="font-extrabold text-slate-900 dark:text-white mr-0.5">{(p.tts_limit || 0).toLocaleString()}</span> TTS Voice Chars
+                        </li>
+                        <li className="flex items-center gap-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          <Check size={14} className="text-emerald-500 shrink-0 stroke-[3]" />
+                          <span className="font-extrabold text-slate-900 dark:text-white mr-0.5">{p.storage_limit} MB</span> Cloud Storage
+                        </li>
+                      </ul>
+
+                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
+                        <div className="flex justify-between">
+                          <span>Active Workspaces:</span>
+                          <span className="text-slate-900 dark:text-white">{activeCustomers}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Revenue Generated:</span>
+                          <span className="text-emerald-600 dark:text-emerald-500">${revenueGenerated.toLocaleString()}/mo</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-5 grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <button 
+                          onClick={() => {
+                            setEditingPlan(p);
+                            setEditPlanName(p.name);
+                            setEditPlanPrice(p.price);
+                            setEditPlanAudio(p.transcription_limit);
+                            setEditPlanTranslation(p.translation_limit || 0);
+                            setEditPlanTTS(p.tts_limit || 0);
+                            setEditPlanStorage(p.storage_limit);
+                          }}
+                          className="bg-slate-55/40 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-white py-1.5 rounded-lg text-sm font-bold cursor-pointer border border-slate-200 dark:border-slate-800 flex justify-center items-center active:scale-95 transition-all"
+                          title="Edit Plan"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        
+                        <button 
+                          onClick={() => {
+                            setConfirmDialog({
+                              isOpen: true,
+                              title: "Delete Plan",
+                              message: "Are you sure you want to delete this plan? Workspaces using this plan might be affected.",
+                              confirmText: "Yes, Delete Plan",
+                              cancelText: "Cancel",
+                              onConfirm: () => {
+                                apiRequest(`/super-admin/plans/${p.id}`, { method: "DELETE" }).then(() => {
+                                  showToast("Plan deleted successfully.", "success");
+                                  loadData();
+                                }).catch(err => {
+                                  showToast(err.message || "Failed to delete plan", "error");
+                                }).finally(() => {
+                                  setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                                });
+                              }
                             });
-                          }
-                        });
-                      }}
-                      className="bg-red-600/10 hover:bg-red-600/25 text-red-500 py-1.5 rounded-lg text-sm font-bold cursor-pointer flex justify-center items-center"
-                     title="Delete"><Trash2 size={18} /></button>
-                    <button 
-                      onClick={() => handleTogglePlanActive(p.id)}
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out place-self-center ${
-                        p.active ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
-                      }`}
-                     title={p.active ? "Disable" : "Enable"}
-                    >
-                      <span className="sr-only">Toggle Plan</span>
-                      <span
-                        aria-hidden="true"
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          p.active ? 'translate-x-5' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                          }}
+                          className="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 py-1.5 rounded-lg text-sm font-bold cursor-pointer flex justify-center items-center border border-red-200/50 dark:border-red-950/30 active:scale-95 transition-all"
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+
+                        <button 
+                          onClick={() => handleTogglePlanActive(p.id)}
+                          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out place-self-center ${
+                            p.active ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'
+                          }`}
+                          title={p.active ? "Disable" : "Enable"}
+                        >
+                          <span className="sr-only">Toggle Plan</span>
+                          <span
+                            aria-hidden="true"
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              p.active ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       )}
@@ -1279,7 +1464,12 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       {/* ── 5. PROVIDERS TAB ── */}
       {activeTab === 'providers' && (
         <div className="space-y-6 animate-fadeIn">
-          
+
+          {/* Section 0: AI Provider Failover Manager */}
+          <div className="glass-card rounded-2xl p-6 border border-violet-500/20 bg-violet-950/10">
+            <ProviderManager />
+          </div>
+
           {/* Section 1: AI Feature Provider Mapping */}
           <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
             <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 mb-4">
@@ -1306,26 +1496,26 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     <tr key={idx} className="border-b border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5">
                       <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{mapping.feature}</td>
                       <td className="px-4 py-3">
-                        <select
+                        <CustomDropdown
                           value={mapping.provider}
-                          onChange={(e) => {
+                          onChange={(val) => {
                             const newMappings = [...featureMappings];
-                            newMappings[idx].provider = e.target.value;
+                            newMappings[idx].provider = val;
                             setFeatureMappings(newMappings);
                           }}
-                          className="bg-transparent border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1 outline-none font-semibold text-slate-800 dark:text-slate-200"
-                        >
-                          <option className="bg-white dark:bg-slate-900">OpenAI</option>
-                          <option className="bg-white dark:bg-slate-900">Deepgram</option>
-                          <option className="bg-white dark:bg-slate-900">ElevenLabs</option>
-                          <option className="bg-white dark:bg-slate-900">Whisper</option>
-                          <option className="bg-white dark:bg-slate-900">Google Translate</option>
-                          <option className="bg-white dark:bg-slate-900">Gemini</option>
-                          <option className="bg-white dark:bg-slate-900">Anthropic Claude</option>
-                          <option className="bg-white dark:bg-slate-900">Tavily</option>
-                          <option className="bg-white dark:bg-slate-900">Serper</option>
-                          <option className="bg-white dark:bg-slate-900">Azure OpenAI</option>
-                        </select>
+                          options={[
+                            { value: "OpenAI", label: `OpenAI ${mapping.feature === 'Translation' ? '⭐' : ''}`.trim() },
+                            { value: "Deepgram", label: `Deepgram ${['Audio To Text', 'Transcription'].includes(mapping.feature) ? '⭐' : ''}`.trim() },
+                            { value: "ElevenLabs", label: `ElevenLabs ${mapping.feature === 'Text To Speech' ? '⭐' : ''}`.trim() },
+                            { value: "Whisper", label: `Whisper ${['Audio To Text', 'Transcription'].includes(mapping.feature) ? '⭐' : ''}`.trim() },
+                            { value: "Google Translate", label: "Google Translate" },
+                            { value: "Gemini", label: `Gemini ${mapping.feature === 'Translation' ? '👍' : ''}`.trim() },
+                            { value: "Anthropic Claude", label: "Anthropic Claude" },
+                            { value: "Tavily", label: "Tavily" },
+                            { value: "Serper", label: "Serper" },
+                            { value: "Azure OpenAI", label: "Azure OpenAI" }
+                          ]}
+                        />
                       </td>
                       <td className="px-4 py-3">
                         <input type="number" min="1" value={mapping.priority} onChange={(e) => {
@@ -1350,7 +1540,12 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         </button>
                       </td>
                       <td className="px-4 py-3">
-                        <button className="text-teal-600 hover:underline text-xs font-bold" onClick={() => showToast('Mapping saved!', 'success')}>Save</button>
+                        <button 
+                          className="text-teal-600 hover:underline text-xs font-bold cursor-pointer" 
+                          onClick={() => handleSaveMapping(idx)}
+                        >
+                          Save
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -1359,82 +1554,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Section 2: Web Search Configuration */}
-            <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-                <Search className="text-blue-500" size={18} />
-                Web Search Configuration
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Web Search Provider</label>
-                  <select
-                    value={webSearchConfig.provider}
-                    onChange={(e) => setWebSearchConfig({...webSearchConfig, provider: e.target.value})}
-                    className="w-full px-3 py-2 mt-1 rounded-xl text-sm bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 outline-none font-semibold"
-                  >
-                    <option className="bg-white dark:bg-slate-900">Tavily</option>
-                    <option className="bg-white dark:bg-slate-900">Serper</option>
-                    <option className="bg-white dark:bg-slate-900">Brave Search</option>
-                    <option className="bg-white dark:bg-slate-900">Google Custom Search</option>
-                    <option className="bg-white dark:bg-slate-900">Bing Search</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">API Key</label>
-                  <input
-                    type="password"
-                    value={webSearchConfig.apiKey}
-                    onChange={(e) => setWebSearchConfig({...webSearchConfig, apiKey: e.target.value})}
-                    placeholder="Enter API Key"
-                    className="w-full px-3 py-2 mt-1 rounded-xl text-sm bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 outline-none"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Search Depth</label>
-                    <select
-                      value={webSearchConfig.searchDepth}
-                      onChange={(e) => setWebSearchConfig({...webSearchConfig, searchDepth: e.target.value})}
-                      className="w-full px-3 py-2 mt-1 rounded-xl text-sm bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 outline-none"
-                    >
-                      <option className="bg-white dark:bg-slate-900" value="basic">Basic</option>
-                      <option className="bg-white dark:bg-slate-900" value="advanced">Advanced</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500">Result Limit</label>
-                    <input
-                      type="number"
-                      value={webSearchConfig.resultLimit}
-                      onChange={(e) => setWebSearchConfig({...webSearchConfig, resultLimit: Number(e.target.value)})}
-                      className="w-full px-3 py-2 mt-1 rounded-xl text-sm bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 outline-none text-center"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2 pt-2">
-                  <input
-                    type="checkbox"
-                    id="safe-search"
-                    checked={webSearchConfig.safeSearch}
-                    onChange={(e) => setWebSearchConfig({...webSearchConfig, safeSearch: e.target.checked})}
-                    className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-600"
-                  />
-                  <label htmlFor="safe-search" className="text-sm font-bold text-slate-700 dark:text-slate-300">Enable Safe Search</label>
-                </div>
-                
-                <div className="flex gap-3 pt-2">
-                  <button onClick={(e) => { e.preventDefault(); showToast('Search API connection successful', 'success'); }} className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer">Test Connection</button>
-                  <button onClick={(e) => { e.preventDefault(); showToast('Web search configuration saved', 'success'); }} className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-lg cursor-pointer">Save Configuration</button>
-                </div>
-              </div>
-            </div>
-
+          <div className="grid grid-cols-1 gap-6">
             {/* Section 3: Global System Providers */}
             <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
               <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 mb-4">
@@ -1444,16 +1564,42 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               
               <div className="space-y-3">
                 {providers.slice(0, 4).map((prov) => (
-                  <div key={prov.provider_name} className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50">
-                    <div>
-                      <h4 className="text-sm font-extrabold capitalize">{prov.provider_name.replace("-", " ")}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">{prov.status === 'Healthy' ? '? Connected' : '? Offline'}</p>
+                  <div key={prov.provider_name} className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50">
+                    <div className="flex flex-col gap-1 text-left">
+                      <h4 className="text-sm font-extrabold capitalize text-slate-900 dark:text-white">{prov.provider_name.replace("-", " ")}</h4>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`h-1.5 w-1.5 rounded-full ${prov.status === 'Healthy' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                          {prov.status === 'Healthy' ? 'Connected' : 'Offline'}
+                        </span>
+                      </div>
                     </div>
-                    <button className="text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white underline cursor-pointer">Configure</button>
+                    <button 
+                      onClick={() => {
+                        setConfiguringProvider(prov);
+                        setProviderKey('');
+                        setProviderPriority(prov.priority || 1);
+                        setProviderEnabled(prov.is_enabled !== false);
+                      }}
+                      className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white underline cursor-pointer"
+                    >
+                      Configure
+                    </button>
                   </div>
                 ))}
               </div>
-              <button className="w-full mt-4 py-2 rounded-xl bg-teal-600/10 text-teal-600 dark:text-teal-400 font-bold text-sm hover:bg-teal-600/20 cursor-pointer">Add System Provider</button>
+              <button 
+                onClick={() => {
+                  setConfiguringProvider({ provider_name: 'openai', is_enabled: true, priority: 1, isNew: true });
+                  setProviderKey('');
+                  setProviderPriority(1);
+                  setProviderEnabled(true);
+                  setSelectedProvider('openai');
+                }}
+                className="w-full mt-4 py-2 rounded-xl bg-teal-600/10 text-teal-600 dark:text-teal-400 font-bold text-sm hover:bg-teal-600/20 cursor-pointer"
+              >
+                Add System Provider
+              </button>
             </div>
           </div>
         </div>
@@ -2212,15 +2358,28 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               <Activity size={14} className="text-teal-400" />
               Unified AI Activity Logs
             </h3>
-            <div className="flex items-center gap-2">
-              <Search size={14} className="text-slate-500 dark:text-slate-400" />
-              <input
-                type="text"
-                placeholder="Filter logs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1.5 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none placeholder-slate-500"
-              />
+            <div className="flex items-center gap-3">
+              <select
+                value={logTimeFilter}
+                onChange={(e) => setLogTimeFilter(e.target.value as any)}
+                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none cursor-pointer hover:border-slate-300 transition-colors"
+              >
+                <option value="all" className="bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-100">All Time</option>
+                <option value="today" className="bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-100">Today</option>
+                <option value="weekly" className="bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-100">Weekly</option>
+                <option value="monthly" className="bg-white dark:bg-slate-900 text-slate-850 dark:text-slate-100">Monthly</option>
+              </select>
+
+              <div className="flex items-center gap-2">
+                <Search size={14} className="text-slate-500 dark:text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Filter logs..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none placeholder-slate-500"
+                />
+              </div>
             </div>
           </div>
 
@@ -2240,20 +2399,40 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               <tbody>
                 {aiLogs
                   .filter(l => l.tenant.toLowerCase().includes(searchTerm.toLowerCase()) || l.feature.toLowerCase().includes(searchTerm.toLowerCase()) || l.provider.toLowerCase().includes(searchTerm.toLowerCase()))
+                  .filter(l => {
+                    if (logTimeFilter === 'all') return true;
+                    if (!l.timestamp) return true;
+                    const logDate = new Date(l.timestamp);
+                    const now = new Date();
+                    if (logTimeFilter === 'today') {
+                      return logDate.toDateString() === now.toDateString();
+                    }
+                    if (logTimeFilter === 'weekly') {
+                      const diffTime = Math.abs(now.getTime() - logDate.getTime());
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      return diffDays <= 7;
+                    }
+                    if (logTimeFilter === 'monthly') {
+                      return logDate.getMonth() === now.getMonth() && logDate.getFullYear() === now.getFullYear();
+                    }
+                    return true;
+                  })
                   .map((log: any, idx: number) => {
                     const duration = log.provider === 'openai' ? '450ms' : log.provider === 'deepgram' ? '320ms' : '820ms';
                     return (
-                      <tr key={idx} className="border-b border-slate-200 dark:border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-3 font-mono text-slate-400">{log.time}</td>
-                        <td className="py-3 font-semibold text-slate-800 dark:text-white">{log.tenant}</td>
-                        <td className="py-3 text-slate-300 font-bold">{log.feature}</td>
+                      <tr key={idx} className="border-b border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                        <td className="py-3 font-mono text-slate-500 dark:text-slate-400">{log.time}</td>
+                        <td className="py-3 font-semibold text-slate-900 dark:text-white">{log.tenant}</td>
+                        <td className="py-3 text-slate-850 dark:text-slate-200 font-bold">{log.feature}</td>
                         <td className="py-3">
-                          <span className="badge badge-info">{log.provider}</span>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase tracking-wider">
+                            {log.provider}
+                          </span>
                         </td>
                         <td className="py-3 text-slate-600 dark:text-slate-400 font-mono">{duration}</td>
-                        <td className="py-3 font-mono text-emerald-400">{log.cost}</td>
+                        <td className="py-3 font-mono text-emerald-600 dark:text-emerald-400 font-extrabold">{log.cost}</td>
                         <td className="py-3">
-                          <span className="px-2 py-0.5 rounded text-sm font-extrabold bg-emerald-500/10 text-emerald-400">
+                          <span className="px-2 py-0.5 rounded text-xs font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                             {log.status}
                           </span>
                         </td>
@@ -2302,31 +2481,31 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         <div className="space-y-6 animate-fadeIn">
           {/* Resource Usage Gauges */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40">
+            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
               <p className="text-sm uppercase font-bold text-slate-500">CPU LOAD</p>
               <div className="flex items-center justify-between mt-2.5">
-                <h4 className="text-3xl font-black text-white">{systemHealth.cpu}</h4>
-                <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden border border-slate-200 dark:border-white/5">
+                <h4 className="text-3xl font-black text-slate-900 dark:text-white">{systemHealth.cpu}</h4>
+                <div className="w-24 h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden border border-slate-200 dark:border-white/5">
                   <div className="h-full bg-teal-500" style={{ width: systemHealth.cpu }} />
                 </div>
               </div>
             </div>
 
-            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40">
+            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
               <p className="text-sm uppercase font-bold text-slate-500">RAM USAGE</p>
               <div className="flex items-center justify-between mt-2.5">
-                <h4 className="text-3xl font-black text-white">{systemHealth.ram}</h4>
-                <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden border border-slate-200 dark:border-white/5">
+                <h4 className="text-3xl font-black text-slate-900 dark:text-white">{systemHealth.ram}</h4>
+                <div className="w-24 h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden border border-slate-200 dark:border-white/5">
                   <div className="h-full bg-teal-500" style={{ width: systemHealth.ram }} />
                 </div>
               </div>
             </div>
 
-            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40">
+            <div className="glass-card rounded-2xl p-5 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
               <p className="text-sm uppercase font-bold text-slate-500">DISK SPACE USED</p>
               <div className="flex items-center justify-between mt-2.5">
-                <h4 className="text-3xl font-black text-white">{systemHealth.disk}</h4>
-                <div className="w-24 h-2 bg-white/10 rounded-full overflow-hidden border border-slate-200 dark:border-white/5">
+                <h4 className="text-3xl font-black text-slate-900 dark:text-white">{systemHealth.disk}</h4>
+                <div className="w-24 h-2 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden border border-slate-200 dark:border-white/5">
                   <div className="h-full bg-amber-500" style={{ width: systemHealth.disk }} />
                 </div>
               </div>
@@ -2334,7 +2513,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           </div>
 
           {/* Microservices Checklist */}
-          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 space-y-4">
+          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Server size={14} className="text-teal-400" />
               Service Health
@@ -2342,11 +2521,11 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {Object.entries(systemHealth.services).map(([service, status]: any) => (
-                <div key={service} className="p-4 rounded-xl bg-white dark:bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-white/5 flex items-center justify-between">
-                  <span className="text-base font-bold text-slate-800 dark:text-white">{service}</span>
+                <div key={service} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/30 border border-slate-200 dark:border-white/5 flex items-center justify-between">
+                  <span className="text-base font-bold text-slate-800 dark:text-slate-200">{service}</span>
                   <span className={`px-2 py-0.5 rounded text-sm font-black ${
-                    status === 'Healthy' ? 'bg-emerald-500/10 text-emerald-400' :
-                    status === 'Warning' ? 'bg-amber-500/10 text-amber-400' : 'bg-red-500/10 text-red-500'
+                    status === 'Healthy' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+                    status === 'Warning' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-red-500/10 text-red-500'
                   }`}>
                     {status}
                   </span>
@@ -2638,7 +2817,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="relative w-full max-w-md overflow-hidden rounded-2xl p-6 bg-white dark:bg-slate-900 border border-white/10 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/5 pb-2">
-              <h3 className="text-base font-bold text-slate-800 dark:text-white">Edit Subscription Plan</h3>
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">
+                {editingPlan.isNew ? "Create Subscription Plan" : "Edit Subscription Plan"}
+              </h3>
               <button onClick={() => setEditingPlan(null)} className="text-slate-400 hover:text-white">✕</button>
             </div>
             
@@ -2706,8 +2887,12 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             <div className="pt-4 flex gap-3">
               <button
                 onClick={() => {
-                  apiRequest(`/super-admin/plans/${editingPlan.id}`, {
-                    method: 'PATCH',
+                  const isNew = editingPlan.isNew;
+                  const url = isNew ? '/super-admin/plans' : `/super-admin/plans/${editingPlan.id}`;
+                  const method = isNew ? 'POST' : 'PATCH';
+                  
+                  apiRequest(url, {
+                    method: method,
                     body: JSON.stringify({
                       name: editPlanName,
                       price: editPlanPrice,
@@ -2717,16 +2902,16 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                       storage_limit: editPlanStorage
                     })
                   }).then(() => {
-                    showToast("Plan updated successfully", "success");
+                    showToast(isNew ? "Plan created successfully" : "Plan updated successfully", "success");
                     setEditingPlan(null);
                     loadData();
                   }).catch(e => {
-                    showToast("Failed to update plan", "error");
+                    showToast(isNew ? "Failed to create plan" : "Failed to update plan", "error");
                   });
                 }}
                 className="flex-1 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-slate-800 dark:text-white text-base font-bold cursor-pointer shadow-md"
               >
-                Save Changes
+                Save
               </button>
               <button
                 onClick={() => setEditingPlan(null)}
@@ -2750,6 +2935,200 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       {subTab === 'settings-backup' && <BackupRestore />}
       {subTab === 'settings-notifications' && <NotificationCenter />}
       {subTab === 'settings-activity' && <ActivityCenter />}
+
+      {/* User Deletion Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="glass-card rounded-2xl w-full max-w-sm p-6 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl space-y-6">
+            <div className="text-center space-y-3">
+              <div className="mx-auto bg-red-500/10 text-red-500 rounded-full w-12 h-12 flex items-center justify-center mb-2">
+                <AlertTriangle size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Delete User?</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Are you sure you want to delete this user? This action cannot be undone and will remove all their data.
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={confirmDeleteUser}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-bold shadow-md transition-all active:scale-95"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setUserToDelete(null)}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-sm font-bold transition-all active:scale-95"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Configure Provider Modal */}
+      {configuringProvider && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <form 
+            onSubmit={handleConfigureProvider}
+            className="glass-card rounded-2xl w-full max-w-md p-6 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl space-y-4 text-left"
+          >
+            <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/10 pb-3">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                {configuringProvider.isNew ? "Add System Provider" : `Configure ${configuringProvider.provider_name.replace("-", " ").toUpperCase()}`}
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setConfiguringProvider(null)} 
+                className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {configuringProvider.isNew && (
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Select Provider</label>
+                <select
+                  value={selectedProvider}
+                  onChange={(e) => setSelectedProvider(e.target.value)}
+                  className="w-full px-3 py-2 mt-1 rounded-xl text-sm bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 outline-none font-semibold text-slate-900 dark:text-white"
+                >
+                  <option className="bg-white dark:bg-slate-900" value="openai">OpenAI</option>
+                  <option className="bg-white dark:bg-slate-900" value="deepgram">Deepgram</option>
+                  <option className="bg-white dark:bg-slate-900" value="elevenlabs">ElevenLabs</option>
+                  <option className="bg-white dark:bg-slate-900" value="google-translate">Google Translate</option>
+                  <option className="bg-white dark:bg-slate-900" value="gemini">Gemini</option>
+                  <option className="bg-white dark:bg-slate-900" value="anthropic-claude">Anthropic Claude</option>
+                  <option className="bg-white dark:bg-slate-900" value="brave-search">Brave Search</option>
+                  <option className="bg-white dark:bg-slate-900" value="tavily">Tavily</option>
+                  <option className="bg-white dark:bg-slate-900" value="serper">Serper</option>
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">API Key / Credentials</label>
+              <input
+                type="password"
+                value={providerKey}
+                onChange={(e) => setProviderKey(e.target.value)}
+                placeholder={configuringProvider.isNew ? "Enter API Key" : "•••••••••••• (Leave blank to keep current)"}
+                className="w-full px-3 py-2 mt-1 rounded-xl text-sm bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 outline-none text-slate-900 dark:text-white"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Priority</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={providerPriority}
+                  onChange={(e) => setProviderPriority(Number(e.target.value))}
+                  className="w-full px-3 py-2 mt-1 rounded-xl text-sm bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 outline-none text-slate-900 dark:text-white text-center animate-none"
+                />
+              </div>
+
+              <div className="flex flex-col justify-end pb-1.5">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="provider-enabled"
+                    checked={providerEnabled}
+                    onChange={(e) => setProviderEnabled(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-350 text-teal-600 focus:ring-teal-650 cursor-pointer"
+                  />
+                  <label htmlFor="provider-enabled" className="text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer select-none">Enabled</label>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-3 border-t border-slate-200 dark:border-white/10">
+              <button
+                type="button"
+                onClick={handleTestConnectionInModal}
+                className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-bold hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer text-slate-800 dark:text-slate-200"
+              >
+                Test Connection
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-slate-800 dark:text-white text-xs font-bold shadow-lg cursor-pointer"
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+      {/* Password Reset Success Modal */}
+      {resetPasswordInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="glass-card rounded-2xl w-full max-w-sm p-6 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-2xl space-y-6 text-left">
+            <div className="text-center space-y-3">
+              <div className="mx-auto bg-emerald-500/10 text-emerald-500 rounded-full w-12 h-12 flex items-center justify-center mb-2">
+                <Lock size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Temporary Password</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                A temporary password has been generated for: <br />
+                <span className="font-extrabold text-slate-700 dark:text-slate-200">{resetPasswordInfo.userName}</span>
+              </p>
+            </div>
+
+            <div className="relative flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950/40">
+              <span className="font-mono text-sm font-black select-all text-slate-800 dark:text-slate-200">{resetPasswordInfo.tempPass}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(resetPasswordInfo.tempPass);
+                  showToast("Password copied to clipboard!", "success");
+                }}
+                className="text-xs font-bold text-teal-600 hover:text-teal-700 cursor-pointer flex items-center gap-1"
+                title="Copy Password"
+              >
+                <Copy size={14} /> Copy
+              </button>
+            </div>
+
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 text-center font-semibold">
+              ⚠️ Share this password securely. The user will be required to change it upon log in.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setResetPasswordInfo(null)}
+              className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-sm font-bold shadow-md transition-all cursor-pointer active:scale-95"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Toast Alert Popup */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className={`fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-2xl border text-sm font-semibold backdrop-blur-md transition-all duration-300 ${
+              toastType === 'success' 
+                ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+                : toastType === 'error'
+                  ? 'bg-red-500/10 dark:bg-red-500/20 border-red-500/30 text-red-600 dark:text-red-400'
+                  : 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/30 text-blue-600 dark:text-blue-400'
+            }`}
+          >
+            {toastType === 'success' && <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />}
+            {toastType === 'error' && <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
+            {toastType === 'info' && <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />}
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 </div>
   );
 };

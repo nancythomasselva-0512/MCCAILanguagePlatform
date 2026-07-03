@@ -876,27 +876,27 @@ def download_payment_receipt(payment_id: str, db: Session = Depends(get_db)):
 
 @router.get("/admin/overview", dependencies=[super_admin_only])
 def get_admin_billing_overview(db: Session = Depends(get_db)):
-    """Fetch MRR, ARR, paid/failed counts, list of invoices, active plans for admin display."""
+    """Fetch real computed MRR, ARR, paid/failed counts, list of invoices, active plans for admin display."""
     # 1. Total revenue: sum of successful payments
-    success_payments = db.query(Payment).filter(Payment.status == "success").all()
-    total_rev = sum(p.amount for p in success_payments)
+    success_payments = db.query(Payment).filter(Payment.status.in_(["success", "Success"])).all()
+    total_rev = float(sum(p.amount for p in success_payments))
     
     # Today's revenue
     today = datetime.datetime.utcnow().date()
     today_payments = [p for p in success_payments if p.created_at.date() == today]
-    today_rev = sum(p.amount for p in today_payments)
+    today_rev = float(sum(p.amount for p in today_payments))
     
     # 2. MRR: sum of prices of active subscriptions
-    active_subs = db.query(Subscription).filter(Subscription.status == "active").all()
-    mrr = sum(sub.price for sub in active_subs)
+    active_subs = db.query(Subscription).filter(Subscription.status.in_(["active", "Active"])).all()
+    mrr = float(sum(sub.price for sub in active_subs))
     arr = mrr * 12
     
     # 3. Counts
-    expired_count = db.query(Subscription).filter(Subscription.status == "expired").count()
-    paid_count = db.query(Invoice).filter(Invoice.status == "paid").count()
-    pending_count = db.query(Invoice).filter(Invoice.status == "pending").count()
-    failed_count = db.query(PaymentTransaction).filter(PaymentTransaction.status == "failed").count()
-    success_count = db.query(PaymentTransaction).filter(PaymentTransaction.status == "success").count()
+    expired_count = db.query(Subscription).filter(Subscription.status.in_(["expired", "Expired"])).count()
+    paid_count = db.query(Invoice).filter(Invoice.status.in_(["paid", "Paid"])).count()
+    pending_count = db.query(Invoice).filter(Invoice.status.in_(["pending", "Pending"])).count()
+    failed_count = db.query(PaymentTransaction).filter(PaymentTransaction.status.in_(["failed", "Failed"])).count()
+    success_count = db.query(PaymentTransaction).filter(PaymentTransaction.status.in_(["success", "Success"])).count()
     
     # 4. Invoices log
     invoices = db.query(Invoice).order_by(Invoice.created_at.desc()).all()
@@ -904,16 +904,16 @@ def get_admin_billing_overview(db: Session = Depends(get_db)):
     for inv in invoices:
         tenant = db.query(Tenant).filter(Tenant.id == inv.tenant_id).first()
         inv_list.append({
-            "id": inv.id,
+            "id": str(inv.id),
             "invoice_number": inv.invoice_number,
             "tenant_name": tenant.tenant_name if tenant else "Unknown Tenant",
             "plan": inv.plan.name if inv.plan else "Free",
-            "amount": inv.total_amount,
+            "amount": float(inv.total_amount),
             "status": inv.status.capitalize(),
             "date": inv.created_at.strftime("%Y-%m-%d")
         })
         
-    # 5. Subscriptions list (Rich details for ALL subscriptions)
+    # 5. Subscriptions list
     all_subs = db.query(Subscription).all()
     sub_list = []
     for sub in all_subs:
@@ -925,19 +925,19 @@ def get_admin_billing_overview(db: Session = Depends(get_db)):
         latest_payment = db.query(Payment).filter(Payment.tenant_id == sub.tenant_id).order_by(Payment.created_at.desc()).first()
         
         sub_list.append({
-            "id": sub.id,
+            "id": str(sub.id),
             "tenant_name": tenant.tenant_name if tenant else "Unknown Tenant",
             "user_name": admin_user.name if admin_user else (tenant.tenant_name if tenant else "N/A"),
             "email": admin_user.email if admin_user else "N/A",
             "plan": sub.plan.name if sub.plan else "Free",
-            "amount": sub.price,
+            "amount": float(sub.price),
             "payment_status": latest_payment.status.capitalize() if latest_payment else "N/A",
-            "status": sub.status.capitalize(),  # Active, Expired, Cancelled
+            "status": sub.status.capitalize(),
             "billing_cycle": sub.billing_cycle,
-            "price": sub.price,
+            "price": float(sub.price),
             "started": sub.start_date.strftime("%Y-%m-%d") if sub.start_date else "-",
             "expires": sub.end_date.strftime("%Y-%m-%d") if sub.end_date else "-",
-            "payment_id": latest_payment.transaction_id or latest_payment.id if latest_payment else "N/A"
+            "payment_id": str(latest_payment.transaction_id or latest_payment.id) if latest_payment else "N/A"
         })
         
     # 6. Payments list
@@ -948,85 +948,45 @@ def get_admin_billing_overview(db: Session = Depends(get_db)):
         invoice = db.query(Invoice).filter(Invoice.id == p.invoice_id).first()
         plan_name = invoice.plan.name if (invoice and invoice.plan) else "Professional"
         pay_list.append({
-            "id": p.id,
+            "id": str(p.id),
             "transaction_id": p.transaction_id or f"TXN-{str(p.id)[:8]}",
             "invoice_number": invoice.invoice_number if invoice else "N/A",
             "tenant_name": tenant.tenant_name if tenant else "Unknown Tenant",
             "workspace": tenant.slug if tenant else "unknown",
             "plan": plan_name,
             "gateway": p.payment_method,
-            "amount": p.amount,
+            "amount": float(p.amount),
             "status": p.status.capitalize(),
             "date": p.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "receipt_url": f"/api/billing/payments/{p.id}/receipt" if p.status == "success" else None
+            "receipt_url": f"/api/billing/payments/{p.id}/receipt" if p.status.lower() == "success" else None
         })
-
-    # Fallback default values for aesthetics if database is fresh
-    if not pay_list:
-        pay_list = [
-            {
-                "id": "PAY-001",
-                "transaction_id": "TXN-1781772201",
-                "invoice_number": "INV-2026-0001",
-                "tenant_name": "ABC School",
-                "workspace": "abc-school",
-                "plan": "Professional",
-                "gateway": "Razorpay",
-                "amount": 2999.0,
-                "status": "Success",
-                "date": "2026-06-18 10:12:45",
-                "receipt_url": "#"
-            },
-            {
-                "id": "PAY-002",
-                "transaction_id": "TXN-1781772202",
-                "invoice_number": "INV-2026-0002",
-                "tenant_name": "Acme Corp",
-                "workspace": "acme-corp",
-                "plan": "Enterprise",
-                "gateway": "Stripe",
-                "amount": 14999.0,
-                "status": "Success",
-                "date": "2026-06-17 14:25:10",
-                "receipt_url": "#"
-            }
-        ]
-        
-    if not inv_list:
-        inv_list = [
-            {"id": "INV-MOCK-001", "invoice_number": "INV-2026-0001", "tenant_name": "ABC School", "plan": "Professional", "amount": 2999.0, "status": "Paid", "date": "2026-06-18"},
-            {"id": "INV-MOCK-002", "invoice_number": "INV-2026-0002", "tenant_name": "Acme Corp", "plan": "Enterprise", "amount": 14999.0, "status": "Paid", "date": "2026-06-17"},
-            {"id": "INV-MOCK-003", "invoice_number": "INV-2026-0003", "tenant_name": "Stark Industries", "plan": "Professional", "amount": 2999.0, "status": "Pending", "date": "2026-06-18"}
-        ]
-        
-    if not sub_list:
-        sub_list = [
-            {"id": "SUB-MOCK-001", "tenant_name": "ABC School", "plan": "Professional", "status": "Active", "expires": "2026-07-18", "billing_cycle": "monthly", "price": 2999.0, "started": "2026-06-18"},
-            {"id": "SUB-MOCK-002", "tenant_name": "Acme Corp", "plan": "Enterprise", "status": "Active", "expires": "2027-06-17", "billing_cycle": "yearly", "price": 14999.0, "started": "2026-06-17"}
-        ]
 
     # Generate vector metrics for Revenue Trend (e.g. past 7 days)
     trend_dates = [(datetime.datetime.utcnow().date() - datetime.timedelta(days=i)).strftime("%d-%b") for i in range(6, -1, -1)]
-    trend_values = [1200, 1500, 1800, 2200, 2900, 3500, total_rev if total_rev > 0 else 4500.0]
+    trend_values = []
+    for i in range(6, -1, -1):
+        day = datetime.datetime.utcnow().date() - datetime.timedelta(days=i)
+        day_revenue = sum(p.amount for p in success_payments if p.created_at.date() == day)
+        trend_values.append(float(day_revenue))
     
     gateway_spread = [
-        {"name": "Stripe", "value": sum(p.amount for p in success_payments if p.payment_method == "stripe") or 3500.0},
-        {"name": "Razorpay", "value": sum(p.amount for p in success_payments if p.payment_method == "razorpay") or 1000.0},
-        {"name": "UPI", "value": sum(p.amount for p in success_payments if p.payment_method == "upi") or 500.0}
+        {"name": "Stripe", "value": float(sum(p.amount for p in success_payments if p.payment_method.lower() in ["stripe", "credit_card", "card"]))},
+        {"name": "Razorpay", "value": float(sum(p.amount for p in success_payments if p.payment_method.lower() == "razorpay"))},
+        {"name": "UPI", "value": float(sum(p.amount for p in success_payments if p.payment_method.lower() == "upi"))}
     ]
     
     total_attempts = success_count + failed_count
-    success_ratio = (success_count / total_attempts * 100.0) if total_attempts > 0 else 92.5
+    success_ratio = (success_count / total_attempts * 100.0) if total_attempts > 0 else 100.0
 
     return {
-        "total_revenue": total_rev if total_rev > 0 else 4500.0,
-        "today_revenue": today_rev if today_rev > 0 else 2999.0,
-        "mrr": mrr if mrr > 0 else 4500.0,
-        "arr": arr if arr > 0 else 54000.0,
-        "active_subscriptions": len(active_subs) if len(active_subs) > 0 else 2,
+        "total_revenue": total_rev,
+        "today_revenue": today_rev,
+        "mrr": mrr,
+        "arr": arr,
+        "active_subscriptions": len(active_subs),
         "expired_subscriptions": expired_count,
-        "paid_invoices": paid_count if paid_count > 0 else 2,
-        "pending_invoices": pending_count if pending_count > 0 else 1,
+        "paid_invoices": paid_count,
+        "pending_invoices": pending_count,
         "failed_payments": failed_count,
         "invoices": inv_list,
         "subscriptions": sub_list,

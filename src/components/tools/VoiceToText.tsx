@@ -83,7 +83,9 @@ export const VoiceToText: React.FC = () => {
   
   useEffect(() => {
     providerManager.getActiveProviders().then(res => {
-      if (res["Audio To Text"]) {
+      if (res["Transcription"]) {
+        setActiveProvider(res["Transcription"].toUpperCase());
+      } else if (res["Audio To Text"]) {
         setActiveProvider(res["Audio To Text"].toUpperCase());
       }
     });

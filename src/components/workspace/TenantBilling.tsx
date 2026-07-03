@@ -283,8 +283,8 @@ export const TenantBilling: React.FC = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-teal-400/20 blur-[120px] pointer-events-none rounded-full" />
         
         <div className="relative z-10 text-center space-y-1">
-          <h3 className="text-4xl md:text-5xl font-black text-teal-950 tracking-widest uppercase drop-shadow-sm">Our Prices</h3>
-          <p className="text-[10px] text-teal-700 font-bold tracking-[0.2em] uppercase">Select a target tier to upgrade or downgrade your active workspace instantly.</p>
+          <h3 className="text-4xl md:text-5xl font-black text-teal-950 dark:text-teal-50 tracking-widest uppercase drop-shadow-sm">Our Prices</h3>
+          <p className="text-[10px] text-teal-700 dark:text-teal-300 font-bold tracking-[0.2em] uppercase">Select a target tier to upgrade or downgrade your active workspace instantly.</p>
         </div>
 
         {/* Monthly / Yearly Toggle */}

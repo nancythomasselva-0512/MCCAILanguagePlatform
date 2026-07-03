@@ -90,10 +90,30 @@ class ProviderConfiguration(Base):
     credentials_encrypted = Column(Text, nullable=True)  # AES-256 encrypted API key / endpoint
     priority = Column(Integer, default=1)  # lower number means higher priority
     config_json = Column(Text, nullable=True) # Web search configs etc.
+    # Circuit breaker persistence
+    circuit_breaker_failures = Column(Integer, default=0)
+    circuit_breaker_opened_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     tenant = relationship("Tenant", back_populates="providers")
+
+
+class ProviderLog(Base):
+    """Structured log of every AI provider call — displayed in Admin Panel."""
+    __tablename__ = "provider_logs"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    provider_name = Column(String(50), nullable=False)
+    feature = Column(String(100), nullable=False)       # e.g. "translation", "Audio To Text"
+    status = Column(String(20), nullable=False)          # "success" | "failed" | "skipped"
+    error_code = Column(String(10), nullable=True)
+    error_message = Column(Text, nullable=True)
+    response_time_ms = Column(Integer, default=0)
+    retry_count = Column(Integer, default=0)
+    fallback_occurred = Column(Boolean, default=False)
+    tenant_id = Column(String(36), nullable=True)       # soft reference — no FK to avoid type mismatch
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class TranscriptionHistory(Base):
     __tablename__ = "transcription_history"

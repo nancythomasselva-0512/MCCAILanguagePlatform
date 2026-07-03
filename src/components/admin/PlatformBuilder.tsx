@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../utils/api';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings, Paintbrush, FileText, Menu, Sliders, Play, FormInput, 
   Mail, ShieldCheck, Code2, Users, FolderOpen, Plus, Trash2, 
@@ -16,6 +17,44 @@ export const PlatformBuilder: React.FC = () => {
   const [config, setConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
+
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
+
+  const handleFieldImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'logo_url' | 'favicon_url' | 'app_icon_url') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingField(fieldName);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await apiRequest('/platform-builder/media', {
+        method: 'POST',
+        body: formData
+      });
+      if (res && res.file_url) {
+        setBrandingForm(prev => ({ ...prev, [fieldName]: res.file_url }));
+        showToast('Image uploaded and applied!', 'success');
+      } else {
+        showToast('Upload succeeded but no URL returned.', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Failed to upload image.', 'error');
+    } finally {
+      setUploadingField(null);
+    }
+  };
 
   // States for sub-managers
   // Branding
@@ -138,10 +177,10 @@ export const PlatformBuilder: React.FC = () => {
         method: 'PATCH',
         body: JSON.stringify(brandingForm)
       });
-      alert('Branding settings saved successfully!');
+      showToast('Branding settings saved successfully!', 'success');
       fetchConfig();
     } catch (err) {
-      alert('Failed to save branding settings.');
+      showToast('Failed to save branding settings.', 'error');
     } finally {
       setSaving(false);
     }
@@ -154,10 +193,10 @@ export const PlatformBuilder: React.FC = () => {
         method: 'PATCH',
         body: JSON.stringify(themeForm)
       });
-      alert('Theme settings saved successfully!');
+      showToast('Theme settings saved successfully!', 'success');
       fetchConfig();
     } catch (err) {
-      alert('Failed to save theme settings.');
+      showToast('Failed to save theme settings.', 'error');
     } finally {
       setSaving(false);
     }
@@ -170,10 +209,10 @@ export const PlatformBuilder: React.FC = () => {
         method: 'PATCH',
         body: JSON.stringify(platformForm)
       });
-      alert('Platform settings saved successfully!');
+      showToast('Platform settings saved successfully!', 'success');
       fetchConfig();
     } catch (err) {
-      alert('Failed to save platform settings.');
+      showToast('Failed to save platform settings.', 'error');
     } finally {
       setSaving(false);
     }
@@ -181,7 +220,7 @@ export const PlatformBuilder: React.FC = () => {
 
   // Website Page CRUD
   const handleAddPage = async () => {
-    if (!newPage.title || !newPage.slug) return alert('Fill title and slug');
+    if (!newPage.title || !newPage.slug) return showToast('Please fill in title and slug', 'error');
     try {
       await apiRequest('/platform-builder/pages', {
         method: 'POST',
@@ -190,7 +229,7 @@ export const PlatformBuilder: React.FC = () => {
       setNewPage({ slug: '', title: '', subtitle: '', is_active: true });
       fetchConfig();
     } catch (err) {
-      alert('Failed to add page');
+      showToast('Failed to add page.', 'error');
     }
   };
 
@@ -200,7 +239,7 @@ export const PlatformBuilder: React.FC = () => {
       await apiRequest(`/platform-builder/pages/${id}`, { method: 'DELETE' });
       fetchConfig();
     } catch (err) {
-      alert('Failed to delete page');
+      showToast('Failed to delete page.', 'error');
     }
   };
 
@@ -212,13 +251,13 @@ export const PlatformBuilder: React.FC = () => {
       });
       fetchConfig();
     } catch (err) {
-      alert('Failed to toggle page status');
+      showToast('Failed to toggle page status.', 'error');
     }
   };
 
   // Navigation CRUD
   const handleAddNavItem = async () => {
-    if (!newNavItem.label || !newNavItem.route) return alert('Fill label and route');
+    if (!newNavItem.label || !newNavItem.route) return showToast('Please fill in label and route', 'error');
     try {
       await apiRequest('/platform-builder/navigation', {
         method: 'POST',
@@ -227,7 +266,7 @@ export const PlatformBuilder: React.FC = () => {
       setNewNavItem({ label: '', route: '', icon: '', order: 0, is_visible: true });
       fetchConfig();
     } catch (err) {
-      alert('Failed to add navigation item');
+      showToast('Failed to add navigation item.', 'error');
     }
   };
 
@@ -236,7 +275,7 @@ export const PlatformBuilder: React.FC = () => {
       await apiRequest(`/platform-builder/navigation/${id}`, { method: 'DELETE' });
       fetchConfig();
     } catch (err) {
-      alert('Failed to delete navigation item');
+      showToast('Failed to delete navigation item.', 'error');
     }
   };
 
@@ -249,13 +288,13 @@ export const PlatformBuilder: React.FC = () => {
       });
       fetchConfig();
     } catch (err) {
-      alert('Failed to toggle feature');
+      showToast('Failed to toggle feature.', 'error');
     }
   };
 
   // Widget Builder
   const handleAddWidget = async () => {
-    if (!newWidget.title) return alert('Enter widget title');
+    if (!newWidget.title) return showToast('Please enter widget title', 'error');
     try {
       await apiRequest('/platform-builder/widgets', {
         method: 'POST',
@@ -264,7 +303,7 @@ export const PlatformBuilder: React.FC = () => {
       setNewWidget({ title: '', widget_type: 'metric', config_json: '', order: 0 });
       fetchConfig();
     } catch (err) {
-      alert('Failed to create widget');
+      showToast('Failed to create widget.', 'error');
     }
   };
 
@@ -273,7 +312,7 @@ export const PlatformBuilder: React.FC = () => {
       await apiRequest(`/platform-builder/widgets/${id}`, { method: 'DELETE' });
       fetchConfig();
     } catch (err) {
-      alert('Failed to delete widget');
+      showToast('Failed to delete widget.', 'error');
     }
   };
 
@@ -298,7 +337,7 @@ export const PlatformBuilder: React.FC = () => {
   };
 
   const handleSaveForm = async () => {
-    if (!newForm.form_name) return alert('Enter form name');
+    if (!newForm.form_name) return showToast('Please enter form name', 'error');
     try {
       await apiRequest('/platform-builder/forms', {
         method: 'POST',
@@ -307,7 +346,7 @@ export const PlatformBuilder: React.FC = () => {
       setNewForm({ form_name: '', fields: [{ label: '', type: 'text', required: true }] });
       fetchConfig();
     } catch (err) {
-      alert('Failed to save form');
+      showToast('Failed to save form.', 'error');
     }
   };
 
@@ -316,7 +355,7 @@ export const PlatformBuilder: React.FC = () => {
       await apiRequest(`/platform-builder/forms/${id}`, { method: 'DELETE' });
       fetchConfig();
     } catch (err) {
-      alert('Failed to delete form');
+      showToast('Failed to delete form.', 'error');
     }
   };
 
@@ -336,10 +375,10 @@ export const PlatformBuilder: React.FC = () => {
           body: JSON.stringify({ template_type: selectedEmailType, subject: emailSubject, body_html: emailBody })
         });
       }
-      alert('Email template saved successfully!');
+      showToast('Email template saved successfully!', 'success');
       fetchConfig();
     } catch (err) {
-      alert('Failed to save email template');
+      showToast('Failed to save email template.', 'error');
     } finally {
       setSaving(false);
     }
@@ -347,17 +386,17 @@ export const PlatformBuilder: React.FC = () => {
 
   // White label Tenant Branding Save
   const handleSaveTenantBranding = async () => {
-    if (!selectedTenantId || !customDomain) return alert('Select tenant and enter custom domain');
+    if (!selectedTenantId || !customDomain) return showToast('Please select tenant and enter custom domain', 'error');
     setSaving(true);
     try {
       await apiRequest(`/platform-builder/tenant-branding/${selectedTenantId}`, {
         method: 'PATCH',
         body: JSON.stringify({ custom_domain: customDomain })
       });
-      alert('Tenant domain branding mapped successfully!');
+      showToast('Tenant domain branding mapped successfully!', 'success');
       fetchConfig();
     } catch (err) {
-      alert('Failed to update tenant white label branding');
+      showToast('Failed to update tenant white label branding.', 'error');
     } finally {
       setSaving(false);
     }
@@ -366,7 +405,7 @@ export const PlatformBuilder: React.FC = () => {
   // Media Library Upload mock
   const handleUploadMedia = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!mediaFile) return alert('Select a file first');
+    if (!mediaFile) return showToast('Please select a file first', 'error');
     setSaving(true);
     try {
       const formData = new FormData();
@@ -376,10 +415,10 @@ export const PlatformBuilder: React.FC = () => {
         body: formData
       });
       setMediaFile(null);
-      alert('Media uploaded successfully!');
+      showToast('Media uploaded successfully!', 'success');
       fetchConfig();
     } catch (err) {
-      alert('Failed to upload media asset');
+      showToast('Failed to upload media asset.', 'error');
     } finally {
       setSaving(false);
     }
@@ -390,7 +429,7 @@ export const PlatformBuilder: React.FC = () => {
       await apiRequest(`/platform-builder/media/${id}`, { method: 'DELETE' });
       fetchConfig();
     } catch (err) {
-      alert('Failed to delete media');
+      showToast('Failed to delete media.', 'error');
     }
   };
 
@@ -415,7 +454,6 @@ export const PlatformBuilder: React.FC = () => {
     { id: 'features', label: 'Feature Manager', icon: ShieldCheck },
     { id: 'dashboard', label: 'Dashboard Builder', icon: Sliders },
     { id: 'forms', label: 'Form Builder', icon: FormInput },
-    { id: 'emails', label: 'Email Templates', icon: Mail },
     { id: 'auth', label: 'Auth Configuration', icon: ShieldCheck },
     { id: 'custom_code', label: 'Custom CSS/JS', icon: Code2 },
     { id: 'white_label', label: 'White-Label Manager', icon: Users },
@@ -477,12 +515,25 @@ export const PlatformBuilder: React.FC = () => {
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Logo URL</label>
-                <input
-                  type="text"
-                  value={brandingForm.logo_url}
-                  onChange={(e) => setBrandingForm({ ...brandingForm, logo_url: e.target.value })}
-                  className="w-full px-3 py-2 mt-1 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
-                />
+                <div className="flex gap-2 mt-1">
+                  <input
+                    type="text"
+                    value={brandingForm.logo_url}
+                    onChange={(e) => setBrandingForm({ ...brandingForm, logo_url: e.target.value })}
+                    className="flex-grow px-3 py-2 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
+                    placeholder="/logo.png or http://..."
+                  />
+                  <label className="shrink-0 flex items-center justify-center px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold cursor-pointer transition-all disabled:opacity-50">
+                    {uploadingField === 'logo_url' ? <Loader2 className="animate-spin" size={12} /> : 'Upload'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFieldImageUpload(e, 'logo_url')}
+                      className="hidden"
+                      disabled={uploadingField !== null}
+                    />
+                  </label>
+                </div>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Logo Size</label>
@@ -507,12 +558,25 @@ export const PlatformBuilder: React.FC = () => {
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Favicon URL</label>
-                <input
-                  type="text"
-                  value={brandingForm.favicon_url}
-                  onChange={(e) => setBrandingForm({ ...brandingForm, favicon_url: e.target.value })}
-                  className="w-full px-3 py-2 mt-1 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
-                />
+                <div className="flex gap-2 mt-1">
+                  <input
+                    type="text"
+                    value={brandingForm.favicon_url}
+                    onChange={(e) => setBrandingForm({ ...brandingForm, favicon_url: e.target.value })}
+                    className="flex-grow px-3 py-2 rounded-xl text-xs bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
+                    placeholder="/favicon.ico or http://..."
+                  />
+                  <label className="shrink-0 flex items-center justify-center px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold cursor-pointer transition-all disabled:opacity-50">
+                    {uploadingField === 'favicon_url' ? <Loader2 className="animate-spin" size={12} /> : 'Upload'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFieldImageUpload(e, 'favicon_url')}
+                      className="hidden"
+                      disabled={uploadingField !== null}
+                    />
+                  </label>
+                </div>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Footer Text</label>
@@ -817,7 +881,7 @@ export const PlatformBuilder: React.FC = () => {
                 </select>
                 <button
                   onClick={() => {
-                    if (!newCms.title) return alert('Enter title');
+                    if (!newCms.title) return showToast('Please enter title', 'error');
                     setCmsPosts([...cmsPosts, { id: Date.now().toString(), ...newCms }]);
                     setNewCms({ title: '', type: 'Blog', is_active: true });
                   }}
@@ -1395,6 +1459,29 @@ export const PlatformBuilder: React.FC = () => {
         )}
 
       </div>
+      
+      {/* Toast Alert Popup */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className={`fixed bottom-5 right-5 z-[200] flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-2xl border text-sm font-semibold backdrop-blur-md transition-all duration-300 ${
+              toastType === 'success' 
+                ? 'bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+                : toastType === 'error'
+                  ? 'bg-red-500/10 dark:bg-red-500/20 border-red-500/30 text-red-600 dark:text-red-400'
+                  : 'bg-blue-500/10 dark:bg-blue-500/20 border-blue-500/30 text-blue-600 dark:text-blue-400'
+            }`}
+          >
+            {toastType === 'success' && <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />}
+            {toastType === 'error' && <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
+            {toastType === 'info' && <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />}
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

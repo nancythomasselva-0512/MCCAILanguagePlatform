@@ -28,7 +28,7 @@ const TARGET_LANGUAGES = LANGUAGES.filter(l => l !== 'Auto Detect');
 type TranslateState = 'idle' | 'translating' | 'done' | 'error';
 
 export const TextTranslation: React.FC = () => {
-  const { history, billingOverview, addHistoryItem, openAiApiKey, fetchBillingOverview, globalConfig } = useApp();
+  const { history, billingOverview, addHistoryItem, openAiApiKey, fetchBillingOverview, globalConfig, theme } = useApp();
   const [sourceText, setSourceText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [sourceLang, setSourceLang] = useState('Auto Detect');
@@ -45,7 +45,9 @@ export const TextTranslation: React.FC = () => {
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('left');
-  const [textColor, setTextColor] = useState('#1e293b');
+  const [customTextColor, setCustomTextColor] = useState<string | null>(null);
+  const textColor = customTextColor || (theme === 'dark' ? '#f8fafc' : '#1e293b');
+  const setTextColor = setCustomTextColor;
 
   const [sourceFont, setSourceFontState] = useState(() => localStorage.getItem('mcc-ai-source-font') || 'TAU-Marutham');
   const [targetFont, setTargetFontState] = useState(() => localStorage.getItem('mcc-ai-target-font') || 'TAU-Marutham');

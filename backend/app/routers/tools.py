@@ -6,6 +6,7 @@ from app.models.models import User, Tenant, UsageTracking, ProviderConfiguration
 from app.schemas.schemas import TranscriptionResponse, TranslationResponse, TtsResponse
 from app.core.security import decrypt_data
 from app.core.config import settings
+from app.ai.provider_manager import provider_manager
 import datetime
 import requests
 import tempfile
@@ -136,108 +137,49 @@ def translate_text(
 ):
     char_len = len(text)
     verify_limit(db, tenant, "translation", char_len)
-    
-    # Resolve Provider and API Key via Global Mapping
-    provider, api_key = get_global_provider_for_feature(db, tenant, "translation")
 
-    
-    # Perform Translation Action (simulate if no keys available)
-    translated_text = ""
-    detected_lang = "en"
-    
-    if provider == "openai" and api_key:
-        try:
-            # Simple wrapper to OpenAI chat completions
-            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-            system_prompt = f"You are a professional translator. Translate the user's input text to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
-            if source_lang and source_lang != "Auto Detect":
-                system_prompt = f"You are a professional translator. Translate the user's input text from {source_lang} to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
-                
-            payload = {
-                "model": "gpt-4o-mini",
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": text}
-                ]
-            }
-            res = requests.post("https://api.openai.com/v1/chat/completions", json=payload, headers=headers)
-            if res.ok:
-                translated_text = res.json()["choices"][0]["message"]["content"].strip()
-        except Exception as e:
-            print(f"OpenAI translation error: {e}")
-            
-    if not translated_text:
-        openrouter_key = settings.OPENROUTER_API_KEY
-        if openrouter_key:
-            try:
-                url = "https://openrouter.ai/api/v1/chat/completions"
-                headers = {"Authorization": f"Bearer {openrouter_key}", "Content-Type": "application/json"}
-                system_prompt = f"You are a professional translator. Translate the user's input text to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
-                if source_lang and source_lang != "Auto Detect":
-                    system_prompt = f"You are a professional translator. Translate the user's input text from {source_lang} to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
-                
-                payload = {
-                    "model": "google/gemini-2.5-flash",
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": text}
-                    ]
-                }
-                res = requests.post(url, json=payload, headers=headers)
-                if res.ok:
-                    translated_text = res.json()["choices"][0]["message"]["content"].strip()
-            except Exception as e:
-                print(f"Gemini (OpenRouter) translation error: {e}")
-
-    if not translated_text:
-        openrouter_key = settings.OPENROUTER_API_KEY
-        if openrouter_key:
-            try:
-                url = "https://openrouter.ai/api/v1/chat/completions"
-                headers = {"Authorization": f"Bearer {openrouter_key}", "Content-Type": "application/json"}
-                system_prompt = f"You are a professional translator. Translate the user's input text to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
-                if source_lang and source_lang != "Auto Detect":
-                    system_prompt = f"You are a professional translator. Translate the user's input text from {source_lang} to {target_lang}. Only output the translated text without any quotes, explanations, or conversational filler."
-                
-                payload = {
-                    "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": text}
-                    ]
-                }
-                res = requests.post(url, json=payload, headers=headers)
-                if res.ok:
-                    translated_text = res.json()["choices"][0]["message"]["content"].strip()
-            except Exception as e:
-                print(f"Nemotron (OpenRouter) translation error: {e}")
-
-    if not translated_text:
-        translated_text = f"[Simulated Translation to {target_lang}]: {text}"
-            
-    if not translated_text:
-        translated_text = f"[Translation Failed] Please check API configuration for {target_lang}"
-    # Record History Log
-    if tenant:
-        history = TranslationHistory(
-            tenant_id=tenant.id if tenant else None,
-            user_id=user.id,
-            source_text=text,
-            translated_text=translated_text,
-            source_lang=source_lang if source_lang != "Auto Detect" else f"Auto ({detected_lang})",
-            target_lang=target_lang,
-            provider=provider
+    # Build translation prompt
+    if source_lang and source_lang != "Auto Detect":
+        system_prompt = (
+            f"You are a professional translator. "
+            f"Translate the following text from {source_lang} to {target_lang}. "
+            f"Output ONLY the translated text with no quotes, explanations, or extra commentary."
         )
-        db.add(history)
-        db.commit()
-    
+    else:
+        system_prompt = (
+            f"You are a professional translator. "
+            f"Translate the following text to {target_lang}. "
+            f"Output ONLY the translated text with no quotes, explanations, or extra commentary."
+        )
+
+    # Delegate to provider manager — automatic fallback + circuit breaker
+    translated_text = provider_manager.call_llm(
+        system_prompt=system_prompt,
+        user_message=text,
+        feature="translation",
+        db=db,
+        tenant=tenant,
+    )
+
+    # Persist history and usage
+    history = TranslationHistory(
+        tenant_id=tenant.id if tenant else None,
+        user_id=user.id,
+        source_text=text,
+        translated_text=translated_text,
+        source_lang=source_lang if source_lang != "Auto Detect" else "Auto",
+        target_lang=target_lang,
+        provider="auto",  # actual provider tracked in ProviderLog
+    )
+    db.add(history)
+    db.commit()
     increment_usage(db, tenant.id if tenant else None, "translation", char_len)
-    
+
     return {
         "text": translated_text,
         "source_lang": source_lang,
         "target_lang": target_lang,
-        "detected_lang": detected_lang
+        "detected_lang": "en",
     }
 
 # --- TOOL 2: VOICE & AUDIO TRANSCRIPTION ---
@@ -246,78 +188,47 @@ async def transcribe_audio(
     file: UploadFile = File(...),
     model: str = Form("base"),
     language: str = Form("en"),
+    feature_name: str = Form("Audio To Text"),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant_context)
 ):
-    # Standard estimate of audio duration: 1MB wav is about 30 seconds
     audio_bytes = await file.read()
     file_size = len(audio_bytes)
-    estimated_minutes = (file_size / (1024 * 1024)) * 0.5  # Rough estimate for limit validation
-    if estimated_minutes < 0.1:
-        estimated_minutes = 0.1
-        
+    estimated_minutes = max(0.1, (file_size / (1024 * 1024)) * 0.5)
     verify_limit(db, tenant, "transcription", estimated_minutes)
-    
-    provider, api_key = get_global_provider_for_feature(db, tenant, "Audio To Text")
-    transcript_text = ""
-    
-    # 1. Local Whisper engine call
-    segments_data = []
-    transcription_performed = False
-    try:
-        from app.utils.audio import transcribe_local_audio
-        resp = transcribe_local_audio(
-            audio_bytes=audio_bytes,
-            filename=file.filename or "audio.wav",
-            model=model,
-            language=language
-        )
-        segments_data = resp.get("segments", [])
-        transcript_text = " ".join(s["text"] for s in segments_data)
-        provider = "local-whisper"
-        transcription_performed = True
-    except Exception as e:
-        print(f"Local Whisper transcription error: {e}")
-        
-    # 2. OpenAI Whisper API check
-    if not transcription_performed and provider == "openai" and api_key:
-        try:
-            headers = {"Authorization": f"Bearer {api_key}"}
-            files = {"file": (file.filename or "audio.wav", audio_bytes, "audio/wav")}
-            data = {"model": "whisper-1"}
-            res = requests.post("https://api.openai.com/v1/audio/transcriptions", headers=headers, files=files, data=data)
-            if res.ok:
-                transcript_text = res.json().get("text", "")
-                transcription_performed = True
-        except Exception:
-            pass
-            
-    # 3. Fallback mock transcript if no connections succeeded
-    if not transcription_performed:
-        transcript_text = f"[Transcribed via Simulated STT]: Speech recognized from file {file.filename}."
-        
-    # Record history
-    if tenant:
-        history = TranscriptionHistory(
-            tenant_id=tenant.id if tenant else None,
-            user_id=user.id,
-            file_name=file.filename or "voice-recording.wav",
-            file_size=file_size,
-            duration_seconds=estimated_minutes * 60,
-            transcript_text=transcript_text,
-            provider=provider
-        )
-        db.add(history)
-        db.commit()
-    
+
+    # Delegate to provider manager — tries local-whisper → deepgram → openai-stt
+    result = provider_manager.call_stt(
+        audio_bytes=audio_bytes,
+        filename=file.filename or "audio.wav",
+        language=language,
+        model=model,
+        feature=feature_name,
+        db=db,
+        tenant=tenant,
+    )
+    transcript_text = result.get("text", "")
+    segments_data   = result.get("segments", [])
+
+    history = TranscriptionHistory(
+        tenant_id=tenant.id if tenant else None,
+        user_id=user.id,
+        file_name=file.filename or "voice-recording.wav",
+        file_size=file_size,
+        duration_seconds=estimated_minutes * 60,
+        transcript_text=transcript_text,
+        provider="auto",
+    )
+    db.add(history)
+    db.commit()
     increment_usage(db, tenant.id if tenant else None, "transcription", estimated_minutes)
-    
-    return {
-        "text": transcript_text,
-        "provider": provider,
-        "segments": segments_data if segments_data else [{"timestamp": "00:00", "text": transcript_text, "start": 0, "end": estimated_minutes * 60}]
-    }
+
+    if not segments_data:
+        segments_data = [{"timestamp": "00:00", "text": transcript_text, "start": 0, "end": estimated_minutes * 60}]
+
+    return {"text": transcript_text, "provider": "auto", "segments": segments_data}
+
 
 # --- TOOL 3: TEXT-TO-SPEECH SYNTHESIS ---
 @router.post("/synthesize")
@@ -330,55 +241,36 @@ def synthesize_speech(
 ):
     char_len = len(text)
     verify_limit(db, tenant, "tts", char_len)
-    
-    provider, api_key = get_global_provider_for_feature(db, tenant, "Text To Speech")
-    
-    if not api_key:
-        api_key = settings.OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY")
-        
-    if not api_key:
-        raise HTTPException(status_code=500, detail="OpenAI API key is missing from environment variables and tenant config.")
 
-    audio_url = ""
-    try:
-        res = requests.post(
-            "https://api.openai.com/v1/audio/speech",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={"model": "tts-1", "input": text, "voice": voice}
-        )
-        if res.ok:
-            b64_audio = base64.b64encode(res.content).decode('utf-8')
-            audio_url = f"data:audio/mpeg;base64,{b64_audio}"
-        else:
-            print(f"TTS API Error: {res.text}")
-    except Exception as e:
-        print(f"TTS Generation Error: {e}")
+    # Delegate to provider manager — tries elevenlabs → openai-tts
+    audio_bytes = provider_manager.call_tts(
+        text=text,
+        voice=voice,
+        feature="Text To Speech",
+        db=db,
+        tenant=tenant,
+    )
+    audio_url = f"data:audio/mpeg;base64,{base64.b64encode(audio_bytes).decode('utf-8')}"
 
-    
-    # Record TTS request log (simulate audio generation path)
-    if tenant:
-        history = TtsHistory(
-            tenant_id=tenant.id if tenant else None,
-            user_id=user.id,
-            text=text,
-            voice_name=voice,
-            characters_count=char_len,
-            file_path="",  # Path where final synthesized audio was hosted
-            provider=provider
-        )
-        db.add(history)
-        db.commit()
-    
+    history = TtsHistory(
+        tenant_id=tenant.id if tenant else None,
+        user_id=user.id,
+        text=text,
+        voice_name=voice,
+        characters_count=char_len,
+        file_path="",
+        provider="auto",
+    )
+    db.add(history)
+    db.commit()
     increment_usage(db, tenant.id if tenant else None, "tts", char_len)
-    
-    # We return the API key validation details along with success status
-    # Frontend handles audio fallback playback elements
+
     return {
         "status": "success",
         "characters": char_len,
         "voice": voice,
-        "provider": provider,
-        "audio_url": audio_url # Returned audio stream or base64 data
+        "provider": "auto",
+        "audio_url": audio_url,
     }
 
 # --- USER TRANSLATION HISTORY LOG ---
@@ -389,8 +281,12 @@ def get_translations_history(
     tenant: Tenant = Depends(get_current_tenant_context)
 ):
     # Enforce strict multi-tenant filtering (only fetch logs within this tenant)
-    if not tenant: return []
-    return db.query(TranslationHistory).filter(TranslationHistory.tenant_id == tenant.id).order_by(TranslationHistory.created_at.desc()).all()
+    if user.role == "super_admin":
+        return db.query(TranslationHistory).order_by(TranslationHistory.created_at.desc()).all()
+    elif tenant:
+        return db.query(TranslationHistory).filter(TranslationHistory.tenant_id == tenant.id).order_by(TranslationHistory.created_at.desc()).all()
+    else:
+        return db.query(TranslationHistory).filter(TranslationHistory.user_id == user.id, TranslationHistory.tenant_id == None).order_by(TranslationHistory.created_at.desc()).all()
 
 # --- USER TRANSCRIPTION HISTORY LOG ---
 @router.get("/history/transcriptions", response_model=List[TranscriptionResponse])
@@ -399,8 +295,12 @@ def get_transcriptions_history(
     user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant_context)
 ):
-    if not tenant: return []
-    return db.query(TranscriptionHistory).filter(TranscriptionHistory.tenant_id == tenant.id).order_by(TranscriptionHistory.created_at.desc()).all()
+    if user.role == "super_admin":
+        return db.query(TranscriptionHistory).order_by(TranscriptionHistory.created_at.desc()).all()
+    elif tenant:
+        return db.query(TranscriptionHistory).filter(TranscriptionHistory.tenant_id == tenant.id).order_by(TranscriptionHistory.created_at.desc()).all()
+    else:
+        return db.query(TranscriptionHistory).filter(TranscriptionHistory.user_id == user.id, TranscriptionHistory.tenant_id == None).order_by(TranscriptionHistory.created_at.desc()).all()
 
 # --- USER TTS HISTORY LOG ---
 @router.get("/history/tts", response_model=List[TtsResponse])
@@ -409,8 +309,12 @@ def get_tts_history(
     user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant_context)
 ):
-    if not tenant: return []
-    return db.query(TtsHistory).filter(TtsHistory.tenant_id == tenant.id).order_by(TtsHistory.created_at.desc()).all()
+    if user.role == "super_admin":
+        return db.query(TtsHistory).order_by(TtsHistory.created_at.desc()).all()
+    elif tenant:
+        return db.query(TtsHistory).filter(TtsHistory.tenant_id == tenant.id).order_by(TtsHistory.created_at.desc()).all()
+    else:
+        return db.query(TtsHistory).filter(TtsHistory.user_id == user.id, TtsHistory.tenant_id == None).order_by(TtsHistory.created_at.desc()).all()
 
 # --- TOOL 4: TEXT EXTRACTION FROM FILE ---
 @router.post("/extract-text")

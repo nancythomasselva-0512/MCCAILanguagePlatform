@@ -47,6 +47,7 @@ export const providerManager = {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("language", language);
+    formData.append("feature_name", "Audio To Text");
 
     const data = await apiRequest("/tools/transcribe", {
       method: "POST",
@@ -71,6 +72,7 @@ export const providerManager = {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("language", langCode);
+    formData.append("feature_name", "Transcription");
 
     const data = await apiRequest("/tools/transcribe", {
       method: "POST",

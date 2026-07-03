@@ -55,7 +55,7 @@ export const AuthSettings: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Login Methods */}
         <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
-          <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
             <Lock size={18} className="text-indigo-500" />
             Login Methods
           </h3>
@@ -85,7 +85,7 @@ export const AuthSettings: React.FC = () => {
         {/* Registration Controls */}
         <div className="space-y-6">
           <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
-            <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
               <Users size={18} className="text-teal-500" />
               Registration Controls
             </h3>
@@ -112,7 +112,7 @@ export const AuthSettings: React.FC = () => {
           </div>
 
           <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
-            <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+            <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
               <Lock size={18} className="text-orange-500" />
               Session Controls
             </h3>
@@ -130,7 +130,7 @@ export const AuthSettings: React.FC = () => {
 
       {/* Administrator Management */}
       <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
-        <h3 className="text-lg font-black mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
           <UserPlus size={18} className="text-blue-500" />
           Administrator Management
         </h3>

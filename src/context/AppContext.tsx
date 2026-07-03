@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storage } from "../utils/storage";
+import { apiRequest } from '../utils/api';
 
 
 export type ActiveTabType = 'dashboard' | 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription' | 'super-admin-dashboard' | 'tenant-dashboard' | 'tenant-billing' | 'sa-overview' | 'sa-tenants' | 'sa-users' | 'sa-plans' | 'sa-providers' | 'sa-usage' | 'sa-billing' | 'sa-ai-logs' | 'sa-audit-logs' | 'sa-health' | 'sa-builder' | 'sa-settings-general' | 'sa-settings-tenant' | 'sa-settings-smtp' | 'sa-settings-auth' | 'sa-settings-security' | 'sa-settings-payments' | 'sa-settings-domains' | 'sa-settings-apikeys' | 'sa-settings-backup' | 'sa-settings-notifications' | 'sa-settings-activity';
@@ -71,6 +72,7 @@ interface AppContextProps {
   loadGlobalConfig: () => Promise<void>;
   billingOverview: any;
   fetchBillingOverview: () => Promise<void>;
+  fetchHistoryFromServer: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -87,22 +89,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const fetchBillingOverview = async () => {
     const savedToken = storage.getItem('mcc-ai-token');
-    const savedSlug = storage.getItem('mcc-ai-tenant-slug');
     if (!savedToken) {
       setBillingOverview(null);
       return;
     }
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/billing/tenant/overview", {
-        headers: {
-          "Authorization": `Bearer ${savedToken}`,
-          "x-tenant-slug": savedSlug || ""
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setBillingOverview(data);
-      }
+      const data = await apiRequest("/billing/tenant/overview");
+      setBillingOverview(data);
     } catch (e) {
       console.error("Failed to fetch billing overview", e);
     }
@@ -110,29 +103,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loadGlobalConfig = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/platform-builder/global-config");
-      if (response.ok) {
-        const data = await response.json();
-        setGlobalConfig(data);
+      const data = await apiRequest("/platform-builder/global-config");
+      setGlobalConfig(data);
 
-        // Apply theme variables dynamically to document root
-        if (data.theme) {
-          const root = document.documentElement;
-          if (data.theme.primary_color) {
-            root.style.setProperty('--accent', data.theme.primary_color);
-          }
-          if (data.theme.secondary_color) {
-            root.style.setProperty('--accent-hover', data.theme.secondary_color);
-          }
-          if (data.theme.font_family) {
-            root.style.setProperty('--font-sans', `'${data.theme.font_family}', sans-serif`);
-          }
+      // Apply theme variables dynamically to document root
+      if (data.theme) {
+        const root = document.documentElement;
+        if (data.theme.primary_color) {
+          root.style.setProperty('--accent', data.theme.primary_color);
         }
+        if (data.theme.secondary_color) {
+          root.style.setProperty('--accent-hover', data.theme.secondary_color);
+        }
+        if (data.theme.font_family) {
+          root.style.setProperty('--font-sans', `'${data.theme.font_family}', sans-serif`);
+        }
+      }
 
-        // Apply branding name dynamically to document title
-        if (data.branding?.platform_name) {
-          document.title = `${data.branding.platform_name} - ${data.branding.tagline || 'Language Platform'}`;
-        }
+      // Apply branding name dynamically to document title
+      if (data.branding?.platform_name) {
+        document.title = `${data.branding.platform_name} - ${data.branding.tagline || 'Language Platform'}`;
       }
     } catch (e) {
       console.error("Failed to fetch global config", e);
@@ -236,6 +226,78 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : [];
   });
 
+  const fetchHistoryFromServer = async () => {
+    const savedToken = storage.getItem('mcc-ai-token');
+    if (!savedToken) return;
+
+    try {
+      const [transRes, ttsRes, audioRes] = await Promise.allSettled([
+        apiRequest("/tools/history/translations"),
+        apiRequest("/tools/history/tts"),
+        apiRequest("/tools/history/transcriptions")
+      ]);
+
+      let combined: any[] = [];
+
+      if (transRes.status === 'fulfilled' && transRes.value) {
+        const items = transRes.value.map((item: any) => ({
+          id: item.id,
+          type: 'translation',
+          title: `${item.source_lang || 'Auto'} → ${item.target_lang}`,
+          timestamp: new Date(item.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }),
+          details: `${(item.provider || '').toUpperCase()} • ${(item.source_text || '').split(' ').filter(Boolean).length} words`,
+          content: `Original:\n${item.source_text}\n\nTranslation:\n${item.translated_text}`,
+          raw_date: new Date(item.created_at)
+        }));
+        combined = combined.concat(items);
+      }
+
+      if (ttsRes.status === 'fulfilled' && ttsRes.value) {
+        const items = ttsRes.value.map((item: any) => ({
+          id: item.id,
+          type: 'text-to-speech',
+          title: item.text.length > 50 ? item.text.substring(0, 50) + '...' : item.text,
+          timestamp: new Date(item.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }),
+          details: `${item.voice_name} (${(item.provider || '').toUpperCase()}) • ${(item.text || '').split(' ').filter(Boolean).length} words`,
+          content: item.text,
+          raw_date: new Date(item.created_at)
+        }));
+        combined = combined.concat(items);
+      }
+
+      if (audioRes.status === 'fulfilled' && audioRes.value) {
+        const items = audioRes.value.map((item: any) => ({
+          id: item.id,
+          type: 'audio-transcription',
+          title: item.file_name,
+          timestamp: new Date(item.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }),
+          details: `${(item.provider || '').toUpperCase()} • ${(item.transcript_text || '').split(' ').filter(Boolean).length} words`,
+          content: item.transcript_text,
+          raw_date: new Date(item.created_at)
+        }));
+        combined = combined.concat(items);
+      }
+
+      // Sort combined by date descending
+      combined.sort((a, b) => b.raw_date.getTime() - a.raw_date.getTime());
+      
+      // Remove raw_date property and set
+      const finalItems = combined.map(({ raw_date, ...rest }) => rest as HistoryItem);
+      
+      setHistory(prev => {
+         const localVoice = prev.filter(p => p.type === 'voice-to-text' || !p.id.includes('-'));
+         const merged = [...finalItems, ...localVoice];
+         const unique = Array.from(new Map(merged.map(item => [item.id, item])).values());
+         
+         // Sort again to ensure ordering if local items are added
+         return finalItems; 
+      });
+
+    } catch (e) {
+      console.error("Failed to fetch history from server", e);
+    }
+  };
+
   // Provider states
   const [ttsProvider, setTtsProviderState] = useState<string>(() => {
     return storage.getItem('mcc-ai-tts-provider') || 'openai';
@@ -298,6 +360,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (token) {
       fetchBillingOverview();
+      fetchHistoryFromServer();
     } else {
       setBillingOverview(null);
     }
@@ -455,7 +518,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         globalConfig,
         loadGlobalConfig,
         billingOverview,
-        fetchBillingOverview
+        fetchBillingOverview,
+        fetchHistoryFromServer
       }}
     >
       {children}
