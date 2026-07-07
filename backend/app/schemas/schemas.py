@@ -112,6 +112,15 @@ class TenantRegistration(BaseModel):
     admin_password: str
     plan_id: Optional[str] = None
 
+class GoogleLoginRequest(BaseModel):
+    credential: str
+
+class GoogleTenantRegistration(BaseModel):
+    tenant_name: str
+    slug: str
+    credential: str
+    plan_id: Optional[str] = None
+
 # Usage Tracking Schemas
 class UsageResponse(BaseModel):
     audio_minutes_used: float

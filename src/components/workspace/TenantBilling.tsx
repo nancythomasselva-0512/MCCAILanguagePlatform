@@ -3,7 +3,8 @@ import { apiRequest } from '../../utils/api';
 import { useApp } from '../../context/AppContext';
 import { 
   CreditCard, AlertTriangle, Loader2, CheckCircle2,
-  TrendingUp, Info, Download, QrCode, X
+  TrendingUp, Info, Download, QrCode, X,
+  Building, Wallet, Smartphone, ShieldCheck, Check
 } from 'lucide-react';
 
 interface ThreeDInteractiveCardProps {
@@ -116,7 +117,8 @@ export const TenantBilling: React.FC = () => {
   const [cardExpiry, setCardExpiry] = useState('12/28');
   const [cardCvc, setCardCvc] = useState('123');
 
-  // Razorpay mock net banking selection
+  // Razorpay UI states
+  const [razorpayMethod, setRazorpayMethod] = useState<'netbanking' | 'card' | 'upi' | 'wallet'>('netbanking');
   const [razorpayBank, setRazorpayBank] = useState('SBI');
 
   // UPI mock address
@@ -877,22 +879,87 @@ export const TenantBilling: React.FC = () => {
 
                     {/* Razorpay fields */}
                     {activeGateway === 'razorpay' && (
-                      <div className="space-y-3 animate-fadeIn">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Preferred Bank</label>
-                          <select
-                            value={razorpayBank}
-                            onChange={(e) => setRazorpayBank(e.target.value)}
-                            className="w-full px-3 py-2 rounded-xl text-xs bg-white dark:bg-slate-950/40 border border-slate-300 dark:border-white/5 text-slate-900 dark:text-white outline-none"
-                            style={{ background: 'var(--bg-subtle)' }}
-                          >
-                            <option value="SBI">State Bank of India (SBI)</option>
-                            <option value="HDFC">HDFC Bank</option>
-                            <option value="ICICI">ICICI Bank</option>
-                            <option value="AXIS">Axis NetBanking</option>
-                          </select>
+                      <div className="space-y-5 animate-fadeIn p-4 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Select Payment Method</span>
+                          <div className="flex items-center gap-1 text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full">
+                            <ShieldCheck size={10} />
+                            Secured by Razorpay
+                          </div>
                         </div>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-450 leading-relaxed font-semibold">Razorpay will redirect to secure net banking site to verify credentials after validation.</p>
+
+                        {/* Method Selector */}
+                        <div className="grid grid-cols-4 gap-2">
+                          {[
+                            { id: 'netbanking', icon: Building, label: 'NetBanking' },
+                            { id: 'card', icon: CreditCard, label: 'Card' },
+                            { id: 'upi', icon: Smartphone, label: 'UPI' },
+                            { id: 'wallet', icon: Wallet, label: 'Wallets' }
+                          ].map((method) => (
+                            <button
+                              key={method.id}
+                              onClick={() => setRazorpayMethod(method.id as any)}
+                              className={`flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border text-[10px] font-bold transition-all duration-300 ${
+                                razorpayMethod === method.id
+                                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 shadow-sm scale-105'
+                                  : 'border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300'
+                              }`}
+                            >
+                              <method.icon size={16} strokeWidth={2.5} className={razorpayMethod === method.id ? 'animate-pulse' : ''} />
+                              <span>{method.label}</span>
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Dynamic View based on Method */}
+                        <div className="pt-2">
+                          {razorpayMethod === 'netbanking' && (
+                            <div className="space-y-3 animate-fadeIn">
+                              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Popular Banks</span>
+                              <div className="grid grid-cols-2 gap-3">
+                                {['SBI', 'HDFC', 'ICICI', 'AXIS'].map((bank) => (
+                                  <button
+                                    key={bank}
+                                    onClick={() => setRazorpayBank(bank)}
+                                    className={`relative flex items-center justify-between p-3 rounded-xl border transition-all duration-300 ${
+                                      razorpayBank === bank
+                                        ? 'border-blue-500 bg-white dark:bg-slate-900 shadow-md ring-1 ring-blue-500'
+                                        : 'border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-slate-950/50 hover:bg-white dark:hover:bg-slate-900 hover:shadow-sm'
+                                    }`}
+                                  >
+                                    <span className={`text-xs font-bold ${razorpayBank === bank ? 'text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                                      {bank === 'SBI' ? 'State Bank of India' : bank === 'AXIS' ? 'Axis Bank' : `${bank} Bank`}
+                                    </span>
+                                    {razorpayBank === bank && (
+                                      <Check size={14} className="text-blue-500 absolute right-3" strokeWidth={3} />
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {razorpayMethod === 'card' && (
+                            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 text-center animate-fadeIn">
+                              <CreditCard size={24} className="mx-auto text-slate-400 mb-2" />
+                              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Razorpay secure card entry will open in a popup.</p>
+                            </div>
+                          )}
+
+                          {razorpayMethod === 'upi' && (
+                            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 text-center animate-fadeIn">
+                              <QrCode size={24} className="mx-auto text-slate-400 mb-2" />
+                              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Scan QR or enter UPI ID via Razorpay securely.</p>
+                            </div>
+                          )}
+
+                          {razorpayMethod === 'wallet' && (
+                            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 text-center animate-fadeIn">
+                              <Wallet size={24} className="mx-auto text-slate-400 mb-2" />
+                              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Paytm, PhonePe, and other wallets supported.</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
 

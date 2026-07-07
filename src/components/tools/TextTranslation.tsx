@@ -117,6 +117,24 @@ export const TextTranslation: React.FC = () => {
     setCharCount(0);
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFile(e.dataTransfer.files[0]);
+    }
+  };
+
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     
@@ -457,21 +475,43 @@ export const TextTranslation: React.FC = () => {
                   )}
                 </div>
               </div>
-              <textarea
-                id="trans-source-input"
-                value={sourceText}
-                onChange={handleSourceChange}
-                placeholder="Type or paste text to translate… (up to 500,000 characters)"
-                rows={15}
-                className="flex-1 resize-none rounded-xl px-4 py-3 text-sm focus:outline-none"
-                style={{
-                  background: 'var(--bg-subtle)',
-                  border: '1px solid var(--border-base)',
-                  color: 'var(--text-primary)',
-                  fontSize: fontSize,
-                  fontFamily: sourceFont === 'System Default' ? 'inherit' : `"${sourceFont}", sans-serif`
-                }}
-              />
+              <div 
+                className="relative flex-1 flex flex-col"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <textarea
+                  id="trans-source-input"
+                  value={sourceText}
+                  onChange={handleSourceChange}
+                  placeholder="Type or paste text to translate… (up to 500,000 characters). Or drag and drop a document here."
+                  rows={15}
+                  className={`flex-1 resize-none rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors duration-200 ${isDragging ? 'ring-2 ring-teal-500 bg-teal-50/10 dark:bg-teal-900/10' : ''}`}
+                  style={{
+                    background: 'var(--bg-subtle)',
+                    border: '1px solid var(--border-base)',
+                    color: 'var(--text-primary)',
+                    fontSize: fontSize,
+                    fontFamily: sourceFont === 'System Default' ? 'inherit' : `"${sourceFont}", sans-serif`
+                  }}
+                />
+                
+                <AnimatePresence>
+                  {isDragging && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-2 border-dashed border-teal-500 pointer-events-none"
+                    >
+                      <UploadCloud size={48} className="text-teal-500 mb-4 animate-bounce" />
+                      <p className="text-lg font-bold text-teal-700 dark:text-teal-400">Drop document to extract text</p>
+                      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-2">Supports DOC, DOCX, XLS, XLSX, PDF</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <div className="mt-3 flex items-center justify-between">
                 <div className={`text-xs font-medium ${charCount > 500000 ? 'text-red-500 font-bold' : ''}`} style={{ color: charCount > 500000 ? undefined : 'var(--text-muted)' }}>
                   {charCount.toLocaleString()} / 500,000
