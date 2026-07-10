@@ -3,7 +3,7 @@ import { storage } from "../utils/storage";
 import { apiRequest } from '../utils/api';
 
 
-export type ActiveTabType = 'dashboard' | 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription' | 'super-admin-dashboard' | 'tenant-dashboard' | 'tenant-billing' | 'sa-overview' | 'sa-tenants' | 'sa-users' | 'sa-plans' | 'sa-providers' | 'sa-usage' | 'sa-billing' | 'sa-ai-logs' | 'sa-audit-logs' | 'sa-health' | 'sa-builder' | 'sa-settings-general' | 'sa-settings-tenant' | 'sa-settings-smtp' | 'sa-settings-auth' | 'sa-settings-security' | 'sa-settings-payments' | 'sa-settings-domains' | 'sa-settings-apikeys' | 'sa-settings-backup' | 'sa-settings-notifications' | 'sa-settings-activity';
+export type ActiveTabType = 'dashboard' | 'voice-to-text' | 'text-to-speech' | 'translation' | 'audio-transcription' | 'super-admin-dashboard' | 'tenant-dashboard' | 'tenant-billing' | 'history-page' | 'sa-overview' | 'sa-tenants' | 'sa-users' | 'sa-plans' | 'sa-providers' | 'sa-usage' | 'sa-billing' | 'sa-ai-logs' | 'sa-audit-logs' | 'sa-health' | 'sa-builder' | 'sa-settings-general' | 'sa-settings-tenant' | 'sa-settings-smtp' | 'sa-settings-auth' | 'sa-settings-security' | 'sa-settings-payments' | 'sa-settings-domains' | 'sa-settings-apikeys' | 'sa-settings-backup' | 'sa-settings-notifications' | 'sa-settings-activity';
 export type ViewModeType = 'landing' | 'workspace' | 'admin-login' | 'controller-landing';
 
 export interface HistoryItem {

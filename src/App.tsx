@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useApp } from './context/AppContext';
+import { useApp, type ActiveTabType } from './context/AppContext';
 import { Header } from './components/common/Header';
 import { AuthModal } from './components/common/AuthModal';
 import { LandingPage } from './components/landing/LandingPage';
@@ -31,7 +31,7 @@ function App() {
           setViewMode('workspace');
           // Update active tab based on URL
           const sub = window.location.pathname.replace('/controller/', '');
-          if (sub) setActiveTab(`sa-${sub}`);
+          if (sub) setActiveTab(`sa-${sub}` as ActiveTabType);
         } else {
           setViewMode('controller-landing');
         }

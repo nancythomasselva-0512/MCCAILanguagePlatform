@@ -21,6 +21,7 @@ class TTSService {
   private langCode: string = 'en-US';
   private langName: string = 'English';
   private currentAudioFallback: HTMLAudioElement | null = null;
+  private voicesLoaded: boolean = false;
 
   private langMap: Record<string, string> = {
     'English': 'en-US',

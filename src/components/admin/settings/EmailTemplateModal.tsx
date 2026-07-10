@@ -24,7 +24,7 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({ template
   const [bodyHtml, setBodyHtml] = useState(template.body_html || "");
   const [fromEmail, setFromEmail] = useState(template.from_email || "");
   const [replyTo, setReplyTo] = useState(template.reply_to || "");
-  const [isEnabled, setIsEnabled] = useState(template.is_enabled ?? True);
+  const [isEnabled, setIsEnabled] = useState(template.is_enabled ?? true);
   const [senders, setSenders] = useState<string[]>([]);
   
   const [isSaving, setIsSaving] = useState(false);
@@ -100,7 +100,7 @@ export const EmailTemplateModal: React.FC<EmailTemplateModalProps> = ({ template
       const vars = TEMPLATE_VARIABLES[template.template_type] || [];
       vars.forEach(v => {
         const cleanVar = v.replace("{{", "").replace("}}", "");
-        sampleData[cleanVar] = `[Sample ${cleanVar.replace('_', ' ').title()}]`;
+        sampleData[cleanVar] = `[Sample ${cleanVar.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}]`;
       });
       
       await apiRequest(`/super-admin/email-templates/test`, {

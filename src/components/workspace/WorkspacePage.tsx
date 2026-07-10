@@ -321,6 +321,7 @@ export const WorkspacePage: React.FC = () => {
       'tenant-settings-payments': { label: 'Payment Gateways', icon: <CreditCard size={16} />, activeColor: '#ef4444' },
       'tenant-billing': { label: 'Plans & Billing', icon: <CreditCard size={16} />, activeColor: '#3b82f6' },
       'document-intelligence': { label: 'Document Intelligence', icon: <FileText size={16} />, activeColor: '#10b981' },
+      'history-page': { label: 'History', icon: <History size={16} />, activeColor: '#3b82f6' },
     }[activeTab] || { label: 'Tools', icon: <Volume2 size={16} />, activeColor: '#8b5cf6' };
   };
 

@@ -14,16 +14,16 @@ const containerVariants = {
       delayChildren: 0.4
     }
   }
-};
+} as const;
 
 const itemVariants = {
   hidden: { opacity: 0, y: 30 },
   show: { 
     opacity: 1, 
     y: 0, 
-    transition: { type: 'spring', bounce: 0.4, duration: 0.8 } 
+    transition: { type: 'spring' as const, bounce: 0.4, duration: 0.8 } 
   }
-};
+} as const;
 
 const DynamicIcon = ({ name, size = 24 }: { name: string, size?: number }) => {
   const Icon = (LucideIcons as any)[name] || LucideIcons.Circle;
