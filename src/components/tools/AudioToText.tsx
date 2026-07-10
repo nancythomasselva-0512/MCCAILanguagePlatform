@@ -74,7 +74,7 @@ export const AudioToText: React.FC = () => {
   const checkBackend = async () => {
     setBackendStatus('checking');
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/health');
+      const res = await fetch('/api/health');
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'ok' && data.engine === 'faster-whisper') {
@@ -125,7 +125,7 @@ export const AudioToText: React.FC = () => {
         const xhr = new XMLHttpRequest();
         xhrRef.current = xhr;
         const responseData = await new Promise<any>((resolve, reject) => {
-          xhr.open('POST', 'http://127.0.0.1:8000/api/transcribe', true);
+          xhr.open('POST', '/api/transcribe', true);
           xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) setUploadProgress(Math.round((event.loaded / event.total) * 100));
           };

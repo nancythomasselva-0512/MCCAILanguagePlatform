@@ -168,7 +168,8 @@ def send_user_subscription_activated_email(
     invoice_id: str
 ):
     subject = "Subscription Activated Successfully"
-    download_url = f"http://localhost:8000/api/billing/invoices/{invoice_id}/download"
+    from app.core.config import settings
+    download_url = f"{settings.BACKEND_URL}/api/billing/invoices/{invoice_id}/download"
     body = (
         f"Hello {user.name},\n\n"
         f"Your subscription has been activated successfully!\n\n"

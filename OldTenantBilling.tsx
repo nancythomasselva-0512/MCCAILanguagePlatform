@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../utils/api';
 import { useApp } from '../../context/AppContext';
 import { 
@@ -467,7 +467,7 @@ export const TenantBilling: React.FC = () => {
                       ) : (
                         inv.pdf_path && (
                           <a
-                            href={`http://127.0.0.1:8000${inv.pdf_path}`}
+                            href={`${inv.pdf_path}`}
                             target="_blank"
                             rel="noreferrer"
                             className="bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-650 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded text-[10px] font-bold border border-slate-200 dark:border-white/5 cursor-pointer inline-flex items-center gap-1 transition-all"
@@ -525,7 +525,7 @@ export const TenantBilling: React.FC = () => {
                     <td className="py-3 text-right">
                       {pay.status === 'success' && pay.receipt_url && (
                         <a
-                          href={`http://127.0.0.1:8000${pay.receipt_url}`}
+                          href={`${pay.receipt_url}`}
                           target="_blank"
                           rel="noreferrer"
                           className="bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-650 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded text-[10px] font-bold border border-slate-200 dark:border-white/5 cursor-pointer inline-flex items-center gap-1 transition-all"
@@ -664,7 +664,7 @@ export const TenantBilling: React.FC = () => {
                 {/* PDF Downloads */}
                 <div className="w-full pt-2">
                   <a
-                    href={`http://127.0.0.1:8000/api/billing/payments/${completedSessionData.paymentId}/receipt`}
+                    href={`/api/billing/payments/${completedSessionData.paymentId}/receipt`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center justify-center gap-1.5 w-full bg-blue-50 dark:bg-blue-600/10 hover:bg-blue-100 dark:hover:bg-blue-600/20 text-blue-650 dark:text-blue-400 border border-blue-200 dark:border-blue-500/10 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"

@@ -35,7 +35,7 @@ export const AuthModal: React.FC = () => {
         if (!tenantName || !tenantSlug) {
            throw new Error("Please fill in Workspace Name and URL Slug before using Google Sign up.");
         }
-        const response = await fetch("http://127.0.0.1:8000/api/auth/google/register-tenant", {
+        const response = await fetch("/api/auth/google/register-tenant", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -61,7 +61,7 @@ export const AuthModal: React.FC = () => {
           setTenantSlug('');
         }, 2000);
       } else {
-        const response = await fetch("http://127.0.0.1:8000/api/auth/google/login", {
+        const response = await fetch("/api/auth/google/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -129,7 +129,7 @@ export const AuthModal: React.FC = () => {
     try {
       if (authModalMode === 'tenant-signup') {
         // Multi-Tenant workspace setup
-        const response = await fetch("http://127.0.0.1:8000/api/auth/register-tenant", {
+        const response = await fetch("/api/auth/register-tenant", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -159,7 +159,7 @@ export const AuthModal: React.FC = () => {
 
       } else {
         // Standard Login
-        const response = await fetch("http://127.0.0.1:8000/api/auth/login", {
+        const response = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

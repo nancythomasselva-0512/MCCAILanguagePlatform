@@ -1889,7 +1889,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         <td className="py-3 text-slate-500 font-mono">{inv.date}</td>
                         <td className="py-3 text-right space-x-1.5 font-semibold">
                           <a
-                            href={`http://127.0.0.1:8000/api/billing/invoices/${inv.id}/download`}
+                            href={`/api/billing/invoices/${inv.id}/download`}
                             target="_blank"
                             rel="noreferrer"
                             className="bg-white/5 hover:bg-white/10 text-slate-700 dark:text-slate-350 hover:text-white px-2.5 py-1 rounded text-sm inline-flex items-center gap-0.5"
@@ -1984,7 +1984,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                           </button>
                           {p.status.toLowerCase() === 'success' && p.receipt_url && (
                             <a
-                              href={`http://127.0.0.1:8000${p.receipt_url}`}
+                              href={`${p.receipt_url}`}
                               target="_blank"
                               rel="noreferrer"
                               className="bg-teal-600/10 hover:bg-teal-600/20 text-teal-400 px-2 py-1 rounded text-sm inline-flex items-center gap-0.5"

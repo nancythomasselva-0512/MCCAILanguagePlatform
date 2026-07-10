@@ -497,7 +497,7 @@ export const TenantBilling: React.FC = () => {
                       ) : (
                         inv.pdf_path && (
                           <a
-                            href={`http://127.0.0.1:8000${inv.pdf_path}`}
+                            href={`${inv.pdf_path}`}
                             target="_blank"
                             rel="noreferrer"
                             className="bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-650 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded text-[10px] font-bold border border-slate-200 dark:border-white/5 cursor-pointer inline-flex items-center gap-1 transition-all"
@@ -555,7 +555,7 @@ export const TenantBilling: React.FC = () => {
                     <td className="py-3 text-right">
                       {pay.status === 'success' && pay.receipt_url && (
                         <a
-                          href={`http://127.0.0.1:8000${pay.receipt_url}`}
+                          href={`${pay.receipt_url}`}
                           target="_blank"
                           rel="noreferrer"
                           className="bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-650 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded text-[10px] font-bold border border-slate-200 dark:border-white/5 cursor-pointer inline-flex items-center gap-1 transition-all"
@@ -704,7 +704,7 @@ export const TenantBilling: React.FC = () => {
                 {/* PDF Downloads */}
                 <div className="w-full pt-2">
                   <a
-                    href={`http://127.0.0.1:8000/api/billing/payments/${completedSessionData.paymentId}/receipt`}
+                    href={`/api/billing/payments/${completedSessionData.paymentId}/receipt`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center justify-center gap-1.5 w-full bg-teal-50 dark:bg-teal-600/10 hover:bg-teal-100 dark:hover:bg-teal-600/20 text-teal-650 dark:text-teal-400 border border-teal-200 dark:border-teal-500/10 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
