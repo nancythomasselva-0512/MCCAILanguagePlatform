@@ -9,7 +9,7 @@ interface UserDashboardProps {
 }
 
 export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDashboardProps) {
-  const { setViewMode } = useApp();
+  const { setViewMode, globalConfig } = useApp();
   
   const cards = [
     {
@@ -137,7 +137,7 @@ export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDash
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">Welcome to Fluentia</h1>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">Welcome to {globalConfig?.branding?.platform_name || "MCC AI"}</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-1">Select a tool below to get started with your workflow.</p>
         </div>
       </div>

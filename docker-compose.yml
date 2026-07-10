@@ -6,11 +6,11 @@ services:
     container_name: mcc-saas-db
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: mcc_saas
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-mcc_saas}
     ports:
-      - "5432:5432"
+      - "${DB_PORT_EXPOSED:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -19,7 +19,7 @@ services:
     container_name: mcc-saas-redis
     restart: always
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT_EXPOSED:-6379}:6379"
 
   backend:
     build:
@@ -28,17 +28,24 @@ services:
     container_name: mcc-saas-backend
     restart: always
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_SERVER=db
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=mcc_saas
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - SECRET_KEY=super-secret-mcc-saas-platform-jwt-key
-      - ENCRYPTION_KEY=t-Wd93Ym3uX2pLw_Kz7U8G1e5zP_y7q8W2-v8F5tZ84=
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-mcc_saas}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - SECRET_KEY=${SECRET_KEY:-super-secret-mcc-saas-platform-jwt-key}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-t-Wd93Ym3uX2pLw_Kz7U8G1e5zP_y7q8W2-v8F5tZ84=}
+      - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL:-aiadmin@gmail.com}
+      - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD:-aiadmin123}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-aachinancy@gmail.com}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-tejm mdru mcyz bnas}
+      - SMTP_SENDER=${SMTP_SENDER:-aachinancy@gmail.com}
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT_EXPOSED:-8000}:8000"
     depends_on:
       - db
       - redis

@@ -742,7 +742,7 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2">Free Trial</h3>
                 <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mb-6">
-                  Perfect for experiencing the complete Fluentia platform workstation locally on your device.
+                  Perfect for experiencing the complete {globalConfig?.branding?.platform_name || 'MCC AI'} platform workstation locally on your device.
                 </p>
                 <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-4" />
                 <ul className="space-y-4">

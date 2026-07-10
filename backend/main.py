@@ -96,8 +96,28 @@ def seed_database():
                 upi_id="mccai@upi",
                 default_gateway="stripe"
             )
-            db.add(billing_s)
+            db.add(platform)
             logger.info("Seeded global billing settings.")
+
+        # 4. SMTP Settings
+        from app.models.models import SMTPSettings
+        from app.core.security import encrypt_data
+        existing_smtp = db.query(SMTPSettings).filter(SMTPSettings.tenant_id == None).first()
+        if not existing_smtp and settings.SMTP_HOST:
+            smtp_config = SMTPSettings(
+                tenant_id=None,
+                smtp_host=settings.SMTP_HOST,
+                smtp_port=settings.SMTP_PORT,
+                smtp_username=settings.SMTP_USER,
+                smtp_password=encrypt_data(settings.SMTP_PASSWORD) if settings.SMTP_PASSWORD else None,
+                from_email=settings.SMTP_SENDER or settings.SMTP_USER,
+                from_name="MCC AI Admin",
+                encryption_type="TLS" if settings.SMTP_PORT == 587 else "SSL",
+                is_enabled=True,
+                enable_authentication=True
+            )
+            db.add(smtp_config)
+            logger.info("Seeded global SMTP settings from environment variables.")
 
         db.commit()
 
@@ -110,10 +130,11 @@ def seed_database():
             pass
         elif super_admin_email:
             # Only seed if an explicit environment variable is provided, to avoid hardcoding
+            super_admin_password = os.environ.get("SUPER_ADMIN_PASSWORD", "admin123")
             super_admin = User(
                 name="Platform Owner",
                 email=super_admin_email,
-                password_hash=get_password_hash("admin123"),
+                password_hash=get_password_hash(super_admin_password),
                 role="super_admin",
                 status="active"
             )
