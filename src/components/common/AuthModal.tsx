@@ -90,7 +90,7 @@ export const AuthModal: React.FC = () => {
 
         setIsSuccess(true);
         setTimeout(() => {
-          saveLoginSession(data.name, email || "google-user", data.role, data.access_token, data.refresh_token, data.tenant_slug);
+          saveLoginSession(data.name, data.email || email || "google-user", data.role, data.access_token, data.refresh_token, data.tenant_slug);
           setViewMode('workspace');
           handleClose(true);
         }, 1500);
