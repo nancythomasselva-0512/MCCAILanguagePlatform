@@ -19,9 +19,16 @@ class Settings(BaseSettings):
     DB_USER: str = "postgres"
     DB_PASSWORD: str = "postgres123"
     DB_NAME: str = "mcc_saas"
+    DATABASE_URL_ENV: str | None = None
 
     @property
     def DATABASE_URL(self) -> str:
+        if self.DATABASE_URL_ENV:
+            return self.DATABASE_URL_ENV
+        import os
+        url = os.environ.get("DATABASE_URL")
+        if url:
+            return url
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     # Redis for rate limiting / session storage
@@ -34,6 +41,10 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_SENDER: str = ""
+    
+    # Super Admin Settings
+    SUPER_ADMIN_EMAIL: str | None = None
+    SUPER_ADMIN_PASSWORD: str | None = None
     
     # Provider Keys
     OPENAI_API_KEY: str | None = None

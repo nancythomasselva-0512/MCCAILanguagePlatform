@@ -122,15 +122,20 @@ def seed_database():
         db.commit()
 
         # 2. Check for existing Super Admin or seed dynamically if env var is provided
-        super_admin_email = os.environ.get("SUPER_ADMIN_EMAIL")
+        super_admin_email = settings.SUPER_ADMIN_EMAIL
         existing_admin = db.query(User).filter(User.role == "super_admin").first()
         
         if existing_admin:
-            # Super Admin exists, do nothing or update password if needed
+            # Super Admin exists, check if email changed or password needs update? 
+            # Or just do nothing. We'll do nothing, assuming they don't want it constantly overwritten.
+            # But they said "whatever admin credentials I gave should work correctly", so let's update password if email matches.
+            if super_admin_email and existing_admin.email == super_admin_email and settings.SUPER_ADMIN_PASSWORD:
+                existing_admin.password_hash = get_password_hash(settings.SUPER_ADMIN_PASSWORD)
+                db.commit()
             pass
         elif super_admin_email:
             # Only seed if an explicit environment variable is provided, to avoid hardcoding
-            super_admin_password = os.environ.get("SUPER_ADMIN_PASSWORD", "admin123")
+            super_admin_password = settings.SUPER_ADMIN_PASSWORD or "admin123"
             super_admin = User(
                 name="Platform Owner",
                 email=super_admin_email,
