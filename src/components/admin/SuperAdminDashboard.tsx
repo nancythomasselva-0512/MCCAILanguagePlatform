@@ -116,7 +116,6 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
   );
 };
 
-
 interface SuperAdminDashboardProps {
   subTab?: TabType;
 }
@@ -206,6 +205,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   const [editingTenant, setEditingTenant] = useState<any>(null);
   const [editTenantName, setEditTenantName] = useState('');
   const [editTenantPlanId, setEditTenantPlanId] = useState('');
+
+  // Expiring Subscriptions Modal
+  const [showExpiringModal, setShowExpiringModal] = useState(false);
 
   // Edit Plan Modal state
   const [editingPlan, setEditingPlan] = useState<any>(null);
@@ -789,8 +791,8 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               </h3>
               <div className="space-y-2.5">
                 {metrics.provider_health?.map((prov: any) => (
-                  <div key={prov.provider} className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-white dark:bg-white dark:bg-slate-950/30 border border-slate-200 dark:border-white/5">
-                    <span className="text-base font-bold text-slate-800 dark:text-slate-800 dark:text-slate-200">{prov.provider}</span>
+                  <div key={prov.provider} className="flex items-center justify-between p-3 rounded-xl bg-slate-100 dark:bg-slate-950/50 border border-slate-200 dark:border-white/5">
+                    <span className="text-base font-bold text-slate-800 dark:text-slate-200">{prov.provider}</span>
                     <span className={`flex items-center gap-1.5 text-sm font-black ${
                       prov.status_code === 'warning' ? 'text-amber-500' : 'text-emerald-500'
                     }`}>
@@ -811,7 +813,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     <span>Audio Transcriptions</span>
                     <span className="font-bold text-teal-500 dark:text-teal-400">{metrics.metrics?.transcription_minutes} mins consumed</span>
                   </div>
-                  <div className="w-full h-2 bg-slate-200 dark:bg-white dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-slate-200 dark:border-white/5">
+                  <div className="w-full h-2 bg-slate-200 dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-white/5">
                     <div className="h-full bg-teal-500 rounded-full" style={{ width: "35%" }} />
                   </div>
                 </div>
@@ -821,7 +823,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     <span>Text Translation</span>
                     <span className="font-bold text-emerald-500 dark:text-emerald-400">{(metrics.metrics?.translation_characters || 0).toLocaleString()} chars</span>
                   </div>
-                  <div className="w-full h-2 bg-slate-200 dark:bg-white dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-slate-200 dark:border-white/5">
+                  <div className="w-full h-2 bg-slate-200 dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-white/5">
                     <div className="h-full bg-emerald-500 rounded-full" style={{ width: "65%" }} />
                   </div>
                 </div>
@@ -831,7 +833,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     <span>TTS Audio Synthesis</span>
                     <span className="font-bold text-amber-500 dark:text-amber-400">{(metrics.metrics?.tts_characters || 0).toLocaleString()} chars</span>
                   </div>
-                  <div className="w-full h-2 bg-slate-200 dark:bg-white dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-slate-200 dark:border-white/5">
+                  <div className="w-full h-2 bg-slate-200 dark:bg-[#0B1020] rounded-full overflow-hidden border border-slate-300 dark:border-white/5">
                     <div className="h-full bg-amber-500 rounded-full" style={{ width: "45%" }} />
                   </div>
                 </div>
@@ -841,7 +843,10 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
           {/* Lower Row: alerts & top list */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="glass-card rounded-2xl p-6 border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 flex flex-col justify-between">
+            <div 
+              className="glass-card rounded-2xl p-6 border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 flex flex-col justify-between cursor-pointer hover:bg-amber-500/10 dark:hover:bg-amber-500/20 transition-all"
+              onClick={() => setShowExpiringModal(true)}
+            >
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
@@ -905,7 +910,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       {activeTab === 'tenants' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
           {/* Provision Form */}
-          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 h-fit space-y-4">
+          <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 h-fit space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Sparkles className="text-teal-500" size={16} />
               Provision Tenant Workspace
@@ -938,7 +943,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 />
               </div>
 
-              <div className="p-4 bg-white dark:bg-white dark:bg-slate-950/50 rounded-2xl border border-slate-200 dark:border-white/5 space-y-3">
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-white/5 space-y-3">
                 <p className="text-sm font-black uppercase text-teal-400 tracking-wider">Tenant Admin Settings</p>
                 <div>
                   <label className="text-sm font-bold text-slate-500 dark:text-slate-400">Full Name</label>
@@ -948,7 +953,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     value={newAdminName}
                     onChange={(e) => setNewAdminName(e.target.value)}
                     placeholder="Admin Name"
-                    className="w-full px-2.5 py-2 mt-0.5 rounded-lg text-base bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                    className="w-full px-3.5 py-2.5 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none focus:border-teal-500/50 transition-colors"
                   />
                 </div>
                 <div>
@@ -959,7 +964,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     value={newAdminEmail}
                     onChange={(e) => setNewAdminEmail(e.target.value)}
                     placeholder="admin@abcschool.com"
-                    className="w-full px-2.5 py-2 mt-0.5 rounded-lg text-base bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                    className="w-full px-3.5 py-2.5 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none focus:border-teal-500/50 transition-colors"
                   />
                 </div>
                 <div>
@@ -970,7 +975,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     value={newAdminPassword}
                     onChange={(e) => setNewAdminPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-2.5 py-2 mt-0.5 rounded-lg text-base bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none"
+                    className="w-full px-3.5 py-2.5 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-200 outline-none focus:border-teal-500/50 transition-colors"
                   />
                 </div>
               </div>
@@ -980,7 +985,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 <select
                   value={selectedPlanId}
                   onChange={(e) => setSelectedPlanId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 mt-1 rounded-xl text-base bg-white dark:bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
+                  className="w-full px-3.5 py-2.5 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none focus:border-teal-500/50 transition-colors"
                   style={{ background: 'var(--bg-subtle)' }}
                 >
                   <option value="" className="text-slate-900 dark:text-slate-200 bg-white dark:bg-slate-950">Select Plan...</option>
@@ -1000,7 +1005,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           </div>
 
           {/* Tenants Table */}
-          <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 space-y-4">
+          <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-white/5 pb-3">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Active Tenants</h3>
               <div className="flex gap-2">
@@ -3129,6 +3134,82 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           </motion.div>
         )}
       </AnimatePresence>
-</div>
+
+      {/* Expiring Subscriptions Modal */}
+      <AnimatePresence>
+        {showExpiringModal && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+              onClick={() => setShowExpiringModal(false)}
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+            >
+              <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                    <AlertTriangle size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white">Upcoming Renewals</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">Subscriptions renewing in the next 7 days</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowExpiringModal(false)}
+                  className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 cursor-pointer"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-slate-900">
+                {billingOverview?.subscriptions && billingOverview.subscriptions.length > 0 ? (
+                  <div className="space-y-3">
+                    {billingOverview.subscriptions.map((sub: any) => (
+                      <div key={sub.id} className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-[#111827]/40 hover:border-amber-500/30 transition-colors">
+                        <div>
+                          <h4 className="font-bold text-slate-900 dark:text-white text-sm">{sub.tenant_name}</h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1">Plan: {sub.plan_name}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-amber-600 dark:text-amber-400 text-sm">{sub.renews}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1">${sub.amount}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <div className="w-16 h-16 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                      <CheckCircle2 size={32} />
+                    </div>
+                    <h3 className="text-slate-900 dark:text-white font-bold">No impending renewals</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-bold">All subscriptions are up to date.</p>
+                  </div>
+                )}
+              </div>
+              <div className="p-4 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50 flex justify-end">
+                <button 
+                  onClick={() => setShowExpiringModal(false)}
+                  className="px-6 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white rounded-xl font-bold transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };

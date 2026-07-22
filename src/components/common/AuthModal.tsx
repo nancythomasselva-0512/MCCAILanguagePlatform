@@ -365,11 +365,30 @@ export const AuthModal: React.FC = () => {
                               type="text"
                               required
                               value={tenantSlug}
-                              onChange={(e) => setTenantSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ""))}
-                              placeholder="acme"
+                              onChange={(e) => {
+                                // Normalize: lowercase, spaces → hyphens, allow a-z 0-9 hyphens and dots
+                                const normalized = e.target.value
+                                  .toLowerCase()
+                                  .replace(/\s+/g, '-')
+                                  .replace(/[^a-z0-9\-.]/g, '')
+                                  .replace(/-{2,}/g, '-')
+                                  .replace(/\.{2,}/g, '.');
+                                setTenantSlug(normalized);
+                              }}
+                              placeholder="acme.com"
                               className="w-full pl-8 pr-3 py-2.5 rounded-xl text-xs font-semibold transition-all focus:ring-2 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 outline-none text-slate-900 dark:text-white focus:border-emerald-600 dark:focus:border-emerald-500"
                             />
                           </div>
+                          {tenantSlug && (
+                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono truncate">
+                              /{tenantSlug}
+                            </p>
+                          )}
+                          {!tenantSlug && (
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                              Letters, numbers, hyphens &amp; dots only
+                            </p>
+                          )}
                         </div>
                       </div>
 

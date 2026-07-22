@@ -884,12 +884,12 @@ export const LandingPage: React.FC = () => {
                 <span className="text-sm text-teal-600 dark:text-teal-400 hover:underline">+1 (800) 555-0199</span>
               </a>
 
-              <a href="https://maps.google.com/?q=123+AI+Boulevard,Tech+District,CA+94103" target="_blank" rel="noopener noreferrer" className="block p-6 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 flex flex-col items-center text-center transition-transform hover:scale-105 cursor-pointer">
+              <a href="https://maps.google.com/?q=MMIP,MCC,Tambaram,600059" target="_blank" rel="noopener noreferrer" className="block p-6 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 flex flex-col items-center text-center transition-transform hover:scale-105 cursor-pointer">
                 <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mb-4">
                   <MapPin className="text-teal-600 dark:text-teal-400" size={24} />
                 </div>
                 <h4 className="font-bold text-slate-900 dark:text-white mb-1">Office</h4>
-                <span className="text-sm text-slate-600 dark:text-slate-400">123 AI Boulevard<br/>Tech District, CA 94103</span>
+                <span className="text-sm text-slate-600 dark:text-slate-400">MMIP, MCC, Tambaram<br/>600059</span>
               </a>
             </div>
           </div>

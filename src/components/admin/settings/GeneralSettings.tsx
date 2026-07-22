@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { Settings, Save, Upload, Globe, Type } from "lucide-react";
 
+const inputCls =
+  "w-full mt-1 px-3 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl outline-none text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-teal-500/40 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:[color-scheme:dark]";
+const labelCls = "text-xs font-bold uppercase text-slate-500 dark:text-slate-400";
+
 export const GeneralSettings: React.FC = () => {
   const [config, setConfig] = useState({
     platformName: "Fluentia",
@@ -10,7 +14,7 @@ export const GeneralSettings: React.FC = () => {
     dateFormat: "MM/DD/YYYY",
     currency: "USD",
     footerText: "Powering Next-Gen Language AI",
-    copyright: "© 2026 MCC AI. All rights reserved."
+    copyright: "© 2026 MCC AI. All rights reserved.",
   });
 
   return (
@@ -21,7 +25,7 @@ export const GeneralSettings: React.FC = () => {
             <Settings className="text-teal-500" />
             General Settings
           </h2>
-          <p className="text-sm font-bold text-slate-500 mt-1">Configure global platform details.</p>
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mt-1">Configure global platform details.</p>
         </div>
         <button className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold flex items-center gap-2 transition-all">
           <Save size={16} /> Save Changes
@@ -29,6 +33,7 @@ export const GeneralSettings: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Platform Details */}
         <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
           <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
             <Type size={18} className="text-blue-500" />
@@ -36,39 +41,45 @@ export const GeneralSettings: React.FC = () => {
           </h3>
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold uppercase text-slate-500">Platform Name</label>
-              <input type="text" value={config.platformName} onChange={e => setConfig({...config, platformName: e.target.value})} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none" />
+              <label className={labelCls}>Platform Name</label>
+              <input type="text" value={config.platformName} onChange={e => setConfig({ ...config, platformName: e.target.value })} className={inputCls} />
             </div>
             <div>
-              <label className="text-xs font-bold uppercase text-slate-500">Description</label>
-              <textarea value={config.description} onChange={e => setConfig({...config, description: e.target.value})} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl h-24 outline-none" />
+              <label className={labelCls}>Description</label>
+              <textarea
+                value={config.description}
+                onChange={e => setConfig({ ...config, description: e.target.value })}
+                className="w-full mt-1 px-3 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl h-24 outline-none text-slate-900 dark:text-white font-medium resize-none focus:ring-2 focus:ring-teal-500/40 transition-all"
+              />
             </div>
           </div>
         </div>
 
+        {/* Media & Assets */}
         <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
           <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
             <Upload size={18} className="text-indigo-500" />
-            Media & Assets
+            Media &amp; Assets
           </h3>
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold uppercase text-slate-500 mb-2 block">Logo</label>
-              <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800">
+              <label className={`${labelCls} mb-2 block`}>Logo</label>
+              <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                 <Upload size={24} className="text-slate-400 mb-2" />
-                <span className="text-xs font-bold text-slate-500">Click to upload logo</span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Click to upload logo</span>
               </div>
             </div>
             <div>
-              <label className="text-xs font-bold uppercase text-slate-500 mb-2 block">Favicon</label>
-              <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800">
+              <label className={`${labelCls} mb-2 block`}>Favicon</label>
+              <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl p-4 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                 <Upload size={24} className="text-slate-400 mb-2" />
-                <span className="text-xs font-bold text-slate-500">Click to upload favicon</span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Click to upload favicon</span>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Localization */}
         <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
           <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
             <Globe size={18} className="text-emerald-500" />
@@ -76,31 +87,31 @@ export const GeneralSettings: React.FC = () => {
           </h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold uppercase text-slate-500">Timezone</label>
-              <select value={config.timezone} onChange={e => setConfig({...config, timezone: e.target.value})} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none">
+              <label className={labelCls}>Timezone</label>
+              <select value={config.timezone} onChange={e => setConfig({ ...config, timezone: e.target.value })} className={inputCls}>
                 <option>UTC</option>
                 <option>America/New_York</option>
                 <option>Asia/Kolkata</option>
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold uppercase text-slate-500">Language</label>
-              <select value={config.language} onChange={e => setConfig({...config, language: e.target.value})} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none">
+              <label className={labelCls}>Language</label>
+              <select value={config.language} onChange={e => setConfig({ ...config, language: e.target.value })} className={inputCls}>
                 <option value="en-US">English (US)</option>
                 <option value="en-GB">English (UK)</option>
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold uppercase text-slate-500">Date Format</label>
-              <select value={config.dateFormat} onChange={e => setConfig({...config, dateFormat: e.target.value})} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none">
+              <label className={labelCls}>Date Format</label>
+              <select value={config.dateFormat} onChange={e => setConfig({ ...config, dateFormat: e.target.value })} className={inputCls}>
                 <option>MM/DD/YYYY</option>
                 <option>DD/MM/YYYY</option>
                 <option>YYYY-MM-DD</option>
               </select>
             </div>
             <div>
-              <label className="text-xs font-bold uppercase text-slate-500">Currency</label>
-              <select value={config.currency} onChange={e => setConfig({...config, currency: e.target.value})} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none">
+              <label className={labelCls}>Currency</label>
+              <select value={config.currency} onChange={e => setConfig({ ...config, currency: e.target.value })} className={inputCls}>
                 <option value="USD">USD ($)</option>
                 <option value="EUR">EUR (€)</option>
                 <option value="INR">INR (₹)</option>
@@ -109,23 +120,23 @@ export const GeneralSettings: React.FC = () => {
           </div>
         </div>
 
+        {/* Footer & Legal */}
         <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-[#111827]/40">
           <h3 className="text-lg font-black mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
             <Type size={18} className="text-purple-500" />
-            Footer & Legal
+            Footer &amp; Legal
           </h3>
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold uppercase text-slate-500">Footer Text</label>
-              <input type="text" value={config.footerText} onChange={e => setConfig({...config, footerText: e.target.value})} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none" />
+              <label className={labelCls}>Footer Text</label>
+              <input type="text" value={config.footerText} onChange={e => setConfig({ ...config, footerText: e.target.value })} className={inputCls} />
             </div>
             <div>
-              <label className="text-xs font-bold uppercase text-slate-500">Copyright Text</label>
-              <input type="text" value={config.copyright} onChange={e => setConfig({...config, copyright: e.target.value})} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl outline-none" />
+              <label className={labelCls}>Copyright Text</label>
+              <input type="text" value={config.copyright} onChange={e => setConfig({ ...config, copyright: e.target.value })} className={inputCls} />
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
