@@ -19,12 +19,14 @@ class Settings(BaseSettings):
     DB_USER: str = "postgres"
     DB_PASSWORD: str = "postgres123"
     DB_NAME: str = "mcc_saas"
-    DATABASE_URL_ENV: str | None = None
+    
+    # If DATABASE_URL is provided in .env, it will be used instead of building it
+    DATABASE_URL: str | None = None
 
     @property
-    def DATABASE_URL(self) -> str:
-        if self.DATABASE_URL_ENV:
-            return self.DATABASE_URL_ENV
+    def get_database_url(self) -> str:
+        if self.DATABASE_URL:
+            return self.DATABASE_URL
         import os
         url = os.environ.get("DATABASE_URL")
         if url:
