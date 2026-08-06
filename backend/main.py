@@ -1,0 +1,241 @@
+import os
+import tempfile
+import logging
+import traceback
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import ResponseValidationError
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+
+# Imports for new SaaS structure
+from app.core.config import settings
+from app.core.database import engine, Base, SessionLocal
+from app.middleware.tenant_middleware import TenantMiddleware
+from app.routers import auth, super_admin, tenant_admin, tools, platform_builder, billing
+from app.models.models import SubscriptionPlan, User, BillingSettings
+from app.core.security import get_password_hash
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger("mcc-ai-saas-backend")
+
+# Initialize database schemas
+try:
+    logger.info("Initializing database schemas...")
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database schemas initialized.")
+except Exception as e:
+    logger.error(f"Failed to initialize database: {e}")
+
+# Database Seeding: default plans and super admin
+def seed_database():
+    db = SessionLocal()
+    try:
+        # 1. Seed plans
+        plans_data = [
+            {"name": "Free", "price": 0.0, "transcription_limit": 15, "translation_limit": 10000, "tts_limit": 5000, "storage_limit": 50},
+            {"name": "Starter", "price": 19.0, "transcription_limit": 60, "translation_limit": 100000, "tts_limit": 50000, "storage_limit": 500},
+            {"name": "Professional", "price": 49.0, "transcription_limit": 300, "translation_limit": 500000, "tts_limit": 250000, "storage_limit": 2000},
+            {"name": "Enterprise", "price": 149.0, "transcription_limit": 1200, "translation_limit": 2000000, "tts_limit": 1000000, "storage_limit": 10000},
+        ]
+        
+        for p in plans_data:
+            existing = db.query(SubscriptionPlan).filter(SubscriptionPlan.name == p["name"]).first()
+            if not existing:
+                db_plan = SubscriptionPlan(**p)
+                db.add(db_plan)
+                logger.info(f"Seeded plan: {p['name']}")
+        db.commit()
+
+        # Seed global branding settings
+        from app.models.models import BrandingSettings, ThemeSettings, PlatformSettings, NavigationItem, FeatureFlag
+        
+        # 1. Branding Settings
+        existing_branding = db.query(BrandingSettings).filter(BrandingSettings.tenant_id == None).first()
+        if not existing_branding:
+            branding = BrandingSettings(
+                platform_name="MCC AI",
+                tagline="Language Platform",
+                footer_text="Powering Next-Gen Language AI",
+                copyright_text="© 2026 MCC AI. All rights reserved.",
+                logo_url="/logo.png"
+            )
+            db.add(branding)
+            logger.info("Seeded global branding settings.")
+            
+        # 2. Theme Settings
+        existing_theme = db.query(ThemeSettings).filter(ThemeSettings.tenant_id == None).first()
+        if not existing_theme:
+            theme = ThemeSettings(
+                mode="dark",
+                primary_color="#2563EB",
+                secondary_color="#4F46E5",
+                accent_color="#06B6D4",
+                success_color="#10B981",
+                warning_color="#F59E0B",
+                error_color="#EF4444",
+                font_family="Inter",
+                border_radius="16px"
+            )
+            db.add(theme)
+            logger.info("Seeded global theme settings.")
+            
+        # 3. Platform Settings
+        existing_platform = db.query(PlatformSettings).filter(PlatformSettings.tenant_id == None).first()
+        if not existing_platform:
+            platform = PlatformSettings(
+                invite_only=False,
+                enable_email_login=True,
+                enable_google_login=True
+            )
+            db.add(platform)
+            logger.info("Seeded global platform settings.")
+
+        # 3b. Billing Settings
+        existing_billing = db.query(BillingSettings).filter(BillingSettings.tenant_id == None).first()
+        if not existing_billing:
+            billing_config = BillingSettings(
+                company_email="billing@mcc-ai.com",
+                stripe_enabled=True,
+                stripe_public_key="pk_test_51MccAiStripePubKeyFake",
+                stripe_secret_key="sk_test_51MccAiStripeSecKeyFake",
+                razorpay_enabled=True,
+                razorpay_key_id="rzp_test_mccaiFakeKeyId",
+                razorpay_key_secret="rzp_secret_mccaiFakeSecret",
+                upi_enabled=True,
+                upi_id="mccai@upi",
+                default_gateway="stripe"
+            )
+            db.add(billing_config)
+            logger.info("Seeded global billing settings.")
+
+        # 4. SMTP Settings
+        from app.models.models import SMTPSettings
+        from app.core.security import encrypt_data
+        existing_smtp = db.query(SMTPSettings).filter(SMTPSettings.tenant_id == None).first()
+        if not existing_smtp and settings.SMTP_HOST:
+            smtp_config = SMTPSettings(
+                tenant_id=None,
+                smtp_host=settings.SMTP_HOST,
+                smtp_port=settings.SMTP_PORT,
+                smtp_username=settings.SMTP_USER,
+                smtp_password=encrypt_data(settings.SMTP_PASSWORD) if settings.SMTP_PASSWORD else None,
+                from_email=settings.SMTP_SENDER or settings.SMTP_USER,
+                from_name="MCC AI Admin",
+                encryption_type="TLS" if settings.SMTP_PORT == 587 else "SSL",
+                is_enabled=True,
+                enable_authentication=True
+            )
+            db.add(smtp_config)
+            logger.info("Seeded global SMTP settings from environment variables.")
+
+        db.commit()
+
+        # 2. Check for existing Super Admin or seed dynamically if env var is provided
+        super_admin_email = settings.SUPER_ADMIN_EMAIL
+        existing_admin = db.query(User).filter(User.role == "super_admin").first()
+        
+        if existing_admin:
+            # Super Admin exists, check if email changed or password needs update? 
+            # Or just do nothing. We'll do nothing, assuming they don't want it constantly overwritten.
+            # But they said "whatever admin credentials I gave should work correctly", so let's update password if email matches.
+            if super_admin_email and existing_admin.email == super_admin_email and settings.SUPER_ADMIN_PASSWORD:
+                existing_admin.password_hash = get_password_hash(settings.SUPER_ADMIN_PASSWORD)
+                db.commit()
+            pass
+        elif super_admin_email:
+            # Only seed if an explicit environment variable is provided, to avoid hardcoding
+            super_admin_password = settings.SUPER_ADMIN_PASSWORD or "admin123"
+            super_admin = User(
+                name="Platform Owner",
+                email=super_admin_email,
+                password_hash=get_password_hash(super_admin_password),
+                role="super_admin",
+                status="active"
+            )
+            db.add(super_admin)
+            logger.info(f"Seeded default Super Admin from env var.")
+        else:
+            logger.info("No super_admin found in DB and SUPER_ADMIN_EMAIL env var not set. Skipping seed.")
+        db.commit()
+    except Exception as e:
+        logger.error(f"Error seeding database: {e}")
+    finally:
+        db.close()
+
+seed_database()
+
+app = FastAPI(title="MCC AI Multi-Tenant SaaS Workspace Platform")
+
+# Inject multi-tenant workspace extraction middleware
+app.add_middleware(TenantMiddleware)
+
+# Enable CORS for frontend requests (outermost)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.exception_handler(ResponseValidationError)
+async def validation_exception_handler(request: Request, exc: ResponseValidationError):
+    import traceback
+    traceback.print_exc()
+    print("VALIDATION ERRORS:", exc.errors())
+    return JSONResponse(status_code=500, content={"message": str(exc), "errors": exc.errors()})
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
+    traceback.print_exc()
+    return JSONResponse(status_code=500, content={"message": str(exc), "traceback": traceback.format_exc()})
+
+# Bind new routers
+app.include_router(auth.router, prefix="/api")
+app.include_router(super_admin.router, prefix="/api")
+app.include_router(tenant_admin.router, prefix="/api")
+app.include_router(tools.router, prefix="/api")
+app.include_router(platform_builder.router, prefix="/api")
+app.include_router(billing.router, prefix="/api")
+
+from app.routers import document
+app.include_router(document.router, prefix="/api")
+
+# --- BACKWARD COMPATIBILITY: LOCAL FASTER-WHISPER RUNNER ---
+from app.utils.audio import get_model, transcribe_local_audio
+
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "engine": "faster-whisper"}
+
+@app.post("/api/transcribe")
+async def transcribe(
+    file: UploadFile = File(...),
+    model: str = Form("base"),
+    language: str = Form(None),
+):
+    filename = file.filename or "audio.mp3"
+    logger.info(f"Received transcription request for file: {filename}, model: {model}, language: {language}")
+    
+    ext = filename.split(".")[-1].lower() if "." in filename else "mp3"
+    if ext not in ["mp3", "wav", "m4a", "ogg", "flac", "aac", "webm", "opus"]:
+        raise HTTPException(status_code=400, detail=f"Unsupported file format: {ext}")
+        
+    try:
+        audio_bytes = await file.read()
+        res = transcribe_local_audio(
+            audio_bytes=audio_bytes,
+            filename=filename,
+            model=model,
+            language=language
+        )
+        return res
+    except Exception as e:
+        logger.error(f"Error during transcription: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

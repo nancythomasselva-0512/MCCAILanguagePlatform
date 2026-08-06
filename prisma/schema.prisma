@@ -1,0 +1,212 @@
+// Prisma schema for SQLite database engine
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model SubscriptionPlan {
+  id                  String   @id @default(uuid())
+  name                String   @unique
+  price               Float    @default(0.0)
+  transcription_limit Int      @default(30)
+  translation_limit   Int      @default(50000)
+  tts_limit           Int      @default(10000)
+  storage_limit       Int      @default(100)
+  active              Boolean  @default(true)
+  created_at          DateTime @default(now())
+
+  tenants             Tenant[]
+}
+
+model Tenant {
+  id            String            @id @default(uuid())
+  tenant_name   String
+  slug          String            @unique
+  status        String            @default("active")
+  plan_id       String?
+  created_at    DateTime          @default(now())
+  updated_at    DateTime          @updatedAt
+
+  plan          SubscriptionPlan? @relation(fields: [plan_id], references: [id])
+  users         User[]
+  usage         UsageTracking[]
+  providers     ProviderConfiguration[]
+  transcriptions TranscriptionHistory[]
+  translations  TranslationHistory[]
+  tts           TtsHistory[]
+  subscriptions Subscription[]
+}
+
+model User {
+  id            String    @id @default(uuid())
+  tenant_id     String?
+  name          String
+  email         String    @unique
+  password_hash String
+  role          String    @default("user")
+  status        String    @default("active")
+  last_login    DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  tenant        Tenant?   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UsageTracking {
+  id                     String   @id @default(uuid())
+  tenant_id              String
+  audio_minutes_used     Float    @default(0.0)
+  translation_chars_used Int      @default(0)
+  tts_chars_used         Int      @default(0)
+  api_calls_used         Int      @default(0)
+  storage_bytes_used     Int      @default(0)
+  billing_period_start   DateTime @default(now())
+  billing_period_end     DateTime
+  updated_at             DateTime @updatedAt
+
+  tenant                 Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+}
+
+model ProviderConfiguration {
+  id                        String    @id @default(uuid())
+  tenant_id                 String?
+  provider_name             String
+  is_enabled                Boolean   @default(true)
+  credentials_encrypted     String?
+  priority                  Int       @default(1)
+  config_json               String?
+  circuit_breaker_failures  Int       @default(0)
+  circuit_breaker_opened_at DateTime?
+  created_at                DateTime  @default(now())
+  updated_at                DateTime  @updatedAt
+
+  tenant                    Tenant?   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+}
+
+model ProviderLog {
+  id               String   @id @default(uuid())
+  provider_name    String
+  feature          String
+  status           String
+  error_code       String?
+  error_message    String?
+  response_time_ms Int      @default(0)
+  retry_count      Int      @default(0)
+  fallback_occurred Boolean @default(false)
+  tenant_id        String?
+  created_at       DateTime @default(now())
+}
+
+model TranscriptionHistory {
+  id               String   @id @default(uuid())
+  tenant_id        String
+  user_id          String
+  file_name        String
+  file_size        Int
+  duration_seconds Float
+  transcript_text  String
+  provider         String
+  created_at       DateTime @default(now())
+
+  tenant           Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+}
+
+model TranslationHistory {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  user_id         String
+  source_text     String
+  translated_text String
+  source_lang     String
+  target_lang     String
+  provider        String
+  created_at      DateTime @default(now())
+
+  tenant          Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+}
+
+model TtsHistory {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  user_id    String
+  text       String
+  voice      String
+  audio_url  String
+  provider   String
+  created_at DateTime @default(now())
+
+  tenant     Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id                  String   @id @default(uuid())
+  tenant_id           String
+  razorpay_sub_id     String?  @unique
+  plan_name           String
+  status              String   @default("active")
+  current_period_end DateTime
+  created_at          DateTime @default(now())
+
+  tenant              Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+}
+
+model EmailTemplate {
+  id         String   @id @default(uuid())
+  name       String   @unique
+  subject    String
+  body       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  user_id    String?
+  action     String
+  details    String
+  ip_address String?
+  created_at DateTime @default(now())
+}
