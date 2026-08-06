@@ -202,16 +202,21 @@ export const Header: React.FC = () => {
           )}
 
           <button
-            onClick={toggleTheme}
+            id="theme-toggle-btn"
+            onClick={(e) => {
+              e.preventDefault();
+              toggleTheme();
+            }}
             className="flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
             style={{
-              background: theme === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(15, 23, 42, 0.05)',
+              background: theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)',
               border: '1px solid var(--border-base)',
               color: 'var(--text-secondary)',
             }}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             aria-label="Toggle theme"
           >
-            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            {theme === 'light' ? <Moon size={18} className="transition-transform duration-300 hover:rotate-12" /> : <Sun size={18} className="transition-transform duration-300 hover:rotate-45" />}
           </button>
 
           {/* Auth Buttons or User Menu */}

@@ -348,11 +348,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     storage.setItem('mcc-ai-theme', theme);
     const root = window.document.documentElement;
+    const body = window.document.body;
     if (theme === 'dark') {
       root.classList.add('dark');
+      body.classList.add('dark');
       root.setAttribute('data-theme', 'dark');
     } else {
       root.classList.remove('dark');
+      body.classList.remove('dark');
       root.setAttribute('data-theme', 'light');
     }
   }, [theme]);
