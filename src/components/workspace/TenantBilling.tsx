@@ -318,7 +318,7 @@ export const TenantBilling: React.FC = () => {
           </button>
         </div>
 
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto pt-4 items-stretch">
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-7xl mx-auto pt-4 items-stretch">
           {plans.map((p, index) => {
             const isCurrent = activePlan?.name?.toLowerCase() === p.name.toLowerCase();
             const monthlyPrice = p.price;
@@ -333,68 +333,72 @@ export const TenantBilling: React.FC = () => {
               <ThreeDInteractiveCard
                 key={p.id}
                 glowColor={isFree ? "rgba(59, 130, 246, 0.15)" : isPopular ? "rgba(16, 185, 129, 0.15)" : "rgba(168, 85, 247, 0.15)"}
-                className="p-8 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/90 border border-slate-200 dark:border-white/5 rounded-3xl shadow-xl relative w-full h-full"
+                className="p-5 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/90 border border-slate-200 dark:border-white/5 rounded-3xl shadow-xl relative w-full h-full"
               >
                 <div className="w-full">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                      isFree ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400' :
-                      isPopular ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
-                      'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                  <div className="flex items-center justify-between gap-1.5 mb-3">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      isFree ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20' :
+                      isPopular ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' :
+                      'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
                     }`}>
                       {isFree ? 'Basic' : isPopular ? 'Most Popular' : 'Premium'}
                     </span>
-                    {isFree && <span className="text-sm font-bold text-slate-500 dark:text-slate-400">7 Days Trial</span>}
+                    {isFree && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300">
+                        7 Days Trial
+                      </span>
+                    )}
                   </div>
-                  <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2 capitalize">{p.name}</h3>
-                  <div className="flex items-end gap-1 mb-6">
-                    <span className="text-4xl font-black text-slate-900 dark:text-white">{currSymbol}{displayPrice}</span>
-                    <span className="text-sm font-bold text-slate-500 mb-1">/mo</span>
+                  <h3 className="font-display text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 capitalize tracking-tight truncate" title={p.name}>{p.name}</h3>
+                  <div className="flex items-end gap-1 mb-5">
+                    <span className="text-3xl font-black text-slate-900 dark:text-white">{currSymbol}{displayPrice}</span>
+                    <span className="text-xs font-bold text-slate-500 mb-1">/mo</span>
                   </div>
-                  <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-4" />
-                  <ul className="space-y-4">
-                    <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0`} />
+                  <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-3.5" />
+                  <ul className="space-y-3">
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 size={15} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0 mt-0.5`} />
                       <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-white">Audio Processing</p>
-                        <p className="text-[10px] text-slate-500">{p.transcription_limit} mins audio included</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-white leading-snug">Audio Processing</p>
+                        <p className="text-[10px] text-slate-500 font-medium">{p.transcription_limit} mins audio included</p>
                       </div>
                     </li>
-                    <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0`} />
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 size={15} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0 mt-0.5`} />
                       <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-white">Translation Services</p>
-                        <p className="text-[10px] text-slate-500">{(p.translation_limit / 1000).toFixed(0)}k chars limit</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-white leading-snug">Translation Services</p>
+                        <p className="text-[10px] text-slate-500 font-medium">{(p.translation_limit / 1000).toFixed(0)}k chars limit</p>
                       </div>
                     </li>
-                    <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0`} />
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 size={15} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0 mt-0.5`} />
                       <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-white">Text-to-Speech (TTS)</p>
-                        <p className="text-[10px] text-slate-500">{(p.tts_limit / 1000).toFixed(0)}k chars limit</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-white leading-snug">Text-to-Speech (TTS)</p>
+                        <p className="text-[10px] text-slate-500 font-medium">{(p.tts_limit / 1000).toFixed(0)}k chars limit</p>
                       </div>
                     </li>
-                    <li className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0`} />
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 size={15} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0 mt-0.5`} />
                       <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-white">Cloud Storage</p>
-                        <p className="text-[10px] text-slate-500">{p.storage_limit} MB secure isolated</p>
+                        <p className="text-xs font-bold text-slate-800 dark:text-white leading-snug">Cloud Storage</p>
+                        <p className="text-[10px] text-slate-500 font-medium">{p.storage_limit} MB secure isolated</p>
                       </div>
                     </li>
                   </ul>
                 </div>
-                <div className="w-full mt-8">
+                <div className="w-full mt-6">
                   {isCurrent ? (
                     <button
                       disabled
-                      className="w-full py-3 px-6 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 text-xs font-bold cursor-default text-center block"
+                      className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 text-xs font-bold cursor-default text-center block"
                     >
                       Active Plan
                     </button>
                   ) : (
                     <button
                       onClick={() => handleStartCheckout(p, billingCycle)}
-                      className={`w-full py-3 px-6 rounded-xl text-white text-xs font-bold cursor-pointer transition-colors shadow-lg text-center block ${
+                      className={`w-full py-2.5 px-4 rounded-xl text-white text-xs font-bold cursor-pointer transition-colors shadow-lg text-center block ${
                         isPopular ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-teal-600 hover:bg-teal-700'
                       }`}
                     >
