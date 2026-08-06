@@ -316,99 +316,104 @@ export const TenantBilling: React.FC = () => {
               Save 30%
             </span>
           </button>
-        </div>
+        </div>        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto pt-6 items-stretch">
+          {(() => {
+            const displayPlans = plans.filter(p => p.price > 0).length >= 3
+              ? plans.filter(p => p.price > 0).slice(0, 3)
+              : plans.slice(0, 3);
 
-        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 w-full pt-6 items-stretch">
-          {plans.map((p, index) => {
-            const isCurrent = activePlan?.name?.toLowerCase() === p.name.toLowerCase();
-            const monthlyPrice = p.price;
-            const yearlyPerMonth = +(p.price * 0.7).toFixed(0);
-            const displayPrice = billingCycle === 'yearly' ? yearlyPerMonth : monthlyPrice;
-            const currSymbol = getCurrencySymbol(data?.currency || 'INR');
-            
-            const isFree = p.price === 0;
-            const isPopular = index === 1; // Middle card is usually popular
+            return displayPlans.map((p, index) => {
+              const isCurrent = activePlan?.name?.toLowerCase() === p.name.toLowerCase();
+              const monthlyPrice = p.price;
+              const yearlyPerMonth = +(p.price * 0.7).toFixed(0);
+              const displayPrice = billingCycle === 'yearly' ? yearlyPerMonth : monthlyPrice;
+              const currSymbol = "₹";
+              
+              const isPopular = index === 1; // Middle card is Recommended / Most Popular
 
-            return (
-              <ThreeDInteractiveCard
-                key={p.id}
-                glowColor={isFree ? "rgba(59, 130, 246, 0.2)" : isPopular ? "rgba(16, 185, 129, 0.2)" : "rgba(168, 85, 247, 0.2)"}
-                className="p-8 sm:p-9 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/95 border border-slate-200 dark:border-white/10 rounded-[2rem] shadow-2xl relative w-full h-full min-h-[500px]"
-              >
-                <div className="w-full">
-                  <div className="flex items-center justify-between gap-2 mb-4">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                      isFree ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20' :
-                      isPopular ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' :
-                      'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
-                    }`}>
-                      {isFree ? 'Basic' : isPopular ? 'Most Popular' : 'Premium'}
-                    </span>
-                    {isFree && (
-                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300">
-                        7 Days Trial
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="font-display text-2xl font-black text-slate-900 dark:text-white mb-2 capitalize tracking-tight whitespace-nowrap" title={p.name}>{p.name}</h3>
-                  <div className="flex items-end gap-1 mb-6">
-                    <span className="text-4xl font-black text-slate-900 dark:text-white">{currSymbol}{displayPrice}</span>
-                    <span className="text-sm font-bold text-slate-500 mb-1">/mo</span>
-                  </div>
-                  <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-3.5" />
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-2.5">
-                      <CheckCircle2 size={15} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0 mt-0.5`} />
-                      <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-white leading-snug">Audio Processing</p>
-                        <p className="text-[10px] text-slate-500 font-medium">{p.transcription_limit} mins audio included</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-2.5">
-                      <CheckCircle2 size={15} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0 mt-0.5`} />
-                      <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-white leading-snug">Translation Services</p>
-                        <p className="text-[10px] text-slate-500 font-medium">{(p.translation_limit / 1000).toFixed(0)}k chars limit</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-2.5">
-                      <CheckCircle2 size={15} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0 mt-0.5`} />
-                      <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-white leading-snug">Text-to-Speech (TTS)</p>
-                        <p className="text-[10px] text-slate-500 font-medium">{(p.tts_limit / 1000).toFixed(0)}k chars limit</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-2.5">
-                      <CheckCircle2 size={15} className={`${isPopular ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'} flex-shrink-0 mt-0.5`} />
-                      <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-white leading-snug">Cloud Storage</p>
-                        <p className="text-[10px] text-slate-500 font-medium">{p.storage_limit} MB secure isolated</p>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-                <div className="w-full mt-6">
-                  {isCurrent ? (
-                    <button
-                      disabled
-                      className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 text-xs font-bold cursor-default text-center block"
-                    >
-                      Active Plan
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleStartCheckout(p, billingCycle)}
-                      className={`w-full py-2.5 px-4 rounded-xl text-white text-xs font-bold cursor-pointer transition-colors shadow-lg text-center block ${
-                        isPopular ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-teal-600 hover:bg-teal-700'
-                      }`}
-                    >
-                      {isFree ? 'Start 7-Day Free Trial' : 'Upgrade Plan'}
-                    </button>
+              return (
+                <ThreeDInteractiveCard
+                  key={p.id}
+                  glowColor={isPopular ? "rgba(20, 184, 166, 0.25)" : "rgba(59, 130, 246, 0.15)"}
+                  className={`p-8 flex flex-col justify-between items-center text-center bg-white dark:bg-[#0c1427] border rounded-3xl shadow-xl relative w-full h-full min-h-[520px] ${
+                    isPopular ? 'border-teal-500 dark:border-teal-400 ring-2 ring-teal-500/30' : 'border-slate-200 dark:border-white/10'
+                  }`}
+                >
+                  {isPopular && (
+                    <div className="w-[calc(100%+4rem)] bg-teal-500 text-white text-[11px] font-black uppercase tracking-widest py-2 text-center rounded-t-3xl -mt-8 mb-6 shadow-md">
+                      RECOMMENDED
+                    </div>
                   )}
-                </div>
-              </ThreeDInteractiveCard>
-            );
-          })}
+                  <div className="w-full">
+                    <h3 className="font-display text-2xl font-extrabold text-slate-900 dark:text-white mb-1.5">{p.name}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-6 max-w-[220px] mx-auto leading-relaxed">
+                      {index === 0 ? "Get organized and set up simple workspace features." : index === 1 ? "Everything you need to boost performance and language workflow." : "Customize without limits and access dedicated workspace support."}
+                    </p>
+                    
+                    <div className="flex items-baseline justify-center gap-1 mb-6">
+                      <span className="text-5xl font-black text-slate-900 dark:text-white">{currSymbol}{displayPrice}</span>
+                      <span className="text-sm font-bold text-slate-500 dark:text-slate-400">/mo</span>
+                    </div>
+
+                    <div className="w-full mb-3">
+                      {isCurrent ? (
+                        <button
+                          disabled
+                          className="w-full py-3.5 px-6 rounded-2xl bg-slate-100 dark:bg-white/10 text-slate-400 text-sm font-extrabold cursor-default text-center block"
+                        >
+                          Active Plan
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleStartCheckout(p, billingCycle)}
+                          className={`w-full py-3.5 px-6 rounded-2xl text-sm font-extrabold transition-all shadow-lg cursor-pointer text-center block ${
+                            isPopular
+                              ? 'bg-teal-500 hover:bg-teal-600 text-white shadow-teal-500/30'
+                              : 'bg-white dark:bg-white/10 hover:bg-slate-50 border border-slate-200 dark:border-white/15 text-slate-900 dark:text-white'
+                          }`}
+                        >
+                          {p.price === 0 ? 'Try for Free' : 'Upgrade Plan'}
+                        </button>
+                      )}
+                    </div>
+                    
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium text-center mb-6">
+                      Free 7-day trial. No credit card required.
+                    </p>
+
+                    <div className="h-[1px] bg-slate-200 dark:bg-white/10 w-full mb-6" />
+
+                    <ul className="space-y-3.5 text-left w-full">
+                      <li className="flex items-center gap-3">
+                        <CheckCircle2 size={16} className="text-teal-500 flex-shrink-0" />
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                          <strong className="font-extrabold">{p.transcription_limit} mins</strong> Audio Processing
+                        </span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <CheckCircle2 size={16} className="text-teal-500 flex-shrink-0" />
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                          <strong className="font-extrabold">{(p.translation_limit / 1000).toFixed(0)}k chars</strong> Translation Limit
+                        </span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <CheckCircle2 size={16} className="text-teal-500 flex-shrink-0" />
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                          <strong className="font-extrabold">{(p.tts_limit / 1000).toFixed(0)}k chars</strong> Text-to-Speech (TTS)
+                        </span>
+                      </li>
+                      <li className="flex items-center gap-3">
+                        <CheckCircle2 size={16} className="text-teal-500 flex-shrink-0" />
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                          <strong className="font-extrabold">{p.storage_limit} MB</strong> Cloud Storage
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </ThreeDInteractiveCard>
+              );
+            });
+          })()}
         </div>
       </div>
 
