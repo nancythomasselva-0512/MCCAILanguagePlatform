@@ -276,41 +276,41 @@ export const TenantBilling: React.FC = () => {
   const invoices = data?.invoices || [];
 
   return (
-    <div className="space-y-6 w-full mx-auto p-4 md:p-8 animate-fadeIn">
+    <div className="space-y-8 w-full animate-fadeIn">
 
 
       {/* Plans Pricing Selection Section */}
-      <div className="space-y-8 bg-teal-900/5 p-10 rounded-[2.5rem] relative overflow-hidden shadow-2xl shadow-teal-900/5 border border-white/60">
+      <div className="space-y-10 bg-teal-900/10 dark:bg-[#031c19] p-8 sm:p-12 md:p-14 lg:p-16 rounded-[3rem] relative overflow-hidden shadow-2xl border border-teal-500/20 w-full">
         {/* Subtle background glow effect */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-teal-400/20 blur-[120px] pointer-events-none rounded-full" />
         
-        <div className="relative z-10 text-center space-y-1">
-          <h3 className="text-4xl md:text-5xl font-black text-teal-950 dark:text-teal-50 tracking-widest uppercase drop-shadow-sm">Our Prices</h3>
-          <p className="text-[10px] text-teal-700 dark:text-teal-300 font-bold tracking-[0.2em] uppercase">Select a target tier to upgrade or downgrade your active workspace instantly.</p>
+        <div className="relative z-10 text-center space-y-2">
+          <h3 className="text-5xl sm:text-6xl md:text-7xl font-black text-teal-950 dark:text-teal-50 tracking-[0.2em] uppercase drop-shadow-md">Our Prices</h3>
+          <p className="text-xs sm:text-sm text-teal-700 dark:text-teal-300 font-extrabold tracking-[0.25em] uppercase">Select a target tier to upgrade or downgrade your active workspace instantly.</p>
         </div>
 
         {/* Monthly / Yearly Toggle */}
-        <div className="relative z-10 flex items-center justify-center gap-3 pt-2">
+        <div className="relative z-10 flex items-center justify-center gap-4 pt-2">
           <button
             onClick={() => setBillingCycle('monthly')}
-            className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${
+            className={`px-7 py-3 rounded-full text-xs sm:text-sm font-black uppercase tracking-[0.15em] transition-all duration-200 ${
               billingCycle === 'monthly'
-                ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
-                : 'bg-white/70 text-slate-500 border border-teal-200/60 hover:border-teal-300'
+                ? 'bg-teal-500 text-white shadow-[0_4px_20px_rgba(20,184,166,0.5)]'
+                : 'bg-white/80 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-teal-200/60 dark:border-white/10 hover:border-teal-300'
             }`}
           >
             Monthly
           </button>
           <button
             onClick={() => setBillingCycle('yearly')}
-            className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 flex items-center gap-2 ${
+            className={`px-7 py-3 rounded-full text-xs sm:text-sm font-black uppercase tracking-[0.15em] transition-all duration-200 flex items-center gap-2.5 ${
               billingCycle === 'yearly'
-                ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
-                : 'bg-white/70 text-slate-500 border border-teal-200/60 hover:border-teal-300'
+                ? 'bg-teal-500 text-white shadow-[0_4px_20px_rgba(20,184,166,0.5)]'
+                : 'bg-white/80 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-teal-200/60 dark:border-white/10 hover:border-teal-300'
             }`}
           >
             Yearly
-            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider ${
+            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider ${
               billingCycle === 'yearly' ? 'bg-white/30 text-white' : 'bg-emerald-100 text-emerald-600 border border-emerald-200'
             }`}>
               Save 30%
@@ -318,7 +318,7 @@ export const TenantBilling: React.FC = () => {
           </button>
         </div>
 
-        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-[1600px] mx-auto pt-4 items-stretch">
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 w-full pt-6 items-stretch">
           {plans.map((p, index) => {
             const isCurrent = activePlan?.name?.toLowerCase() === p.name.toLowerCase();
             const monthlyPrice = p.price;
@@ -332,8 +332,8 @@ export const TenantBilling: React.FC = () => {
             return (
               <ThreeDInteractiveCard
                 key={p.id}
-                glowColor={isFree ? "rgba(59, 130, 246, 0.15)" : isPopular ? "rgba(16, 185, 129, 0.15)" : "rgba(168, 85, 247, 0.15)"}
-                className="p-7 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/90 border border-slate-200 dark:border-white/5 rounded-3xl shadow-xl relative w-full h-full"
+                glowColor={isFree ? "rgba(59, 130, 246, 0.2)" : isPopular ? "rgba(16, 185, 129, 0.2)" : "rgba(168, 85, 247, 0.2)"}
+                className="p-8 sm:p-9 flex flex-col justify-between items-start text-left bg-white dark:bg-[#070d1e]/95 border border-slate-200 dark:border-white/10 rounded-[2rem] shadow-2xl relative w-full h-full min-h-[500px]"
               >
                 <div className="w-full">
                   <div className="flex items-center justify-between gap-2 mb-4">
