@@ -103,21 +103,47 @@ def get_system_metrics(db: Session = Depends(get_db)):
     }
 
 # --- SUBSCRIPTION PLANS CRUD ---
+def _format_plan_dict(p: SubscriptionPlan) -> dict:
+    default_features = ["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "document_intelligence"]
+    feats = default_features
+    if p.features_json:
+        try:
+            feats = json.loads(p.features_json)
+        except Exception:
+            pass
+    return {
+        "id": p.id,
+        "name": p.name,
+        "price": p.price,
+        "transcription_limit": p.transcription_limit,
+        "translation_limit": p.translation_limit,
+        "tts_limit": p.tts_limit,
+        "storage_limit": p.storage_limit,
+        "active": p.active,
+        "created_at": p.created_at,
+        "features": feats
+    }
+
 @router.post("/plans", response_model=SubscriptionPlanResponse)
 def create_subscription_plan(plan: SubscriptionPlanCreate, db: Session = Depends(get_db)):
     existing = db.query(SubscriptionPlan).filter(SubscriptionPlan.name == plan.name).first()
     if existing:
         raise HTTPException(status_code=400, detail="Plan name already exists.")
     
-    db_plan = SubscriptionPlan(**plan.model_dump())
+    dump = plan.model_dump()
+    features = dump.pop("features", None)
+    db_plan = SubscriptionPlan(**dump)
+    if features is not None:
+        db_plan.features_json = json.dumps(features)
     db.add(db_plan)
     db.commit()
     db.refresh(db_plan)
-    return db_plan
+    return _format_plan_dict(db_plan)
 
 @router.get("/plans", response_model=List[SubscriptionPlanResponse])
 def get_all_subscription_plans(db: Session = Depends(get_db)):
-    return db.query(SubscriptionPlan).all()
+    plans = db.query(SubscriptionPlan).all()
+    return [_format_plan_dict(p) for p in plans]
 
 @router.patch("/plans/{plan_id}", response_model=SubscriptionPlanResponse)
 def update_subscription_plan(plan_id: str, updates: SubscriptionPlanUpdate, db: Session = Depends(get_db)):
@@ -125,11 +151,16 @@ def update_subscription_plan(plan_id: str, updates: SubscriptionPlanUpdate, db: 
     if not db_plan:
         raise HTTPException(status_code=404, detail="Subscription plan not found.")
     
-    for key, val in updates.model_dump(exclude_unset=True).items():
+    data = updates.model_dump(exclude_unset=True)
+    if "features" in data:
+        feats = data.pop("features")
+        db_plan.features_json = json.dumps(feats or [])
+
+    for key, val in data.items():
         setattr(db_plan, key, val)
     db.commit()
     db.refresh(db_plan)
-    return db_plan
+    return _format_plan_dict(db_plan)
 
 @router.post("/plans/{plan_id}/clone")
 def clone_subscription_plan(plan_id: str, db: Session = Depends(get_db)):

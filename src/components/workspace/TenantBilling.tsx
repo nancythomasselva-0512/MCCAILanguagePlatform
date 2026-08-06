@@ -384,30 +384,28 @@ export const TenantBilling: React.FC = () => {
                     <div className="h-[1px] bg-slate-200 dark:bg-white/10 w-full mb-6" />
 
                     <ul className="space-y-3.5 text-left w-full">
-                      <li className="flex items-center gap-3">
-                        <CheckCircle2 size={16} className="text-teal-500 flex-shrink-0" />
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                          <strong className="font-extrabold">{p.transcription_limit} mins</strong> Audio Processing
-                        </span>
-                      </li>
-                      <li className="flex items-center gap-3">
-                        <CheckCircle2 size={16} className="text-teal-500 flex-shrink-0" />
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                          <strong className="font-extrabold">{(p.translation_limit / 1000).toFixed(0)}k chars</strong> Translation Limit
-                        </span>
-                      </li>
-                      <li className="flex items-center gap-3">
-                        <CheckCircle2 size={16} className="text-teal-500 flex-shrink-0" />
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                          <strong className="font-extrabold">{(p.tts_limit / 1000).toFixed(0)}k chars</strong> Text-to-Speech (TTS)
-                        </span>
-                      </li>
-                      <li className="flex items-center gap-3">
-                        <CheckCircle2 size={16} className="text-teal-500 flex-shrink-0" />
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                          <strong className="font-extrabold">{p.storage_limit} MB</strong> Cloud Storage
-                        </span>
-                      </li>
+                      {(() => {
+                        const ALL_FEATURE_ITEMS = [
+                          { id: 'audio_processing', label: `${p.transcription_limit} mins Audio Processing` },
+                          { id: 'translation_services', label: `${(p.translation_limit / 1000).toFixed(0)}k chars Translation Services` },
+                          { id: 'text_to_speech', label: `${(p.tts_limit / 1000).toFixed(0)}k chars Text-to-Speech (TTS)` },
+                          { id: 'document_intelligence', label: `Document Intelligence AI` },
+                          { id: 'cloud_storage', label: `${p.storage_limit} MB Cloud Storage & History` },
+                          { id: 'custom_api', label: `Custom API & Webhooks Access` },
+                        ];
+                        const activeFeatures = (p.features && p.features.length > 0)
+                          ? ALL_FEATURE_ITEMS.filter(f => p.features.includes(f.id))
+                          : ALL_FEATURE_ITEMS.slice(0, 4);
+
+                        return activeFeatures.map(feat => (
+                          <li key={feat.id} className="flex items-center gap-3">
+                            <CheckCircle2 size={16} className="text-teal-500 flex-shrink-0" />
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                              {feat.label}
+                            </span>
+                          </li>
+                        ));
+                      })()}
                     </ul>
                   </div>
                 </ThreeDInteractiveCard>

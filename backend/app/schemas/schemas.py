@@ -25,6 +25,7 @@ class SubscriptionPlanBase(BaseModel):
     translation_limit: int
     tts_limit: int
     storage_limit: int
+    features: Optional[List[str]] = None
     active: Optional[bool] = True
 
 class SubscriptionPlanCreate(SubscriptionPlanBase):
@@ -37,11 +38,13 @@ class SubscriptionPlanUpdate(BaseModel):
     translation_limit: Optional[int] = None
     tts_limit: Optional[int] = None
     storage_limit: Optional[int] = None
+    features: Optional[List[str]] = None
     active: Optional[bool] = None
 
 class SubscriptionPlanResponse(SubscriptionPlanBase):
     id: uuid.UUID
     created_at: datetime
+    features: Optional[List[str]] = None
 
     class Config:
         from_attributes = True

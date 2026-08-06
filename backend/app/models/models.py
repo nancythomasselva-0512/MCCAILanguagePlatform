@@ -18,6 +18,7 @@ class SubscriptionPlan(Base):
     translation_limit = Column(Integer, nullable=False, default=50000)  # characters per month
     tts_limit = Column(Integer, nullable=False, default=10000)  # characters per month
     storage_limit = Column(Integer, nullable=False, default=100)  # MBs
+    features_json = Column(Text, nullable=True)  # JSON string of enabled feature keys
     active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 

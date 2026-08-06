@@ -110,7 +110,29 @@ def get_or_create_settings(db: Session) -> BillingSettings:
 @router.get("/plans")
 def get_billing_plans(db: Session = Depends(get_db)):
     """Public list of active plans for subscription selection."""
-    return db.query(SubscriptionPlan).filter(SubscriptionPlan.active == True).order_by(SubscriptionPlan.price.asc()).all()
+    plans = db.query(SubscriptionPlan).filter(SubscriptionPlan.active == True).order_by(SubscriptionPlan.price.asc()).all()
+    default_features = ["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "document_intelligence"]
+    res = []
+    for p in plans:
+        feats = default_features
+        if p.features_json:
+            try:
+                feats = json.loads(p.features_json)
+            except Exception:
+                pass
+        res.append({
+            "id": p.id,
+            "name": p.name,
+            "price": p.price,
+            "transcription_limit": p.transcription_limit,
+            "translation_limit": p.translation_limit,
+            "tts_limit": p.tts_limit,
+            "storage_limit": p.storage_limit,
+            "active": p.active,
+            "created_at": p.created_at,
+            "features": feats
+        })
+    return res
 
 @router.get("/settings")
 def get_billing_settings(db: Session = Depends(get_db)):

@@ -217,6 +217,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   const [editPlanTranslation, setEditPlanTranslation] = useState(0);
   const [editPlanTTS, setEditPlanTTS] = useState(0);
   const [editPlanStorage, setEditPlanStorage] = useState(0);
+  const [editPlanFeatures, setEditPlanFeatures] = useState<string[]>([]);
 
   // Active Dropdowns state
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -1296,6 +1297,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   setEditPlanTranslation(0);
                   setEditPlanTTS(0);
                   setEditPlanStorage(0);
+                  setEditPlanFeatures(["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "document_intelligence"]);
                 }}
                 className="px-5 py-2.5 rounded-xl bg-teal-600/10 dark:bg-teal-600 hover:bg-teal-700 hover:text-slate-800 dark:hover:text-white text-teal-600 dark:text-teal-400 text-xs font-bold uppercase tracking-wider cursor-pointer shadow-sm transition-all active:scale-95 flex items-center gap-1.5 border border-teal-500/20"
               >
@@ -1409,6 +1411,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                             setEditPlanTranslation(p.translation_limit || 0);
                             setEditPlanTTS(p.tts_limit || 0);
                             setEditPlanStorage(p.storage_limit);
+                            setEditPlanFeatures(p.features || ["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "document_intelligence"]);
                           }}
                           className="bg-slate-55/40 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-white py-1.5 rounded-lg text-sm font-bold cursor-pointer border border-slate-200 dark:border-slate-800 flex justify-center items-center active:scale-95 transition-all"
                           title="Edit Plan"
@@ -2840,7 +2843,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               </div>
 
               <div>
-                <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Price ($/mo)</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Price (₹ INR/mo)</label>
                 <input
                   type="number"
                   value={editPlanPrice}
@@ -2851,7 +2854,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Audio Mins</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Audio Mins</label>
                   <input
                     type="number"
                     value={editPlanAudio}
@@ -2860,7 +2863,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Storage (MB)</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Storage (MB)</label>
                   <input
                     type="number"
                     value={editPlanStorage}
@@ -2869,7 +2872,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-bold uppercase tracking-wider text-slate-400">Translation Chars</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Translation Chars</label>
                   <input
                     type="number"
                     value={editPlanTranslation}
@@ -2878,13 +2881,46 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-bold uppercase tracking-wider text-slate-400">TTS Chars</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">TTS Chars</label>
                   <input
                     type="number"
                     value={editPlanTTS}
                     onChange={e => setEditPlanTTS(parseInt(e.target.value))}
                     className="w-full px-3 py-2 mt-1 rounded-xl text-base bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none"
                   />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Included Plan Features (Checkboxes)</label>
+                <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
+                  {[
+                    { id: 'audio_processing', label: 'Audio Processing' },
+                    { id: 'translation_services', label: 'Translation Services' },
+                    { id: 'text_to_speech', label: 'Text-to-Speech (TTS)' },
+                    { id: 'document_intelligence', label: 'Document Intelligence' },
+                    { id: 'cloud_storage', label: 'Cloud Storage & History' },
+                    { id: 'custom_api', label: 'Custom API Access' },
+                  ].map(item => {
+                    const isChecked = editPlanFeatures.includes(item.id);
+                    return (
+                      <label key={item.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 cursor-pointer hover:border-teal-500/50">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setEditPlanFeatures(prev => [...prev, item.id]);
+                            } else {
+                              setEditPlanFeatures(prev => prev.filter(f => f !== item.id));
+                            }
+                          }}
+                          className="accent-teal-500 rounded"
+                        />
+                        <span className="text-slate-800 dark:text-slate-200 text-xs font-bold">{item.label}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -2904,7 +2940,8 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                       transcription_limit: editPlanAudio,
                       translation_limit: editPlanTranslation,
                       tts_limit: editPlanTTS,
-                      storage_limit: editPlanStorage
+                      storage_limit: editPlanStorage,
+                      features: editPlanFeatures
                     })
                   }).then(() => {
                     showToast(isNew ? "Plan created successfully" : "Plan updated successfully", "success");
