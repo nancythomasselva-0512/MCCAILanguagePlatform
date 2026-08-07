@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../utils/api';
+import { useApp } from '../../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, Users, CreditCard, Cpu, Check, 
@@ -7,7 +8,7 @@ import {
   AlertTriangle, Activity, Search, AlertCircle,
   Ban, CheckCircle2,
   TrendingUp, Settings, MoreVertical,
-  ArrowUpRight, Settings2, Edit, Copy, PowerOff, PlayCircle, Lock, Unlock, Mail, Download, RefreshCw, Eye, ToggleLeft, ToggleRight
+  ArrowUpRight, Settings2, Edit, Copy, PowerOff, PlayCircle, Lock, Unlock, Mail, Download, RefreshCw, Eye, ToggleLeft, ToggleRight, Plus
 } from 'lucide-react';
 
 import { PlatformBuilder } from './PlatformBuilder';
@@ -121,7 +122,19 @@ interface SuperAdminDashboardProps {
 }
 
 export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab }) => {
-  const [activeTab, setActiveTab] = useState<TabType>(subTab || 'overview');
+  const { activeTab: globalActiveTab } = useApp();
+
+  const normalizeTab = (raw?: string): TabType => {
+    if (!raw) return 'overview';
+    let clean = raw.startsWith('sa-') ? raw.replace('sa-', '') : raw;
+    if (clean === 'health') return 'system_health';
+    if (clean === 'ai-logs') return 'ai_logs';
+    if (clean === 'audit-logs') return 'audit_logs';
+    if (clean === 'usage') return 'usage_analytics';
+    return clean as TabType;
+  };
+
+  const [activeTab, setActiveTab] = useState<TabType>(() => normalizeTab(subTab || globalActiveTab));
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
@@ -134,13 +147,13 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
     }, 3000);
   };
 
-
-  // Sync internal tab when the global activeTab changes (e.g. after refresh)
+  // Sync internal tab when the global activeTab changes or subTab prop changes
   useEffect(() => {
-    if (subTab && subTab !== activeTab) {
-      setActiveTab(subTab);
+    const target = normalizeTab(subTab || globalActiveTab);
+    if (target && target !== activeTab) {
+      setActiveTab(target);
     }
-  }, [subTab]);
+  }, [subTab, globalActiveTab]);
   const [metrics, setMetrics] = useState<any>(null);
   const [tenants, setTenants] = useState<any[]>([]);
   const [providers, setProviders] = useState<any[]>([]);
@@ -218,6 +231,8 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   const [editPlanTTS, setEditPlanTTS] = useState(0);
   const [editPlanStorage, setEditPlanStorage] = useState(0);
   const [editPlanFeatures, setEditPlanFeatures] = useState<string[]>([]);
+  const [draftPlans, setDraftPlans] = useState<Record<string, { features: string[]; price: number }>>({});
+  const [savingPlanId, setSavingPlanId] = useState<string | null>(null);
 
   // Active Dropdowns state
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -1253,214 +1268,368 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
         </div>
       )}
 
-      {/* ── 4. SUBSCRIPTION PLANS TAB ── */}
+      {/* ── 4. SUBSCRIPTION PLANS & FEATURE MATRIX TAB ── */}
       {activeTab === 'plans' && (
-        <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-white/5 bg-white dark:bg-white dark:bg-[#111827]/40 animate-fadeIn space-y-6">
-          <div className="flex flex-col items-center gap-6 pb-6">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white self-start w-full border-b border-slate-200 dark:border-white/5 pb-3">Subscription Limit Catalog</h3>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setBillingCycle('monthly')}
-                  className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 cursor-pointer ${
-                    billingCycle === 'monthly'
-                      ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
-                      : 'bg-white/70 dark:bg-slate-900 text-slate-500 border border-teal-200/60 dark:border-white/10 hover:border-teal-300 dark:hover:border-white/30'
-                  }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setBillingCycle('yearly')}
-                  className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 flex items-center gap-2 cursor-pointer ${
-                    billingCycle === 'yearly'
-                      ? 'bg-teal-500 text-white shadow-[0_4px_14px_rgba(20,184,166,0.4)]'
-                      : 'bg-white/70 dark:bg-slate-900 text-slate-500 border border-teal-200/60 dark:border-white/10 hover:border-teal-300 dark:hover:border-white/30'
-                  }`}
-                >
-                  Yearly
-                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider ${
-                    billingCycle === 'yearly' ? 'bg-white/30 text-white' : 'bg-emerald-100 text-emerald-600 border border-emerald-200'
-                  }`}>
-                    Save 30%
-                  </span>
-                </button>
+        <div className="space-y-8 animate-fadeIn">
+          {/* Top Banner Header */}
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 p-8 sm:p-10 border border-indigo-500/20 shadow-2xl text-white">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+              <div className="space-y-2">
+                <span className="px-3.5 py-1 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 text-[10px] font-black uppercase tracking-widest shadow-sm inline-flex items-center gap-1.5">
+                  <Sparkles size={12} className="text-teal-400" />
+                  PLANS & FEATURE CHECKBOXES MANAGER
+                </span>
+                <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                  Subscription Plans & Feature Matrix
+                </h2>
+                <p className="text-sm text-slate-300 max-w-2xl font-medium">
+                  Create new pricing plans, edit existing monthly/yearly pricing, and check/uncheck included tools & features for each plan.
+                </p>
               </div>
 
-              <button
-                onClick={() => {
-                  setEditingPlan({ id: 'new', name: '', price: 0, transcription_limit: 0, translation_limit: 0, tts_limit: 0, storage_limit: 0, isNew: true });
-                  setEditPlanName('');
-                  setEditPlanPrice(0);
-                  setEditPlanAudio(0);
-                  setEditPlanTranslation(0);
-                  setEditPlanTTS(0);
-                  setEditPlanStorage(0);
-                  setEditPlanFeatures(["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "document_intelligence"]);
-                }}
-                className="px-5 py-2.5 rounded-xl bg-teal-600/10 dark:bg-teal-600 hover:bg-teal-700 hover:text-slate-800 dark:hover:text-white text-teal-600 dark:text-teal-400 text-xs font-bold uppercase tracking-wider cursor-pointer shadow-sm transition-all active:scale-95 flex items-center gap-1.5 border border-teal-500/20"
-              >
-                <span>+ Create Plan</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => loadData()}
+                  className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 cursor-pointer border border-white/10 backdrop-blur-md active:scale-95"
+                >
+                  <RefreshCw size={14} className="text-teal-400" />
+                  RECALL PLANS
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingPlan({ id: 'new', name: '', price: 0, transcription_limit: 0, translation_limit: 0, tts_limit: 0, storage_limit: 0, isNew: true });
+                    setEditPlanName('');
+                    setEditPlanPrice(0);
+                    setEditPlanAudio(0);
+                    setEditPlanTranslation(0);
+                    setEditPlanTTS(0);
+                    setEditPlanStorage(0);
+                    setEditPlanFeatures(["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "doc_ocr"]);
+                  }}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white text-xs font-black uppercase tracking-wider transition-all duration-200 shadow-lg shadow-teal-500/25 flex items-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <Plus size={16} />
+                  CREATE NEW PLAN
+                </button>
+              </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          {/* Per-Plan Stacked Feature Matrix Cards */}
+          <div className="space-y-8">
             {[...plans]
               .map(p => {
-                if (p.name === 'Professional') return { ...p, name: 'Premium' };
-                return p;
+                if (p.name === 'Professional') return { ...p, displayName: 'PROFESSIONAL' };
+                return { ...p, displayName: (p.name || '').toUpperCase() };
               })
-              .filter(p => p.name === 'Free' || p.name === 'Starter' || p.name === 'Premium')
               .sort((a, b) => a.price - b.price)
               .map((p) => {
-                const activeCustomers = p.name === 'Free' ? 12 : p.name === 'Starter' ? 8 : 4;
-                const revenueGenerated = activeCustomers * p.price;
-                
-                const monthlyPrice = p.price;
-                const yearlyPerMonth = +(p.price * 0.7).toFixed(0);
-                const displayPrice = billingCycle === 'yearly' ? yearlyPerMonth : monthlyPrice;
+                const ALL_PLATFORM_FEATURES = [
+                  // 🎤 Voice-to-Text (Live Microphone)
+                  { id: 'v2t_live', label: 'Live Speech Capture & Auto-Translate to English', category: '🎤 Voice-to-Text' },
+                  { id: 'v2t_vocab', label: 'Custom Speech Vocabulary & Noise Filtering', category: '🎤 Voice-to-Text' },
+                  { id: 'v2t_export', label: 'Real-time Transcript Export (SRT/VTT)', category: '🎤 Voice-to-Text' },
 
-                const subtitle = p.name === 'Free' ? 'Individual (Trial)' : p.name === 'Starter' ? 'Individual' : 'Business';
-                const iconName = p.name === 'Free' ? 'box' : p.name === 'Starter' ? 'trending' : 'diamond';
+                  // 🗣️ Text-to-Voice (TTS)
+                  { id: 't2v_neural', label: 'Neural Multi-Speaker Voices', category: '🗣️ Text-to-Voice' },
+                  { id: 't2v_controls', label: 'Pitch, Speed & Accent Controls', category: '🗣️ Text-to-Voice' },
+                  { id: 't2v_download', label: 'HD Audio Download (WAV / MP3)', category: '🗣️ Text-to-Voice' },
+
+                  // 📄 Text & Document Translation
+                  { id: 'trans_instant', label: 'Instant Multi-Language Text Translation', category: '📄 Document Translation' },
+                  { id: 'doc_5pages', label: 'Document Upload (Up to 5 Pages)', category: '📄 Document Translation' },
+                  { id: 'doc_25pages', label: 'Document Upload (Up to 25 Pages / Large Files)', category: '📄 Document Translation' },
+                  { id: 'doc_parallel', label: 'High-Speed Parallel Document Chunking', category: '📄 Document Translation' },
+
+                  // 🎵 Audio Transcribe & WhatsApp Voice Notes
+                  { id: 'audio_whatsapp', label: 'WhatsApp Audio Transcribe (.ogg/.m4a)', category: '🎵 Audio Transcription' },
+                  { id: 'audio_long', label: 'Long Audio Files (Up to 60+ mins)', category: '🎵 Audio Transcription' },
+                  { id: 'audio_timestamps', label: 'Automated Timestamps & Word Counts', category: '🎵 Audio Transcription' },
+
+                  // 💾 Storage & Advanced
+                  { id: 'cloud_storage', label: 'Cloud Storage & Activity History', category: '💾 Storage & API' },
+                  { id: 'custom_api', label: 'Custom API & Webhooks Access', category: '💾 Storage & API' },
+                ];
+
+                const defaultFeatures: string[] = (p.features && p.features.length > 0)
+                  ? p.features
+                  : ['v2t_live', 't2v_neural', 'trans_instant', 'doc_5pages', 'audio_whatsapp', 'cloud_storage'];
+
+                const draft = draftPlans[p.id];
+                const currentFeatures: string[] = draft?.features ?? defaultFeatures;
+                const monthlyPrice = draft?.price ?? p.price;
+                const yearlyPrice = +(monthlyPrice * 10).toFixed(0);
+
+                const hasUnsavedChanges = draft !== undefined;
+                const isSaving = savingPlanId === p.id;
+
+                const isPopular = p.name === 'Professional' || p.displayName === 'PROFESSIONAL';
+
+                const handleToggleFeature = (featId: string) => {
+                  const updated = currentFeatures.includes(featId)
+                    ? currentFeatures.filter(f => f !== featId)
+                    : [...currentFeatures, featId];
+
+                  setDraftPlans(prev => ({
+                    ...prev,
+                    [p.id]: {
+                      features: updated,
+                      price: monthlyPrice
+                    }
+                  }));
+                };
+
+                const handleToggleAll = () => {
+                  const allIds = ALL_PLATFORM_FEATURES.map(f => f.id);
+                  const updated = currentFeatures.length === allIds.length ? [] : allIds;
+
+                  setDraftPlans(prev => ({
+                    ...prev,
+                    [p.id]: {
+                      features: updated,
+                      price: monthlyPrice
+                    }
+                  }));
+                };
+
+                const handleUpdatePrices = (mPrice: number) => {
+                  setDraftPlans(prev => ({
+                    ...prev,
+                    [p.id]: {
+                      features: currentFeatures,
+                      price: mPrice
+                    }
+                  }));
+                };
+
+                const handleSaveChanges = () => {
+                  setSavingPlanId(p.id);
+                  apiRequest(`/super-admin/plans/${p.id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                      features: currentFeatures,
+                      price: monthlyPrice
+                    })
+                  }).then(() => {
+                    showToast(`Successfully saved changes for ${p.name} plan!`, 'success');
+                    setDraftPlans(prev => {
+                      const copy = { ...prev };
+                      delete copy[p.id];
+                      return copy;
+                    });
+                    loadData();
+                  }).catch(() => {
+                    showToast(`Failed to save changes for ${p.name} plan`, 'error');
+                  }).finally(() => {
+                    setSavingPlanId(null);
+                  });
+                };
 
                 return (
-                  <div 
+                  <div
                     key={p.id}
-                    className="flex flex-col justify-between transition-all duration-300 relative overflow-hidden rounded-[2.5rem] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 shadow-xl max-w-[340px] mx-auto w-full"
-                    style={{ minHeight: '520px' }}
+                    className={`rounded-[2.5rem] bg-white dark:bg-slate-950 border transition-all duration-300 p-6 sm:p-8 shadow-xl space-y-6 relative ${
+                      isPopular
+                        ? 'border-teal-500/60 ring-2 ring-teal-500/20 shadow-teal-500/10'
+                        : 'border-slate-200 dark:border-slate-800'
+                    }`}
                   >
-                    <div className="bg-slate-50 dark:bg-slate-900/40 p-6 pt-8 pb-8 flex flex-col items-center relative border-b-4 border-emerald-500 rounded-b-[2rem]">
-                      <div className="flex justify-between items-start w-full mb-1">
-                        <div className="text-left">
-                          <div className="flex items-center gap-1.5">
-                            <h4 className="text-xl font-extrabold text-slate-900 dark:text-white">{p.name}</h4>
-                            {p.name === 'Free' && (
-                              <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-[8px] font-black uppercase tracking-wider rounded-md shadow-sm">
-                                7 Days
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{subtitle}</p>
+                    {/* Header Bar */}
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 border-b border-slate-100 dark:border-slate-800/80 pb-6">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                            {p.displayName}
+                          </h3>
+                          {isPopular && (
+                            <span className="px-3 py-0.5 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-[9px] font-black uppercase tracking-widest shadow-sm">
+                              ★ RECOMMENDED
+                            </span>
+                          )}
+                          {!p.active && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[9px] font-bold uppercase tracking-wider">
+                              INACTIVE
+                            </span>
+                          )}
+                          {hasUnsavedChanges && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30 text-[9px] font-black uppercase tracking-wider animate-pulse">
+                              UNSAVED CHANGES
+                            </span>
+                          )}
                         </div>
-                        <div className="text-emerald-500 opacity-80">
-                          {iconName === 'box' && <Building2 size={24} />}
-                          {iconName === 'trending' && <TrendingUp size={24} />}
-                          {iconName === 'diamond' && <Sparkles size={24} />}
-                        </div>
-                      </div>
-
-                      <div className="flex items-baseline justify-center gap-1 mt-6">
-                        <span className="text-4xl font-black text-slate-900 dark:text-white">${displayPrice}</span>
-                        <span className="text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider">/ Month</span>
-                      </div>
-
-                      {billingCycle === 'yearly' && p.price > 0 && (
-                        <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mt-1.5">
-                          Billed as ${(displayPrice * 12).toFixed(0)} / year
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                          {p.name === 'Starter' || p.name === 'Free'
+                            ? 'Under 1,000 requests monthly volume'
+                            : p.name === 'Professional'
+                            ? 'Under 50,000 requests monthly volume'
+                            : 'Enterprise scale & high capacity requests'}
                         </p>
-                      )}
+                      </div>
 
-                      <div className="mt-3">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                          p.active ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-500 border border-red-550/20'
-                        }`}>
-                          {p.active ? 'Active' : 'Disabled'}
-                        </span>
+                      {/* Pricing & Control Inputs */}
+                      <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+                        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-2xl border border-slate-200/80 dark:border-slate-800">
+                          <div className="text-right">
+                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">MONTHLY PRICE</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-bold text-slate-500">₹</span>
+                              <input
+                                type="number"
+                                value={monthlyPrice}
+                                onChange={(e) => handleUpdatePrices(parseFloat(e.target.value) || 0)}
+                                className="w-20 px-2 py-1 text-sm font-black bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white text-center outline-none focus:border-teal-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-3">
+                            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">YEARLY PRICE</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-bold text-slate-500">₹</span>
+                              <input
+                                type="number"
+                                value={yearlyPrice}
+                                disabled
+                                className="w-24 px-2 py-1 text-sm font-black bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-500 dark:text-slate-400 text-center outline-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {hasUnsavedChanges && (
+                            <button
+                              onClick={handleSaveChanges}
+                              disabled={isSaving}
+                              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-teal-500/25 flex items-center gap-2 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+                            >
+                              {isSaving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                              <span>Save Changes</span>
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              setEditingPlan(p);
+                              setEditPlanName(p.name);
+                              setEditPlanPrice(p.price);
+                              setEditPlanAudio(p.transcription_limit);
+                              setEditPlanTranslation(p.translation_limit || 0);
+                              setEditPlanTTS(p.tts_limit || 0);
+                              setEditPlanStorage(p.storage_limit);
+                              setEditPlanFeatures(currentFeatures);
+                            }}
+                            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all border border-slate-200 dark:border-slate-800 cursor-pointer"
+                            title="Edit Limits"
+                          >
+                            <Edit size={16} />
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              apiRequest(`/super-admin/plans/${p.id}/toggle-active`, { method: "PATCH" }).then(() => {
+                                showToast(`Plan ${p.active ? "disabled" : "enabled"}`, "success");
+                                loadData();
+                              });
+                            }}
+                            className={`px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                              p.active
+                                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30'
+                                : 'bg-slate-200 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-slate-700'
+                            }`}
+                          >
+                            {p.active ? 'ACTIVE' : 'INACTIVE'}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="p-6 flex-1 flex flex-col justify-between">
-                      <ul className="space-y-3.5 mb-6 text-left">
-                        <li className="flex items-center gap-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                          <Check size={14} className="text-emerald-500 shrink-0 stroke-[3]" />
-                          <span className="font-extrabold text-slate-900 dark:text-white mr-0.5">{p.transcription_limit} mins</span> Audio Transcriptions
-                        </li>
-                        <li className="flex items-center gap-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                          <Check size={14} className="text-emerald-500 shrink-0 stroke-[3]" />
-                          <span className="font-extrabold text-slate-900 dark:text-white mr-0.5">{(p.translation_limit || 0).toLocaleString()}</span> Translation Chars
-                        </li>
-                        <li className="flex items-center gap-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                          <Check size={14} className="text-emerald-500 shrink-0 stroke-[3]" />
-                          <span className="font-extrabold text-slate-900 dark:text-white mr-0.5">{(p.tts_limit || 0).toLocaleString()}</span> TTS Voice Chars
-                        </li>
-                        <li className="flex items-center gap-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                          <Check size={14} className="text-emerald-500 shrink-0 stroke-[3]" />
-                          <span className="font-extrabold text-slate-900 dark:text-white mr-0.5">{p.storage_limit} MB</span> Cloud Storage
-                        </li>
-                      </ul>
-
-                      <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-                        <div className="flex justify-between">
-                          <span>Active Workspaces:</span>
-                          <span className="text-slate-900 dark:text-white">{activeCustomers}</span>
+                    {/* Included Tools & Features Matrix Section */}
+                    <div className="space-y-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-teal-500" />
+                          <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                            INCLUDED ACCESSIBILITY TOOLS & FEATURES ({currentFeatures.length} / {ALL_PLATFORM_FEATURES.length})
+                          </h4>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Revenue Generated:</span>
-                          <span className="text-emerald-600 dark:text-emerald-500">${revenueGenerated.toLocaleString()}/mo</span>
+
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={handleToggleAll}
+                            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-extrabold uppercase tracking-wider border border-slate-200 dark:border-slate-800 cursor-pointer transition-all active:scale-95"
+                          >
+                            {currentFeatures.length === ALL_PLATFORM_FEATURES.length ? 'DESELECT ALL' : 'SELECT ALL'}
+                          </button>
+
+                          {hasUnsavedChanges && (
+                            <button
+                              onClick={handleSaveChanges}
+                              disabled={isSaving}
+                              className="px-5 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-teal-500/25 flex items-center gap-2 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+                            >
+                              {isSaving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                              <span>Save Changes</span>
+                            </button>
+                          )}
                         </div>
                       </div>
 
-                      <div className="mt-5 grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                        <button 
-                          onClick={() => {
-                            setEditingPlan(p);
-                            setEditPlanName(p.name);
-                            setEditPlanPrice(p.price);
-                            setEditPlanAudio(p.transcription_limit);
-                            setEditPlanTranslation(p.translation_limit || 0);
-                            setEditPlanTTS(p.tts_limit || 0);
-                            setEditPlanStorage(p.storage_limit);
-                            setEditPlanFeatures(p.features || ["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "document_intelligence"]);
-                          }}
-                          className="bg-slate-55/40 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-white py-1.5 rounded-lg text-sm font-bold cursor-pointer border border-slate-200 dark:border-slate-800 flex justify-center items-center active:scale-95 transition-all"
-                          title="Edit Plan"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        
-                        <button 
-                          onClick={() => {
-                            setConfirmDialog({
-                              isOpen: true,
-                              title: "Delete Plan",
-                              message: "Are you sure you want to delete this plan? Workspaces using this plan might be affected.",
-                              confirmText: "Yes, Delete Plan",
-                              cancelText: "Cancel",
-                              onConfirm: () => {
-                                apiRequest(`/super-admin/plans/${p.id}`, { method: "DELETE" }).then(() => {
-                                  showToast("Plan deleted successfully.", "success");
-                                  loadData();
-                                }).catch(err => {
-                                  showToast(err.message || "Failed to delete plan", "error");
-                                }).finally(() => {
-                                  setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-                                });
-                              }
-                            });
-                          }}
-                          className="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 py-1.5 rounded-lg text-sm font-bold cursor-pointer flex justify-center items-center border border-red-200/50 dark:border-red-950/30 active:scale-95 transition-all"
-                          title="Delete"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-
-                        <button 
-                          onClick={() => handleTogglePlanActive(p.id)}
-                          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out place-self-center ${
-                            p.active ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'
-                          }`}
-                          title={p.active ? "Disable" : "Enable"}
-                        >
-                          <span className="sr-only">Toggle Plan</span>
-                          <span
-                            aria-hidden="true"
-                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                              p.active ? 'translate-x-5' : 'translate-x-0'
-                            }`}
-                          />
-                        </button>
+                      {/* Checkbox Pills Grid Grouped by Tool Category */}
+                      <div className="space-y-5 pt-2">
+                        {Array.from(new Set(ALL_PLATFORM_FEATURES.map(f => f.category))).map(cat => {
+                          const catFeatures = ALL_PLATFORM_FEATURES.filter(f => f.category === cat);
+                          return (
+                            <div key={cat} className="space-y-2.5">
+                              <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800/60 pb-1">
+                                <span>{cat}</span>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                {catFeatures.map(feat => {
+                                  const isChecked = currentFeatures.includes(feat.id);
+                                  return (
+                                    <div
+                                      key={feat.id}
+                                      onClick={() => handleToggleFeature(feat.id)}
+                                      className={`flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all duration-200 cursor-pointer select-none ${
+                                        isChecked
+                                          ? 'bg-teal-500/10 dark:bg-teal-950/30 border-teal-500/40 text-slate-900 dark:text-white shadow-sm'
+                                          : 'bg-slate-50/60 dark:bg-slate-900/30 border-slate-200/80 dark:border-slate-800/80 text-slate-400 opacity-60 hover:opacity-100'
+                                      }`}
+                                    >
+                                      <span className="text-xs font-bold leading-tight">{feat.label}</span>
+                                      <div
+                                        className={`w-5 h-5 rounded-lg flex items-center justify-center border transition-all flex-shrink-0 ${
+                                          isChecked
+                                            ? 'bg-teal-500 border-teal-500 text-white shadow-sm'
+                                            : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'
+                                        }`}
+                                      >
+                                        {isChecked && <CheckCircle2 size={14} className="text-white" />}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
+
+                      {/* Bottom Save Bar inside Card */}
+                      {hasUnsavedChanges && (
+                        <div className="pt-3 flex justify-end">
+                          <button
+                            onClick={handleSaveChanges}
+                            disabled={isSaving}
+                            className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-teal-500/30 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+                          >
+                            {isSaving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                            <span>Save Changes for {p.displayName}</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

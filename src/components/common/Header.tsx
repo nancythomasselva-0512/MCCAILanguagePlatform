@@ -134,9 +134,9 @@ export const Header: React.FC = () => {
           : '0 4px 20px -1px rgba(0, 0, 0, 0.04)',
       }}
     >
-      <div className={`w-full flex h-20 md:h-24 items-center justify-between px-4 sm:px-6 ${viewMode === 'workspace' ? 'w-full px-4 md:px-8' : 'max-w-7xl mx-auto'}`}>
+      <div className={`w-full flex h-12 sm:h-14 md:h-16 items-center justify-between px-3 sm:px-6 min-w-0 gap-2 sm:gap-4 overflow-hidden ${viewMode === 'workspace' ? 'w-full px-3 sm:px-6 md:px-8' : 'max-w-7xl mx-auto'}`}>
 
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0 overflow-hidden flex-shrink">
           {viewMode !== 'workspace' ? (
             <div
               className="flex cursor-pointer items-center gap-0"
@@ -145,23 +145,23 @@ export const Header: React.FC = () => {
               <img
                 src={"/logo.png?v=2"}
                 alt="Logo"
-                className="h-16 w-16 min-w-[64px] md:h-20 md:w-20 md:min-w-[80px] object-contain transform scale-125 origin-center -ml-2 -mr-4 hover:scale-[1.35] transition-transform duration-200 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180"
+                className="h-8 w-8 sm:h-10 sm:w-10 min-w-[32px] sm:min-w-[40px] md:h-11 md:w-11 md:min-w-[44px] object-contain transform scale-110 origin-center -ml-1 -mr-2 hover:scale-[1.2] transition-transform duration-200 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180"
               />
-              <div className="flex flex-col justify-center select-none">
-                <span className="font-display text-xl md:text-2xl font-black tracking-tight leading-none text-emerald-900 dark:text-emerald-50 flex items-center gap-1">
+              <div className="flex flex-col justify-center select-none min-w-0">
+                <span className="font-display text-sm sm:text-base md:text-lg font-black tracking-tight leading-none text-emerald-900 dark:text-emerald-50 flex items-center gap-1 truncate">
                   {globalConfig?.branding?.platform_name || "Fluentia"}
                 </span>
-                <span className="text-[8px] md:text-[10px] font-bold tracking-[0.2em] uppercase mt-1 text-teal-600 dark:text-teal-400">
+                <span className="text-[6px] sm:text-[7px] md:text-[8.5px] font-bold tracking-[0.2em] uppercase mt-0.5 text-teal-600 dark:text-teal-400 truncate">
                   {globalConfig?.branding?.tagline || "AI Language Platform"}
                 </span>
               </div>
             </div>
           ) : (
-            <div className="hidden md:flex flex-col justify-center animate-fadeIn">
-              <span className="font-display text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <div className="flex flex-col justify-center animate-fadeIn min-w-0 overflow-hidden">
+              <span className="font-display text-xs sm:text-sm md:text-base font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
                 Welcome back, {user?.name?.split(' ')[0] || 'User'} 👋
               </span>
-              <span className="text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400 mt-1 uppercase">
+              <span className="hidden xl:block text-[9px] lg:text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 uppercase truncate">
                 Ready to conquer the day and create something amazing
               </span>
             </div>
@@ -170,12 +170,12 @@ export const Header: React.FC = () => {
 
         {/* Center: Desktop Nav Menu (Only shown on Landing Page) */}
         {viewMode !== 'workspace' && (
-          <nav className="hidden md:flex items-center justify-center gap-6">
+          <nav className="hidden md:flex items-center justify-center gap-5">
             {menuItems.map((item: any) => (
               <button
                 key={item.id}
                 onClick={() => navigateToSection(item.id)}
-                className="relative text-sm md:text-base font-bold transition-all duration-200 text-[#F0FDFA] dark:text-[#F0FDFA] hover:text-emerald-400 py-1.5 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-emerald-400 after:transition-all after:duration-200 after:ease-out"
+                className="relative text-xs md:text-sm font-bold transition-all duration-200 text-slate-800 dark:text-[#F0FDFA] hover:text-teal-600 dark:hover:text-emerald-400 py-1 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-teal-600 dark:after:bg-emerald-400 after:transition-all after:duration-200 after:ease-out"
               >
                 {item.label}
               </button>
@@ -184,19 +184,19 @@ export const Header: React.FC = () => {
         )}
 
         {/* Right: Actions */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
           {viewMode === 'workspace' && (
-            <div className="relative w-64 lg:w-80 transition-all mr-2">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <Search size={16} className="text-slate-400 dark:text-slate-500" />
+            <div className="relative w-28 sm:w-44 md:w-56 lg:w-72 xl:w-80 transition-all mr-1 flex-shrink min-w-[100px]">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={14} className="text-slate-400 dark:text-slate-500" />
               </div>
               <input
                 type="text"
-                placeholder="Search tools, history..."
+                placeholder="Search tools..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearch}
-                className="block w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-white/10 rounded-full leading-5 bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 sm:text-sm shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900/80"
+                className="block w-full pl-8 pr-3 py-1 border border-slate-200 dark:border-white/10 rounded-full leading-5 bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-xs shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900/80"
               />
             </div>
           )}
@@ -207,7 +207,7 @@ export const Header: React.FC = () => {
               e.preventDefault();
               toggleTheme();
             }}
-            className="flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex-shrink-0"
             style={{
               background: theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)',
               border: '1px solid var(--border-base)',
@@ -216,16 +216,16 @@ export const Header: React.FC = () => {
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             aria-label="Toggle theme"
           >
-            {theme === 'light' ? <Moon size={18} className="transition-transform duration-300 hover:rotate-12" /> : <Sun size={18} className="transition-transform duration-300 hover:rotate-45" />}
+            {theme === 'light' ? <Moon size={15} className="transition-transform duration-300 hover:rotate-12" /> : <Sun size={15} className="transition-transform duration-300 hover:rotate-45" />}
           </button>
 
           {/* Auth Buttons or User Menu */}
           {(user && viewMode === 'workspace') ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
               {/* Active Workspace / Open Workspace Button */}
               <button
                 onClick={() => handleLaunchWorkspace()}
-                className={`group flex items-center gap-2 rounded-full px-5 py-2 text-sm font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer`}
+                className={`hidden md:flex items-center gap-2 rounded-full px-3.5 sm:px-4 py-1 sm:py-1.5 text-xs font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex-shrink-0`}
                 style={{
                   background: viewMode === 'workspace'
                     ? (theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.08)')
@@ -235,19 +235,19 @@ export const Header: React.FC = () => {
                 }}
               >
                 <span className={`h-2 w-2 rounded-full ${viewMode === 'workspace' ? 'bg-emerald-500 animate-pulse' : 'bg-teal-500'}`} />
-                <span>{viewMode === 'workspace' ? 'Workspace Active' : 'Go to Workspace'}</span>
+                <span className="whitespace-nowrap">{viewMode === 'workspace' ? 'Workspace Active' : 'Go to Workspace'}</span>
               </button>
 
               {viewMode === 'workspace' && (
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-2 rounded-full p-1 pr-3 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 sm:gap-2 rounded-full p-1 pr-2 sm:pr-3 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer flex-shrink-0"
                   >
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-teal-600 to-emerald-500 text-white flex items-center justify-center text-xs font-black border border-white/10 uppercase select-none">
+                    <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gradient-to-br from-teal-600 to-emerald-500 text-white flex items-center justify-center text-xs font-black border border-white/10 uppercase select-none flex-shrink-0">
                       {user.name ? user.name.charAt(0) : 'U'}
                     </div>
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 max-w-[100px] truncate">
+                    <span className="hidden sm:inline-block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 max-w-[70px] sm:max-w-[100px] truncate">
                       {user.name}
                     </span>
                     <ChevronDown size={14} className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
@@ -322,7 +322,7 @@ export const Header: React.FC = () => {
               {/* Single Combined Auth Button */}
               <button
                 onClick={() => handleOpenAuth('login')}
-                className="group flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                className="group flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 style={{
                   background: 'linear-gradient(135deg, #0D9488, #10B981)',
                   color: '#ffffff',
@@ -331,7 +331,7 @@ export const Header: React.FC = () => {
                 }}
               >
                 <span>Sign In / Sign Up</span>
-                <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+                <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
               </button>
             </div>
           )}

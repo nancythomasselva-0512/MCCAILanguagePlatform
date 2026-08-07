@@ -98,7 +98,6 @@ function App() {
 
   return (
     <div className="flex min-h-screen flex-col" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
-      {viewMode === 'landing' && <Header />}
       <AuthModal />
       <AnimatePresence mode="wait">
         {viewMode === 'landing' ? (

@@ -4,7 +4,7 @@ import {
   Mic, Volume2, Languages, FileAudio, ArrowRight, Sparkles,
   Zap, Globe, Shield, Clock, Star, ChevronRight, Play,
   CheckCircle2, Users, BarChart3, Headphones, Plus, Activity,
-  Server, Database, ArrowRightLeft, FileCode, X,
+  Server, Database, ArrowRightLeft, FileCode, X, Menu,
   Mail, Phone, MapPin
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -12,6 +12,48 @@ import type { ActiveTabType } from '../../context/AppContext';
 import { HeroNeuralSphere } from './HeroNeuralSphere';
 import { AnimatedCounter } from './AnimatedCounter';
 import { NeuralBackground } from './NeuralBackground';
+import { HeroShaderBackground } from './HeroShaderBackground';
+
+// ── STARBURST COMPASS ICON FOR PARTNER BADGE ─────────────────────────────────
+const StarburstIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-5 h-5 sm:w-6 sm:h-6 fill-current text-[#E8704E] shrink-0">
+    <path d="m19.6 66.5 19.7-11 .3-1-.3-.5h-1l-3.3-.2-11.2-.3L14 53l-9.5-.5-2.4-.5L0 49l.2-1.5 2-1.3 2.9.2 6.3.5 9.5.6 6.9.4L38 49.1h1.6l.2-.7-.5-.4-.4-.4L29 41l-10.6-7-5.6-4.1-3-2-1.5-2-.6-4.2 2.7-3 3.7.3.9.2 3.7 2.9 8 6.1L37 36l1.5 1.2.6-.4.1-.3-.7-1.1L33 25l-6-10.4-2.7-4.3-.7-2.6c-.3-1-.4-2-.4-3l3-4.2L28 0l4.2.6L33.8 2l2.6 6 4.1 9.3L47 29.9l2 3.8 1 3.4.3 1h.7v-.5l.5-7.2 1-8.7 1-11.2.3-3.2 1.6-3.8 3-2L61 2.6l2 2.9-.3 1.8-1.1 7.7L59 27.1l-1.5 8.2h.9l1-1.1 4.1-5.4 6.9-8.6 3-3.5L77 13l2.3-1.8h4.3l3.1 4.7-1.4 4.9-4.4 5.6-3.7 4.7-5.3 7.1-3.2 5.7.3.4h.7l12-2.6 6.4-1.1 7.6-1.3 3.5 1.6.4 1.6-1.4 3.4-8.2 2-9.6 2-14.3 3.3-.2.1.2.3 6.4.6 2.8.2h6.8l12.6 1 3.3 2 1.9 2.7-.3 2-5.1 2.6-6.8-1.6-16-3.8-5.4-1.3h-.8v.4l4.6 4.5 8.3 7.5L89 80.1l.5 2.4-1.3 2-1.4-.2-9.2-7-3.6-3-8-6.8h-.5v.7l1.8 2.7 9.8 14.7.5 4.5-.7 1.4-2.6 1-2.7-.6-5.8-8-6-9-4.7-8.2-.5.4-2.9 30.2-1.3 1.5-3 1.2-2.5-2-1.4-3 1.4-6.2 1.6-8 1.3-6.4 1.2-7.9.7-2.6v-.2H49L43 72l-9 12.3-7.2 7.6-1.7.7-3-1.5.3-2.8L24 86l10-12.8 6-7.9 4-4.6-.1-.5h-.3L17.2 77.4l-4.7.6-2-2 .2-3 1-1 8-5.5Z"/>
+  </svg>
+);
+
+// ── TEXT ROLL HOVER BUTTON COMPONENT ─────────────────────────────────────────
+const TextRollButton = ({
+  text,
+  onClick,
+  bgClass = "bg-gray-900 text-white",
+  iconBgClass = "bg-white text-gray-900",
+  arrowColorClass = "",
+  paddingClass = "pl-5 pr-2 py-2"
+}: {
+  text: string;
+  onClick?: () => void;
+  bgClass?: string;
+  iconBgClass?: string;
+  arrowColorClass?: string;
+  paddingClass?: string;
+}) => (
+  <button
+    onClick={onClick}
+    className={`group relative inline-flex items-center gap-3 rounded-full font-medium text-[13px] sm:text-[14px] cursor-pointer ${bgClass} ${paddingClass} transition-all duration-300 shadow-md`}
+  >
+    <div className="flex flex-col h-[20px] overflow-hidden leading-[20px]">
+      <span className="transform group-hover:-translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)]">
+        {text}
+      </span>
+      <span className="transform group-hover:-translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)]">
+        {text}
+      </span>
+    </div>
+    <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center transition-transform duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] group-hover:-rotate-45 ${iconBgClass}`}>
+      <ArrowRight size={14} className={arrowColorClass} />
+    </div>
+  </button>
+);
 
 // ── CUSTOM 3D INTERACTIVE CARD COMPONENT ──────────────────────────────────────
 interface ThreeDInteractiveCardProps {
@@ -172,6 +214,41 @@ export const LandingPage: React.FC = () => {
   const { user, setViewMode, setActiveTab, globalConfig, setIsAuthModalOpen, setAuthModalMode, logout } = useApp();
   const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [dbPlans, setDbPlans] = useState<any[]>([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [londonTime, setLondonTime] = useState('');
+
+  useEffect(() => {
+    fetch('/api/billing/plans')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setDbPlans(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const updateTime = () => {
+      try {
+        const formatter = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/London',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        setLondonTime(formatter.format(new Date()));
+      } catch (e) {
+        const d = new Date();
+        setLondonTime(`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`);
+      }
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const launchTool = (tab: ActiveTabType) => {
     setActiveTab(tab);
     if (user) logout(); // Wipe session to force re-login
@@ -181,106 +258,332 @@ export const LandingPage: React.FC = () => {
 
   return (
     <main id="landing" className="overflow-x-hidden relative min-h-screen text-slate-900 dark:text-slate-100" style={{ background: 'var(--bg-base)' }}>
-      {/* ── LIVE BACKGROUND EFFECTS ── */}
-      <NeuralBackground />
-
-      {/* ── HERO SECTION (MASSIVE HIGH-CONTRAST OVERHAUL) ────────────────────── */}
-      <section className="relative min-h-[96vh] flex items-center justify-center pt-12 pb-16 overflow-hidden border-b border-[#DDE5F0] dark:border-white/5">
+      {/* ── SECTION 1: HERO (Full viewport height) ───────────────────────────── */}
+      <section className="relative min-h-screen h-[100vh] h-[100svh] flex flex-col justify-between overflow-hidden bg-[#EFEFEF] dark:bg-[#080d18] text-gray-900 dark:text-white border-b border-gray-200 dark:border-white/5">
         
-        {/* Soft grid background */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border-base)_1px,transparent_1px),linear-gradient(to_bottom,var(--border-base)_1px,transparent_1px)] bg-[size:40px_40px] opacity-25 dark:opacity-10 pointer-events-none" />
-        
-        {/* Soft blur auroras */}
-        <div className="absolute top-[15%] right-[-15%] w-[50%] h-[50%] rounded-full blur-[180px] opacity-20 dark:opacity-15 bg-radial from-emerald-500 via-teal-400 to-transparent pointer-events-none" />
-        <div className="absolute bottom-[10%] left-[-15%] w-[50%] h-[50%] rounded-full blur-[180px] opacity-20 dark:opacity-15 bg-radial from-teal-500 via-cyan-400 to-transparent pointer-events-none" />
+        {/* Full-screen Animated Shader Overlay */}
+        <HeroShaderBackground />
 
-        <div className="mx-auto max-w-7xl w-full px-4 sm:px-6 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          {/* Left Text Block */}
-          <div className="lg:col-span-7 flex flex-col justify-center text-left">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, ease: 'easeOut' }}
-            >
-              {/* Badges block */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md bg-teal-500/10 dark:bg-teal-500/10 border border-teal-500/30 text-teal-700 dark:text-teal-400">
-                  <Activity size={10} className="animate-pulse" /> Real-Time AI
+        {/* Navigation (z-20 relative) */}
+        <header className="relative z-20 w-full max-w-[1440px] mx-auto p-2 sm:p-3">
+          <nav className="bg-white dark:bg-slate-900 rounded-full p-[5px] shadow-md border border-slate-200 dark:border-white/10 flex items-center justify-between">
+            {/* LEFT */}
+            <div className="flex items-center gap-3 pl-1">
+              <button
+                onClick={() => {
+                  if (user) logout();
+                  setAuthModalMode('login');
+                  setIsAuthModalOpen(true);
+                }}
+                className="flex items-center gap-2.5 cursor-pointer"
+              >
+                <img src="/logo.png?v=2" alt="Logo" className="h-7 w-7 sm:h-8 sm:w-8 object-contain brightness-125" />
+                <span className="font-extrabold text-sm sm:text-base tracking-tight text-gray-900 dark:text-white">
+                  {globalConfig?.branding?.platform_name || 'MCC AI'}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 dark:text-cyan-400">
-                  +2M Users
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md bg-lime-500/10 border border-lime-500/30 text-lime-700 dark:text-lime-400">
-                  99.2% Accuracy
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
-                  100+ Languages
-                </span>
+              </button>
+              <div className="hidden md:flex items-center gap-6 text-[14px] font-medium text-gray-900 dark:text-gray-100 pl-4">
+                <a href="#ai-language-tools" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">AI Tools</a>
+                <a href="#about-studio" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">Capabilities</a>
+                <a href="#pricing" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">Pricing</a>
+                <a href="#contact" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">Contact</a>
               </div>
+            </div>
 
-              {/* Title Word Reveal Sequence matching screenshot */}
-              <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-[76px] font-black leading-[1.05] tracking-tight text-white mb-4">
-                {globalConfig?.branding?.platform_name || 'Fluentia'} -{' '}
-                <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent font-black block mt-1">
-                  {globalConfig?.branding?.tagline || 'AI Language Platform'}
-                </span>
-              </h1>
+            {/* RIGHT */}
+            <div className="hidden md:flex items-center gap-4 pr-1">
+              <span className="text-[13px] text-emerald-600 dark:text-emerald-400 font-semibold hidden lg:flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                Engine Status: Online
+              </span>
+              <div className="flex items-center gap-1.5 text-[13px] text-gray-600 dark:text-gray-400 font-normal">
+                <Clock size={14} className="text-gray-500 shrink-0" />
+                <span>{londonTime || '12:00'} in London</span>
+              </div>
+              <TextRollButton
+                text="Launch AI Workstation"
+                onClick={() => {
+                  if (user) logout();
+                  setAuthModalMode('login');
+                  setIsAuthModalOpen(true);
+                }}
+              />
+            </div>
 
-              <p className="text-xl sm:text-2xl text-slate-100 max-w-2xl mb-3 font-bold tracking-tight">
-                {globalConfig?.branding?.footer_text || 'Powering Next-Gen Language AI'}
-              </p>
-              
-              <p className="text-sm sm:text-base md:text-lg text-slate-300 max-w-2xl mb-8 leading-relaxed font-medium">
-                Experience high-performance, local client-side transcription, multi-speaker voice synthesis, and real-time document translations. Complete workspace capability loaded into a premium desktop layout.
-              </p>
+            {/* MOBILE MENU TOGGLE */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden bg-gray-900 text-white rounded-full p-2.5 flex items-center justify-center"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </nav>
+        </header>
+
+        {/* MOBILE MENU OVERLAY */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col justify-end"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white dark:bg-slate-900 rounded-2xl mx-3 mb-3 p-6 shadow-2xl space-y-6"
+              >
+                <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-4">
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <Clock size={14} />
+                    <span>{londonTime} in London</span>
+                  </div>
+                  <button onClick={() => setMobileMenuOpen(false)} className="text-gray-500">
+                    <X size={20} />
+                  </button>
+                </div>
+                <div className="flex flex-col space-y-4 text-[28px] font-medium text-gray-900 dark:text-white">
+                  <a href="#ai-language-tools" onClick={() => setMobileMenuOpen(false)}>AI Tools</a>
+                  <a href="#about-studio" onClick={() => setMobileMenuOpen(false)}>Capabilities</a>
+                  <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
+                  <a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+                </div>
+                <TextRollButton
+                  text="Launch AI Workstation"
+                  bgClass="bg-[#F26522] hover:bg-[#e05a1a] text-white w-full justify-between"
+                  arrowColorClass="text-[#F26522]"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    if (user) logout();
+                    setAuthModalMode('login');
+                    setIsAuthModalOpen(true);
+                  }}
+                />
+              </motion.div>
             </motion.div>
+          )}
+        </AnimatePresence>
 
-            {/* Launch Call To Actions with Magnetic/Scale effects */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-              <button
-                id="hero-launch-btn"
-                onClick={() => { 
-                  if (user) logout(); // Wipe session to force re-login
-                  setAuthModalMode('login'); 
-                  setIsAuthModalOpen(true); 
-                }}
-                className="group flex items-center justify-center gap-2.5 rounded-full px-8 py-4 text-base font-extrabold text-white transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] cursor-pointer shadow-lg"
-                style={{ 
-                  background: 'linear-gradient(135deg, #0D9488, #10B981)', 
-                }}
-              >
-                <Play size={16} className="fill-current" />
-                Launch Workstation
-                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-              </button>
-              <button
-                id="hero-explore-btn"
+        {/* Hero Content (z-20) */}
+        <div className="relative z-20 max-w-[1440px] w-full mx-auto px-5 sm:px-8 lg:px-12 pb-14 sm:pb-16 lg:pb-20 flex-1 flex flex-col justify-end">
+          <p className="text-[13px] sm:text-[14px] text-gray-900 dark:text-gray-100 tracking-wide font-semibold mb-5 sm:mb-8 uppercase">
+            [ {globalConfig?.branding?.platform_name || 'MCC AI'} LANGUAGE PLATFORM ]
+          </p>
+
+          <h1 className="text-[clamp(1.75rem,7vw,4.2rem)] sm:text-[clamp(2.5rem,5vw,4.2rem)] font-medium leading-[1.08] tracking-[-0.03em] text-gray-900 dark:text-white max-w-5xl">
+            {globalConfig?.branding?.platform_name || 'MCC AI'} — Next-Gen{' '}
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> </span>
+            AI Language Platform for Voice,{' '}
+            <br className="hidden sm:block" />
+            <span className="sm:hidden"> </span>
+            Speech & Real-Time Translation.
+          </h1>
+
+          <p className="mt-4 text-sm sm:text-base text-gray-700 dark:text-gray-300 max-w-2xl font-medium leading-relaxed">
+            Local client-side Whisper transcription, multi-speaker neural voice synthesis, and zero-latency document translation loaded into a high-performance desktop workstation.
+          </p>
+
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
+            <TextRollButton
+              text="Launch AI Workstation"
+              bgClass="bg-[#F26522] hover:bg-[#e05a1a] text-white"
+              arrowColorClass="text-[#F26522]"
+              paddingClass="pl-5 sm:pl-6 pr-2 py-2"
+              onClick={() => {
+                if (user) logout();
+                setAuthModalMode('login');
+                setIsAuthModalOpen(true);
+              }}
+            />
+
+            <div className="bg-white dark:bg-slate-900 rounded-[4px] px-3.5 py-2 flex items-center gap-2 border border-slate-200 dark:border-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-shadow duration-300 cursor-pointer">
+              <StarburstIcon />
+              <span className="text-[13px] sm:text-[14px] font-medium text-gray-900 dark:text-white">
+                Certified AI Engine
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-bold bg-gray-900 text-white px-1.5 sm:px-2 py-0.5 rounded ml-1">
+                v2.4 Active
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 2: ABOUT ─────────────────────────────────────────────────── */}
+      <section id="about-studio" className="bg-white dark:bg-[#030712] pt-16 sm:pt-20 lg:pt-32 pb-12 sm:pb-16 lg:pb-24 overflow-hidden border-b border-gray-100 dark:border-white/5">
+        <div className="max-w-[1440px] mx-auto">
+          {/* Badge Row */}
+          <div className="px-5 sm:px-8 lg:px-12 flex items-center gap-3 mb-6 sm:mb-8">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-900 text-white text-[11px] sm:text-[12px] font-semibold flex items-center justify-center">
+              1
+            </div>
+            <span className="text-[12px] sm:text-[13px] font-medium border border-gray-200 dark:border-white/10 text-gray-900 dark:text-gray-100 rounded-full px-3 sm:px-4 py-1 sm:py-1.5">
+              Introducing {globalConfig?.branding?.platform_name || 'MCC AI'} Engine
+            </span>
+          </div>
+
+          {/* Heading h2 */}
+          <h2 className="text-[clamp(1.5rem,4vw,3.2rem)] font-medium leading-[1.12] tracking-[-0.02em] text-gray-900 dark:text-white mb-12 sm:mb-16 lg:mb-28 px-5 sm:px-8 lg:px-12">
+            Neural speech processing, delivering{' '}
+            <br className="hidden sm:block" />
+            unmatched accuracy across 100+ languages.
+          </h2>
+
+          {/* DESKTOP LAYOUT (lg:grid) */}
+          <div className="hidden lg:grid grid-cols-[26%_1fr_48%] items-end gap-6 xl:gap-8 px-5 sm:px-8 lg:px-12">
+            {/* Left Col: Small Image */}
+            <div className="self-end overflow-hidden rounded-2xl aspect-[438/346] shadow-lg group">
+              <img
+                src="https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260516_090123_74be96d4-9c1b-40cf-932a-96f4f4babed3.png&w=1280&q=85"
+                alt="AI Speech Intelligence"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+
+            {/* Center Col: Paragraph + Button */}
+            <div className="self-start flex flex-col justify-end items-start pb-2">
+              <p className="text-[16px] xl:text-[18px] leading-[1.65] font-medium text-gray-900 dark:text-gray-200 mb-6">
+                Through deep learning models, <br />
+                client-side Whisper processing, and <br />
+                neural voice cloning, we empower global teams.
+              </p>
+              <TextRollButton
+                text="Explore AI Modules"
+                bgClass="bg-[#F26522] hover:bg-[#e05a1a] text-white"
+                arrowColorClass="text-[#F26522]"
                 onClick={() => document.getElementById('ai-language-tools')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-extrabold transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] text-slate-900 dark:text-white bg-white/70 dark:bg-white/5 border border-[#DDE5F0] dark:border-white/10 hover:bg-white dark:hover:bg-white/10 hover:border-teal-500/20 backdrop-blur-md cursor-pointer"
-              >
-                Explore Modules
-                <ChevronRight size={16} />
-              </button>
+              />
             </div>
-            
-            <div className="mt-8 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-bold">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-              <span>Model status: Online</span>
-              <span className="mx-2 text-[#DDE5F0] dark:text-white/10">|</span>
-              <span>All 4 networks sandbox validated</span>
+
+            {/* Right Col: Large Image */}
+            <div className="self-end overflow-hidden rounded-2xl aspect-[3/2] shadow-lg group">
+              <img
+                src="https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260516_090133_c157d30b-a99a-4477-bec1-a446149ec3f2.png&w=1280&q=85"
+                alt="Language Workstation"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
             </div>
           </div>
 
-          {/* Right 3D Visualizer block */}
-          <div className="lg:col-span-5 flex justify-center items-center relative min-h-[460px] xl:min-h-[500px]">
-            
-            {/* 3D Neural Sphere */}
-            <div className="relative z-10 w-full max-w-[420px] aspect-square flex items-center justify-center">
-              <HeroNeuralSphere />
+          {/* MOBILE/TABLET LAYOUT (lg:hidden) */}
+          <div className="lg:hidden px-5 sm:px-8 space-y-8">
+            <p className="text-[15px] sm:text-[17px] leading-[1.6] font-medium text-gray-900 dark:text-gray-200">
+              Through deep learning models, client-side Whisper processing, and neural voice cloning, we empower global teams to automate language workflows.
+            </p>
+            <TextRollButton
+              text="Explore AI Modules"
+              bgClass="bg-[#F26522] hover:bg-[#e05a1a] text-white"
+              arrowColorClass="text-[#F26522]"
+              onClick={() => document.getElementById('ai-language-tools')?.scrollIntoView({ behavior: 'smooth' })}
+            />
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 pt-4">
+              <div className="sm:w-[45%] aspect-[438/346] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
+                <img
+                  src="https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260516_090123_74be96d4-9c1b-40cf-932a-96f4f4babed3.png&w=1280&q=85"
+                  alt="AI Speech Intelligence"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="sm:w-[55%] aspect-[900/600] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
+                <img
+                  src="https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260516_090133_c157d30b-a99a-4477-bec1-a446149ec3f2.png&w=1280&q=85"
+                  alt="Language Workstation"
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
+      {/* ── SECTION 3: CASE STUDIES / FEATURED AI MODULES ─────────────────────── */}
+      <section id="ai-language-tools" className="bg-[#F5F5F5] dark:bg-[#090f1d] pt-16 sm:pt-20 lg:pt-28 pb-16 sm:pb-20 lg:pb-28">
+        <div className="max-w-[1440px] mx-auto">
+          {/* Badge Row */}
+          <div className="px-5 sm:px-8 lg:px-12 flex items-center gap-3 mb-6 sm:mb-8">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-900 text-white text-[11px] sm:text-[12px] font-semibold flex items-center justify-center">
+              2
+            </div>
+            <span className="text-[12px] sm:text-[13px] font-medium border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 rounded-full px-3 sm:px-4 py-1 sm:py-1.5">
+              Featured AI Workstations
+            </span>
+          </div>
+
+          {/* Heading h2 */}
+          <h2 className="text-[clamp(1.75rem,7vw,4.2rem)] sm:text-[clamp(2.5rem,5vw,4.2rem)] font-medium leading-[1.08] tracking-[-0.03em] text-gray-900 dark:text-white mb-10 sm:mb-14 lg:mb-16 px-5 sm:px-8 lg:px-12">
+            Our AI Modules
+          </h2>
+
+          {/* Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 lg:gap-7 px-5 sm:px-8 lg:px-12">
+            
+            {/* CARD 1: Voice to Text */}
+            <div className="flex flex-col group cursor-pointer" onClick={() => launchTool('voice-to-text')}>
+              <div className="aspect-[329/246] rounded-2xl overflow-hidden bg-[#1a1d2e] relative shadow-md">
+                <video
+                  src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260516_122702_390f5305-8719-41d5-ae80-d23ab3796c28.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Expanding Hover Pill Button */}
+                <div className="absolute bottom-4 left-4 h-9 w-9 group-hover:w-[154px] rounded-full bg-white shadow-lg flex items-center justify-between px-2.5 transition-all duration-300 ease-in-out overflow-hidden z-20">
+                  <span className="text-[13px] font-medium text-gray-900 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
+                    Launch Voice AI
+                  </span>
+                  <svg className="w-3.5 h-3.5 text-gray-900 transform -rotate-45 group-hover:rotate-0 transition-transform duration-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                </div>
+              </div>
+              <p className="text-[13px] sm:text-[14px] text-gray-600 dark:text-gray-400 mt-4 leading-relaxed">
+                Real-time client-side speech recognition with automatic timestamp alignment and multi-speaker detection.
+              </p>
+              <h3 className="text-[14px] sm:text-[15px] font-semibold text-gray-900 dark:text-white mt-1">
+                Voice-to-Text & Audio Transcription
+              </h3>
+            </div>
+
+            {/* CARD 2: Translation */}
+            <div className="flex flex-col group cursor-pointer" onClick={() => launchTool('translation')}>
+              <div className="aspect-square rounded-2xl overflow-hidden bg-[#6b6b6b] relative shadow-md">
+                <video
+                  src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260516_123323_f909c2b8-ff6c-4edf-882b-8ebcdbe389b5.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Expanding Hover Pill Button */}
+                <div className="absolute bottom-4 left-4 h-9 w-9 group-hover:w-[168px] rounded-full bg-gray-900 text-white shadow-lg flex items-center justify-between px-2.5 transition-all duration-300 ease-in-out overflow-hidden z-20">
+                  <span className="text-[13px] font-medium text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 delay-100">
+                    Launch Translator
+                  </span>
+                  <ArrowRight size={14} className="text-white transform -rotate-45 group-hover:rotate-0 transition-transform duration-300 shrink-0" />
+                </div>
+              </div>
+              <p className="text-[13px] sm:text-[14px] text-gray-600 dark:text-gray-400 mt-4 leading-relaxed">
+                Neural machine translation supporting 100+ global languages with formatting retention and speech playback.
+              </p>
+              <h3 className="text-[14px] sm:text-[15px] font-semibold text-gray-900 dark:text-white mt-1">
+                Real-Time Multi-Lingual Translation
+              </h3>
+            </div>
+
+          </div>
         </div>
       </section>
 
@@ -904,36 +1207,76 @@ export const LandingPage: React.FC = () => {
             </button>
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Premium Plan Details</h3>
             
-            <div className="space-y-4">
-              <div className="p-4 border border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
-                <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">Starter Plan - {billingCycle === "yearly" ? "$13/mo" : "$19/mo"}</h4>
-                <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1">
-                  <li>• 60 minutes of audio processing</li>
-                  <li>• 100,000 characters translation</li>
-                  <li>• 50,000 characters Text-to-Speech</li>
-                  <li>• Secure isolated storage included</li>
-                </ul>
-              </div>
-              
-              <div className="p-4 border border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
-                <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">Professional Plan - {billingCycle === "yearly" ? "$34/mo" : "$49/mo"}</h4>
-                <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1">
-                  <li>• 300 minutes of audio processing</li>
-                  <li>• 500,000 characters translation</li>
-                  <li>• 250,000 characters Text-to-Speech</li>
-                  <li>• Secure isolated storage included</li>
-                </ul>
-              </div>
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+              {(() => {
+                const FEATURE_LABEL_MAP: Record<string, string> = {
+                  v2t_live: `Live Voice-to-Text Speech Capture`,
+                  v2t_vocab: 'Custom Speech Vocabulary & Noise Filtering',
+                  v2t_export: 'Real-time Transcript Export (SRT/VTT)',
+                  t2v_neural: `Neural Multi-Speaker Voices`,
+                  t2v_controls: 'Pitch, Speed & Accent Controls',
+                  t2v_download: 'HD Audio Download (WAV / MP3)',
+                  trans_instant: `Instant Multi-Language Translation`,
+                  doc_5pages: 'Document Upload (Up to 5 Pages)',
+                  doc_25pages: 'Document Upload (Up to 25 Pages)',
+                  doc_parallel: 'High-Speed Parallel Document Chunking',
+                  audio_whatsapp: 'WhatsApp Audio Transcribe (.ogg/.m4a)',
+                  audio_long: 'Long Audio Processing (60+ mins)',
+                  audio_timestamps: 'Automated Timestamps & Word Counts',
+                  cloud_storage: `Cloud Storage & History`,
+                  custom_api: 'Custom API & Webhooks Access',
 
-              <div className="p-4 border border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
-                <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">Enterprise Plan - {billingCycle === "yearly" ? "$104/mo" : "$149/mo"}</h4>
-                <ul className="text-sm text-slate-600 dark:text-slate-300 space-y-1">
-                  <li>• 1200 minutes of audio processing</li>
-                  <li>• 2,000,000 characters translation</li>
-                  <li>• 1,000,000 characters Text-to-Speech</li>
-                  <li>• Secure isolated storage included</li>
-                </ul>
-              </div>
+                  audio_processing: `Live Voice-to-Text Speech Capture`,
+                  translation_services: `Fast Multi-Language Translation`,
+                  text_to_speech: `Voice Synthesis TTS`,
+                  read_aloud: 'Read Aloud & Audio Narration',
+                  whatsapp_audio: 'WhatsApp Audio Transcribe (.ogg/.m4a)',
+                  doc_ocr: 'Document OCR & PDF Intelligence',
+                  auto_detect: 'Multi-Language Auto Detection',
+                  custom_vocab: 'Custom AI Vocabulary & Glossary',
+                  parallel_chunks: 'High-Speed Parallel Processing',
+                  font_selector: 'Dynamic Font Family Selector',
+                  theme_toggle: 'Dark / Light Glassmorphism Theme',
+                  audio_export: 'Export HD Audio (WAV / MP3)',
+                  srt_vtt_export: 'Export Subtitles (SRT / VTT)',
+                  enterprise_support: '24/7 Dedicated Enterprise Support',
+                  tenant_branding: 'Custom Tenant Domain & Branding',
+                  audit_logs: 'Security & Audit Logging',
+                  high_priority_queue: 'High Priority Processing Queue',
+                  unlimited_history: 'Unlimited Activity History'
+                };
+
+                const plansToDisplay = dbPlans.length > 0 ? dbPlans : [
+                  { id: '1', name: 'Starter', price: 19, transcription_limit: 60, translation_limit: 100000, tts_limit: 50000, storage_limit: 500, features: ['v2t_live', 't2v_neural', 'trans_instant', 'doc_5pages', 'audio_whatsapp', 'cloud_storage'] },
+                  { id: '2', name: 'Professional', price: 49, transcription_limit: 300, translation_limit: 500000, tts_limit: 250000, storage_limit: 5000, features: ['v2t_live', 'v2t_vocab', 'v2t_export', 't2v_neural', 't2v_controls', 't2v_download', 'trans_instant', 'doc_25pages', 'audio_whatsapp', 'audio_long', 'cloud_storage'] },
+                  { id: '3', name: 'Enterprise', price: 149, transcription_limit: 1200, translation_limit: 2000000, tts_limit: 1000000, storage_limit: 10000, features: ['v2t_live', 'v2t_vocab', 'v2t_export', 't2v_neural', 't2v_controls', 't2v_download', 'trans_instant', 'doc_25pages', 'doc_parallel', 'audio_whatsapp', 'audio_long', 'audio_timestamps', 'cloud_storage', 'custom_api'] }
+                ];
+
+                return plansToDisplay.map((plan: any) => {
+                  const mPrice = plan.price;
+                  const displayPrice = billingCycle === "yearly" ? `₹${(mPrice * 10).toFixed(0)}/yr` : `₹${mPrice}/mo`;
+                  const featureLabels = (plan.features && plan.features.length > 0)
+                    ? plan.features.map((fId: string) => FEATURE_LABEL_MAP[fId] || fId)
+                    : [`${plan.transcription_limit} mins Voice-to-Text`, `Instant Translation`, `Text-to-Voice TTS`, `${plan.storage_limit} MB Storage`];
+
+                  return (
+                    <div key={plan.id} className="p-5 border border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-800/50 space-y-3">
+                      <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
+                        <h4 className="font-extrabold text-lg text-slate-900 dark:text-white">{plan.name} Plan</h4>
+                        <span className="text-base font-black text-teal-600 dark:text-teal-400">{displayPrice}</span>
+                      </div>
+                      <ul className="text-xs text-slate-700 dark:text-slate-300 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {featureLabels.map((featText: string, fIdx: number) => (
+                          <li key={fIdx} className="flex items-center gap-2">
+                            <CheckCircle2 size={14} className="text-teal-500 flex-shrink-0" />
+                            <span>{featText}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>

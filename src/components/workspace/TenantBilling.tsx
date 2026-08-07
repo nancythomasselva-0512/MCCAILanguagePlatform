@@ -383,25 +383,65 @@ export const TenantBilling: React.FC = () => {
 
                     <div className="h-[1px] bg-slate-200 dark:bg-white/10 w-full mb-6" />
 
-                    <ul className="space-y-3.5 text-left w-full">
+                    <ul className="space-y-3 text-left w-full">
                       {(() => {
-                        const ALL_FEATURE_ITEMS = [
-                          { id: 'audio_processing', label: `${p.transcription_limit} mins Audio Processing` },
-                          { id: 'translation_services', label: `${(p.translation_limit / 1000).toFixed(0)}k chars Translation Services` },
-                          { id: 'text_to_speech', label: `${(p.tts_limit / 1000).toFixed(0)}k chars Text-to-Speech (TTS)` },
-                          { id: 'document_intelligence', label: `Document Intelligence AI` },
-                          { id: 'cloud_storage', label: `${p.storage_limit} MB Cloud Storage & History` },
-                          { id: 'custom_api', label: `Custom API & Webhooks Access` },
-                        ];
-                        const activeFeatures = (p.features && p.features.length > 0)
-                          ? ALL_FEATURE_ITEMS.filter(f => p.features.includes(f.id))
-                          : ALL_FEATURE_ITEMS.slice(0, 4);
+                        const FEATURE_LABEL_MAP: Record<string, string> = {
+                          v2t_live: `Live Voice-to-Text (${p.transcription_limit} mins)`,
+                          v2t_vocab: 'Custom Speech Vocabulary & Noise Filtering',
+                          v2t_export: 'Real-time Transcript Export (SRT/VTT)',
+                          t2v_neural: `Text-to-Voice TTS (${(p.tts_limit / 1000).toFixed(0)}k chars)`,
+                          t2v_controls: 'Pitch, Speed & Accent Controls',
+                          t2v_download: 'HD Audio Download (WAV / MP3)',
+                          trans_instant: `Instant Translation (${(p.translation_limit / 1000).toFixed(0)}k chars)`,
+                          doc_5pages: 'Document Upload (Up to 5 Pages)',
+                          doc_25pages: 'Document Upload (Up to 25 Pages)',
+                          doc_parallel: 'High-Speed Parallel Document Chunking',
+                          audio_whatsapp: 'WhatsApp Audio Transcribe (.ogg/.m4a)',
+                          audio_long: 'Long Audio Processing (60+ mins)',
+                          audio_timestamps: 'Automated Timestamps & Word Counts',
+                          cloud_storage: `${p.storage_limit} MB Cloud Storage`,
+                          custom_api: 'Custom API & Webhooks Access',
 
-                        return activeFeatures.map(feat => (
-                          <li key={feat.id} className="flex items-center gap-3">
+                          // Legacy IDs
+                          audio_processing: `Live Voice-to-Text (${p.transcription_limit} mins)`,
+                          translation_services: `Multi-Language Translation (${(p.translation_limit / 1000).toFixed(0)}k chars)`,
+                          text_to_speech: `Voice Synthesis TTS (${(p.tts_limit / 1000).toFixed(0)}k chars)`,
+                          read_aloud: 'Read Aloud & Audio Narration',
+                          whatsapp_audio: 'WhatsApp Audio Transcribe (.ogg/.m4a)',
+                          doc_ocr: 'Document OCR & PDF Intelligence',
+                          auto_detect: 'Multi-Language Auto Detection',
+                          custom_vocab: 'Custom AI Vocabulary & Glossary',
+                          parallel_chunks: 'High-Speed Parallel Processing',
+                          font_selector: 'Dynamic Font Family Selector',
+                          theme_toggle: 'Dark / Light Glassmorphism Theme',
+                          audio_export: 'Export HD Audio (WAV / MP3)',
+                          srt_vtt_export: 'Export Subtitles (SRT / VTT)',
+                          enterprise_support: '24/7 Dedicated Enterprise Support',
+                          tenant_branding: 'Custom Tenant Domain & Branding',
+                          audit_logs: 'Security & Audit Logging',
+                          high_priority_queue: 'High Priority Processing Queue',
+                          unlimited_history: 'Unlimited Activity History'
+                        };
+
+                        let labels: string[] = [];
+
+                        if (p.features && p.features.length > 0) {
+                          labels = p.features.map((fId: string) => FEATURE_LABEL_MAP[fId] || fId);
+                        } else {
+                          labels = [
+                            `Live Voice-to-Text (${p.transcription_limit} mins)`,
+                            `Text-to-Voice TTS (${(p.tts_limit / 1000).toFixed(0)}k chars)`,
+                            `Instant Translation (${(p.translation_limit / 1000).toFixed(0)}k chars)`,
+                            `WhatsApp Audio Transcribe (.ogg/.m4a)`,
+                            `${p.storage_limit} MB Cloud Storage`
+                          ];
+                        }
+
+                        return labels.map((labelStr, idx) => (
+                          <li key={idx} className="flex items-center gap-3">
                             <CheckCircle2 size={16} className="text-teal-500 flex-shrink-0" />
                             <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                              {feat.label}
+                              {labelStr}
                             </span>
                           </li>
                         ));

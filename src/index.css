@@ -143,27 +143,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Scrollbar */
+/* ─── Globally Hide Scrollbar Thumb/Track (Scrolling remains 100% active) ─── */
+* {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(3, 7, 18, 0.5);
+  background: transparent !important;
+  display: none !important;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 99px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: transparent !important;
+  display: none !important;
 }
 
 /* ─── Premium Glassmorphism Classes ─────────────────────────────────────────── */
@@ -600,13 +600,18 @@ body {
 }
 
 /* Scrollbar hide utility */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.scrollbar-hide,
+.custom-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+.scrollbar-hide::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
 }
 
 /* ─── Legacy compatibility shims ─────────────────────────────────────────────── */
@@ -756,4 +761,19 @@ input[type="range"]::-moz-range-thumb {
   height: 14px;
   width: 14px;
   box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+}
+
+/* Liquid glass utilities */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.05);
+}
+
+.liquid-glass-strong {
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.08);
 }

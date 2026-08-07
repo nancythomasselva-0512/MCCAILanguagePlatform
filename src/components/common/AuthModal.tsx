@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { X, Mail, Lock, Sparkles, CheckCircle2, Eye, EyeOff, Globe, User as UserIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useGoogleLogin } from '@react-oauth/google';
+import { motion, AnimatePresence } from 'framer-motion';
+import './EchoidAuth.css';
 
 export const AuthModal: React.FC = () => {
   const {
@@ -12,6 +12,7 @@ export const AuthModal: React.FC = () => {
     setAuthModalMode,
     login: saveLoginSession,
     setViewMode,
+    globalConfig
   } = useApp();
 
   const [email, setEmail] = useState('');
@@ -19,14 +20,47 @@ export const AuthModal: React.FC = () => {
   const [name, setName] = useState('');
   const [tenantName, setTenantName] = useState('');
   const [tenantSlug, setTenantSlug] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  const platformName = globalConfig?.branding?.platform_name || 'Fluentia';
+  const taglineText = globalConfig?.branding?.tagline || 'AI Language Platform';
+  const footerText = globalConfig?.branding?.footer_text || 'Powering Next-Gen Language AI';
+
+  // Update page title when modal opens
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      document.title = `${platformName} — ${taglineText}`;
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isAuthModalOpen, platformName, taglineText]);
+
+  // Handle ESC key to close
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isAuthModalOpen) {
+        if (mobileMenuOpen) {
+          setMobileMenuOpen(false);
+        } else {
+          handleClose(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAuthModalOpen, mobileMenuOpen]);
+
   const handleClose = (force = false) => {
     setIsAuthModalOpen(false);
+    setMobileMenuOpen(false);
     if (!force) {
       setTimeout(() => {
         setError('');
@@ -75,7 +109,7 @@ export const AuthModal: React.FC = () => {
 
         if (!response.ok) {
           const errData = await response.json();
-          const msg = Array.isArray(errData.detail) ? errData.detail.map((e: any) => e.msg || 'Invalid field').join(', ') : (errData.detail || "Google Sign-In failed.");
+          const msg = Array.isArray(data.detail) ? data.detail.map((e: any) => e.msg || 'Invalid field').join(', ') : (errData.detail || "Google Sign-In failed.");
           throw new Error(msg);
         }
 
@@ -102,6 +136,10 @@ export const AuthModal: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email) {
+      setError('Please enter your email address.');
+      return;
+    }
     setError('');
     setIsLoading(true);
 
@@ -115,7 +153,7 @@ export const AuthModal: React.FC = () => {
             slug: (tenantSlug || name || 'workspace').toLowerCase().replace(/[^a-z0-9]/g, ''),
             admin_name: name || 'Admin',
             admin_email: email,
-            admin_password: password
+            admin_password: password || 'defaultpass123'
           })
         });
 
@@ -137,7 +175,7 @@ export const AuthModal: React.FC = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             username: email,
-            password: password
+            password: password || 'defaultpass123'
           })
         });
 
@@ -162,252 +200,264 @@ export const AuthModal: React.FC = () => {
     }
   };
 
+  if (!isAuthModalOpen) return null;
+
   return (
     <AnimatePresence>
-      {isAuthModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          {/* Backdrop Blur Overlay */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => handleClose(false)}
-            className="absolute inset-0 bg-[#050A18]/80 backdrop-blur-md z-0"
-          />
-
-          {/* Modal Container Card */}
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 15 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 15 }}
-            transition={{ type: "spring", duration: 0.35 }}
-            className="relative z-10 w-full max-w-[420px] overflow-hidden rounded-[28px] border border-slate-700/50 bg-[#0B132B] p-7 shadow-2xl text-white"
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
+        className="echoid-hero"
+      >
+        {/* Full-bleed Background Video Layer */}
+        <div className="echoid-media">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            poster="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260806_132328_5f9029c8-218f-4489-82b6-29ff2849920e.png"
           >
-            {/* Close Button */}
-            <button
-              onClick={() => handleClose(false)}
-              className="absolute top-5 right-5 flex h-8 w-8 items-center justify-center rounded-full bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer z-20"
-            >
-              <X size={16} />
-            </button>
-
-            <AnimatePresence mode="wait">
-              {isSuccess ? (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex flex-col items-center justify-center py-10 text-center"
-                >
-                  <div className="rounded-full bg-emerald-500/20 p-4 text-emerald-400 mb-4">
-                    <CheckCircle2 size={48} className="animate-pulse" />
-                  </div>
-                  <h3 className="text-xl font-bold tracking-tight mb-2 text-white">
-                    {authModalMode === 'tenant-signup' ? 'Workspace Registered!' : 'Welcome Back'}
-                  </h3>
-                  <p className="text-xs text-slate-300">
-                    {authModalMode === 'tenant-signup'
-                      ? "Your workspace is ready. Please sign in to continue."
-                      : "Redirecting to your language workstation..."}
-                  </p>
-                  <div className="w-10 h-1 bg-emerald-500 rounded-full mt-6 animate-pulse" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="form"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  {/* Header Title */}
-                  <div className="text-center mb-5">
-                    <h2 className="text-2xl font-bold tracking-tight text-white">
-                      {authModalMode === 'tenant-signup' ? 'Register Workspace' : 'Sign in to platform'}
-                    </h2>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Access high-speed transcription & language models.
-                    </p>
-                  </div>
-
-                  {/* Mode Switcher Tabs */}
-                  <div className="grid grid-cols-2 p-1 bg-[#131D3B] rounded-2xl mb-5 border border-slate-700/40">
-                    <button
-                      type="button"
-                      onClick={() => setAuthModalMode('login')}
-                      className={`py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
-                        authModalMode === 'login'
-                          ? 'bg-[#1E294B] text-white shadow-sm border border-slate-600/40'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      Sign In
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAuthModalMode('tenant-signup')}
-                      className={`py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
-                        authModalMode === 'tenant-signup'
-                          ? 'bg-[#1E294B] text-white shadow-sm border border-slate-600/40'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      Register Workspace
-                    </button>
-                  </div>
-
-                  {error && (
-                    <div className="mb-4 p-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 text-xs font-medium flex items-center gap-2">
-                      <X size={14} className="shrink-0 cursor-pointer" onClick={() => setError('')} />
-                      <span>{error}</span>
-                    </div>
-                  )}
-
-                  {/* Form */}
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    {authModalMode === 'tenant-signup' && (
-                      <>
-                        <div>
-                          <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5">
-                            WORKSPACE NAME
-                          </label>
-                          <div className="relative flex items-center bg-[#131D3B]/80 border border-slate-700/50 rounded-xl overflow-hidden focus-within:border-emerald-500 transition-colors">
-                            <Globe size={15} className="ml-3.5 text-slate-400 shrink-0" />
-                            <input
-                              type="text"
-                              required
-                              value={tenantName}
-                              onChange={(e) => {
-                                setTenantName(e.target.value);
-                                setTenantSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''));
-                              }}
-                              placeholder="Acme Corp"
-                              className="w-full pl-3 pr-4 py-2.5 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5">
-                            FULL NAME
-                          </label>
-                          <div className="relative flex items-center bg-[#131D3B]/80 border border-slate-700/50 rounded-xl overflow-hidden focus-within:border-emerald-500 transition-colors">
-                            <UserIcon size={15} className="ml-3.5 text-slate-400 shrink-0" />
-                            <input
-                              type="text"
-                              required
-                              value={name}
-                              onChange={(e) => setName(e.target.value)}
-                              placeholder="John Doe"
-                              className="w-full pl-3 pr-4 py-2.5 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"
-                            />
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    <div>
-                      <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5">
-                        EMAIL ADDRESS
-                      </label>
-                      <div className="relative flex items-center bg-[#131D3B]/80 border border-slate-700/50 rounded-xl overflow-hidden focus-within:border-emerald-500 transition-colors">
-                        <Mail size={15} className="ml-3.5 text-slate-400 shrink-0" />
-                        <input
-                          type="email"
-                          required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="you@example.com"
-                          className="w-full pl-3 pr-4 py-2.5 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-1.5">
-                        PASSWORD
-                      </label>
-                      <div className="relative flex items-center bg-[#131D3B]/80 border border-slate-700/50 rounded-xl overflow-hidden focus-within:border-emerald-500 transition-colors">
-                        <Lock size={15} className="ml-3.5 text-slate-400 shrink-0" />
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          required
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="••••••••"
-                          className="w-full pl-3 pr-10 py-2.5 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3.5 text-slate-400 hover:text-white"
-                        >
-                          {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Primary Button */}
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer mt-2"
-                    >
-                      {isLoading ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          <span>Processing...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          <span>{authModalMode === 'tenant-signup' ? 'Register Workspace' : 'Sign In'}</span>
-                          <Sparkles size={14} className="text-emerald-200" />
-                        </div>
-                      )}
-                    </button>
-                  </form>
-
-                  {/* OR Divider */}
-                  <div className="relative flex items-center justify-center my-4">
-                    <div className="border-t border-slate-800 w-full" />
-                    <span className="bg-[#0B132B] px-3 text-[10px] font-bold tracking-wider text-slate-500 uppercase absolute">
-                      OR
-                    </span>
-                  </div>
-
-                  {/* Google Button */}
-                  <button
-                    type="button"
-                    onClick={() => loginWithGoogle()}
-                    disabled={isLoading}
-                    className="w-full py-3 px-4 rounded-xl bg-[#131D3B] hover:bg-[#1E294B] border border-slate-700/50 text-white text-xs font-bold transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-sm"
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24">
-                      <path
-                        fill="#EA4335"
-                        d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
-                      />
-                      <path
-                        fill="#4285F4"
-                        d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15s.7 5.3 1.9 7.7l3.7-2.9z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 22.3 12 23z"
-                      />
-                    </svg>
-                    <span>Sign in with Google</span>
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+            <source
+              src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260806_133255_956f653f-5d80-4b06-abd5-0f46c98b60fa.mp4"
+              type="video/mp4"
+            />
+          </video>
         </div>
-      )}
+
+        {/* Dual Gradient Scrim Overlay */}
+        <div className="echoid-scrim" />
+
+        {/* Row 1: Navbar (Top) */}
+        <header className="echoid-nav">
+          <button onClick={() => handleClose(false)} className="echoid-logo flex items-center gap-2.5">
+            <img src="/logo.png?v=2" alt="Logo" className="h-8 w-8 object-contain brightness-125" />
+            <span className="font-extrabold tracking-tight">{platformName}</span>
+          </button>
+
+          {/* Desktop Nav Cluster */}
+          <div className="echoid-nav-links">
+            <nav className="echoid-nav-items">
+              <a href="#ai-language-tools" className="echoid-nav-link" onClick={() => handleClose(false)}>AI Tools</a>
+              <a href="#pricing" className="echoid-nav-link" onClick={() => handleClose(false)}>Plans</a>
+              <a href="#contact" className="echoid-nav-link" onClick={() => handleClose(false)}>Contact</a>
+            </nav>
+            <a href="#join" className="echoid-cta-btn" onClick={(e) => { e.preventDefault(); setAuthModalMode('login'); }}>
+              JOIN UP
+            </a>
+            <button
+              type="button"
+              onClick={() => handleClose(false)}
+              className="echoid-close-btn"
+              title="Close overlay"
+              aria-label="Close menu"
+            >
+              [ X ]
+            </button>
+          </div>
+
+          {/* Mobile Hamburger Button */}
+          <button
+            type="button"
+            className={`echoid-hamburger ${mobileMenuOpen ? 'active' : ''}`}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobileMenu"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            <span className="echoid-hamburger-bar" />
+            <span className="echoid-hamburger-bar" />
+            <span className="echoid-hamburger-bar" />
+          </button>
+        </header>
+
+        {/* Mobile Menu Overlay */}
+        <div
+          id="mobileMenu"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Site menu"
+          aria-hidden={!mobileMenuOpen}
+          className={`echoid-mobile-menu ${mobileMenuOpen ? 'open' : ''}`}
+        >
+          <a href="#ai-language-tools" className="echoid-mobile-item" style={{ transitionDelay: '180ms' }} onClick={() => { setMobileMenuOpen(false); handleClose(false); }}>
+            AI Tools
+          </a>
+          <a href="#pricing" className="echoid-mobile-item" style={{ transitionDelay: '250ms' }} onClick={() => { setMobileMenuOpen(false); handleClose(false); }}>
+            Plans
+          </a>
+          <a href="#contact" className="echoid-mobile-item" style={{ transitionDelay: '320ms' }} onClick={() => { setMobileMenuOpen(false); handleClose(false); }}>
+            Contact
+          </a>
+          <a href="#join" className="echoid-mobile-item echoid-mobile-cta" style={{ transitionDelay: '390ms' }} onClick={() => { setMobileMenuOpen(false); setAuthModalMode('login'); }}>
+            JOIN UP
+          </a>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            className="echoid-close-btn mt-6"
+          >
+            [ CLOSE MENU ]
+          </button>
+        </div>
+
+        {/* Row 2: Right Panel Form (Voice Entry Signup) */}
+        <main className="echoid-body">
+          <div className="echoid-panel">
+            {/* 1) Chip */}
+            <div className="echoid-chip">
+              [ {taglineText.toUpperCase()} ]
+            </div>
+
+            {/* 2) H1 */}
+            <h1 className="echoid-h1">
+              {platformName.toUpperCase()}
+            </h1>
+
+            {/* 3) Tagline */}
+            <p className="echoid-tagline">
+              {footerText.toUpperCase()}
+            </p>
+
+            {/* Success State Notification */}
+            {isSuccess ? (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-8 p-6 border border-emerald-500/50 bg-emerald-500/10 text-white font-mono text-sm uppercase tracking-widest text-center w-full"
+              >
+                ✓ AUTHENTICATION GRANTED. REDIRECTING...
+              </motion.div>
+            ) : (
+              /* 4) Form */
+              <form noValidate onSubmit={handleSubmit} className="echoid-form">
+                {error && (
+                  <div className="p-3 border border-red-500/40 bg-red-500/10 text-red-300 font-mono text-xs uppercase tracking-wider mb-2">
+                    ERROR: {error}
+                  </div>
+                )}
+
+                {/* Additional workspace fields if registering workspace */}
+                {authModalMode === 'tenant-signup' && (
+                  <>
+                    <div>
+                      <label htmlFor="tenantName" className="sr-only">Workspace Name</label>
+                      <input
+                        id="tenantName"
+                        type="text"
+                        required
+                        value={tenantName}
+                        onChange={(e) => {
+                          setTenantName(e.target.value);
+                          setTenantSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''));
+                        }}
+                        placeholder="Workspace Name (e.g. Acme Corp)"
+                        className="echoid-input mb-2"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="adminName" className="sr-only">Full Name</label>
+                      <input
+                        id="adminName"
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Full Name"
+                        className="echoid-input mb-2"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* a) Email Field */}
+                <div>
+                  <label htmlFor="echoidEmail" className="sr-only">Email</label>
+                  <input
+                    id="echoidEmail"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
+                    className="echoid-input"
+                  />
+                </div>
+
+                {/* Password Field */}
+                <div>
+                  <label htmlFor="echoidPassword" className="sr-only">Password</label>
+                  <input
+                    id="echoidPassword"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    className="echoid-input"
+                  />
+                </div>
+
+                {/* b) Button "Proceed with Google" (.btn--ghost) -> Google Sign In */}
+                <button
+                  type="button"
+                  onClick={() => loginWithGoogle()}
+                  disabled={isLoading}
+                  className="echoid-btn-ghost flex items-center justify-center gap-3"
+                >
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                    <path
+                      fill="#EA4335"
+                      d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
+                    />
+                    <path
+                      fill="#4285F4"
+                      d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15s.7 5.3 1.9 7.7l3.7-2.9z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 22.3 12 23z"
+                    />
+                  </svg>
+                  <span>SIGN IN WITH GOOGLE</span>
+                </button>
+
+                {/* c) Button "Access" (.btn--solid) -> Submit form */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="echoid-btn-solid"
+                >
+                  {isLoading ? 'AUTHENTICATING...' : (authModalMode === 'tenant-signup' ? 'REGISTER WORKSPACE' : 'ACCESS')}
+                </button>
+
+                {/* 5) Referral Link */}
+                <button
+                  type="button"
+                  onClick={() => setAuthModalMode(authModalMode === 'tenant-signup' ? 'login' : 'tenant-signup')}
+                  className="echoid-referral"
+                >
+                  {authModalMode === 'tenant-signup' ? 'SIGN IN WITH EXISTING ACCOUNT' : "I'VE GOT AN INVITE KEY"}
+                </button>
+              </form>
+            )}
+          </div>
+        </main>
+
+        {/* Row 3: Legal Footer */}
+        <footer className="echoid-footer">
+          Opening a {platformName} account signals that you accept our{' '}
+          <a href="#privacy" onClick={(e) => e.preventDefault()}>Privacy Notice</a> and{' '}
+          <a href="#terms" onClick={(e) => e.preventDefault()}>Service Contract</a>.
+        </footer>
+      </motion.section>
     </AnimatePresence>
   );
 };

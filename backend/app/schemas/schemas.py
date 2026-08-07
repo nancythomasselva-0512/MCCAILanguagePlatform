@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
+from typing import Optional, List, Union, Any
 from datetime import datetime
 
 import uuid
@@ -42,7 +42,7 @@ class SubscriptionPlanUpdate(BaseModel):
     active: Optional[bool] = None
 
 class SubscriptionPlanResponse(SubscriptionPlanBase):
-    id: uuid.UUID
+    id: Any
     created_at: datetime
     features: Optional[List[str]] = None
 

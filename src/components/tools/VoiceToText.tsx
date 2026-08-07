@@ -47,6 +47,15 @@ const getLanguageName = (code: string): string => {
   }
 };
 
+const samplePhrases: Record<string, string> = {
+  'en-US': 'Hello world, welcome to our AI speech platform.',
+  'ta-IN': 'வணக்கம், எங்கள் AI குரல் சேவைக்கு வரவேற்கிறோம்.',
+  'hi-IN': 'नमस्ते, हमारे AI प्लेटफॉर्म में आपका स्वागत है।',
+  'es-ES': 'Hola mundo, bienvenido a nuestra plataforma.',
+  'fr-FR': 'Bonjour le monde, bienvenue sur notre plateforme.',
+  'de-DE': 'Hallo Welt, willkommen auf unserer Plattform.',
+};
+
 export const VoiceToText: React.FC = () => {
   const {
     history,

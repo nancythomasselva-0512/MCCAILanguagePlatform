@@ -256,7 +256,7 @@ class TTSService {
         ttsAudioCache.set(cacheKey, audioUrl);
         
         if (!audioUrl) {
-          const finalErrorMsg = errors.join(" | ");
+          const finalErrorMsg = "TTS audio generation failed.";
           console.error(`TTS: All configured online fallback providers failed. Errors: ${finalErrorMsg}`);
           if (this.options?.onWarning) {
             this.options.onWarning(`Online TTS Providers Failed. ${finalErrorMsg}`);

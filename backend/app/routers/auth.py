@@ -291,10 +291,62 @@ def google_login(data: GoogleLoginRequest, db: Session = Depends(get_db)):
             
         user = db.query(User).filter(User.email == email).first()
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User not found. Please register your workspace first."
+            # Auto-register workspace & user for first-time Google sign in
+            user_name = idinfo.get("name") or (email.split("@")[0].capitalize() if email else "User")
+            clean_prefix = "".join(c for c in email.split("@")[0].lower() if c.isalnum()) or "user"
+            slug = f"{clean_prefix}-workspace"
+            
+            counter = 1
+            original_slug = slug
+            while db.query(Tenant).filter(Tenant.slug == slug).first():
+                slug = f"{original_slug}-{counter}"
+                counter += 1
+
+            free_plan = db.query(SubscriptionPlan).filter(SubscriptionPlan.name.ilike("free")).first()
+            if not free_plan:
+                free_plan = SubscriptionPlan(
+                    name="Free", price=0.0, transcription_limit=15, translation_limit=10000,
+                    tts_limit=5000, storage_limit=50, active=True
+                )
+                db.add(free_plan)
+                db.commit()
+                db.refresh(free_plan)
+
+            new_tenant = Tenant(
+                tenant_name=f"{user_name}'s Workspace",
+                slug=slug,
+                status="active",
+                plan_id=free_plan.id
             )
+            db.add(new_tenant)
+            db.commit()
+            db.refresh(new_tenant)
+
+            new_usage = UsageTracking(tenant_id=new_tenant.id)
+            db.add(new_usage)
+
+            user = User(
+                tenant_id=new_tenant.id,
+                name=user_name,
+                email=email,
+                password_hash=get_password_hash(generate_random_password()),
+                role="tenant_admin",
+                status="active"
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
+            now = datetime.datetime.utcnow()
+            sub = Subscription(
+                tenant_id=new_tenant.id,
+                plan_id=free_plan.id,
+                status="trialing",
+                current_period_start=now,
+                current_period_end=now + datetime.timedelta(days=7)
+            )
+            db.add(sub)
+            db.commit()
 
         if user.status != "active":
             raise HTTPException(
