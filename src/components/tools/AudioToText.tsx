@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -188,7 +190,7 @@ export const AudioToText: React.FC = () => {
         selectedLanguage === 'auto' ? 'en' : selectedLanguage
       );
       if (!text || !text.trim()) {
-        text = "Welcome to MCC AI Language Platform. Speech transcribed successfully.";
+        text = "Welcome to Fluentia Language Platform. Speech transcribed successfully.";
       }
       fetchBillingOverview();
 

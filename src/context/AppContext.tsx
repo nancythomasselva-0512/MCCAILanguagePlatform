@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storage } from "../utils/storage";
 import { apiRequest } from '../utils/api';
@@ -81,7 +83,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = storage.getItem('mcc-ai-theme');
     if (saved === 'light' || saved === 'dark') return saved;
-    return 'dark';
+    return 'light';
   });
 
   const [globalConfig, setGlobalConfig] = useState<any>(null);
@@ -104,28 +106,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const loadGlobalConfig = async () => {
     try {
       const data = await apiRequest("/platform-builder/global-config");
-      setGlobalConfig(data);
+      if (data) {
+        setGlobalConfig(data);
 
-      // Apply theme variables dynamically to document root
-      if (data.theme) {
-        const root = document.documentElement;
-        if (data.theme.primary_color) {
-          root.style.setProperty('--accent', data.theme.primary_color);
+        // Apply theme variables dynamically to document root
+        if (data.theme) {
+          const root = document.documentElement;
+          if (data.theme.primary_color) {
+            root.style.setProperty('--accent', data.theme.primary_color);
+          }
+          if (data.theme.secondary_color) {
+            root.style.setProperty('--accent-hover', data.theme.secondary_color);
+          }
+          if (data.theme.font_family) {
+            root.style.setProperty('--font-sans', `'${data.theme.font_family}', sans-serif`);
+          }
         }
-        if (data.theme.secondary_color) {
-          root.style.setProperty('--accent-hover', data.theme.secondary_color);
-        }
-        if (data.theme.font_family) {
-          root.style.setProperty('--font-sans', `'${data.theme.font_family}', sans-serif`);
-        }
-      }
 
-      // Apply branding name dynamically to document title
-      if (data.branding?.platform_name) {
-        document.title = `${data.branding.platform_name} - ${data.branding.tagline || 'Language Platform'}`;
+        // Apply branding name dynamically to document title
+        if (data.branding?.platform_name) {
+          document.title = `${data.branding.platform_name} - ${data.branding.tagline || 'Language Platform'}`;
+        }
       }
     } catch (e) {
-      console.error("Failed to fetch global config", e);
+      console.warn("[AppContext] Global config fetch unfulfilled, using default state:", e);
     }
   };
 

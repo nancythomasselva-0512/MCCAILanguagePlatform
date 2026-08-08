@@ -55,10 +55,10 @@ def seed_database():
         existing_branding = db.query(BrandingSettings).filter(BrandingSettings.tenant_id == None).first()
         if not existing_branding:
             branding = BrandingSettings(
-                platform_name="MCC AI",
+                platform_name="Fluentia",
                 tagline="Language Platform",
                 footer_text="Powering Next-Gen Language AI",
-                copyright_text="© 2026 MCC AI. All rights reserved.",
+                copyright_text="© 2026 Fluentia. All rights reserved.",
                 logo_url="/logo.png"
             )
             db.add(branding)

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useRef } from 'react';
 
 const GLYPHS = ['A', 'ஆ', '文', 'Ω', '♫', '語', 'हिं', 'EN', 'ES', 'FR', 'AR'];

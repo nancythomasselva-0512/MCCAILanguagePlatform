@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from "react";
 import { Building2, Save, Users, Layers } from "lucide-react";
 

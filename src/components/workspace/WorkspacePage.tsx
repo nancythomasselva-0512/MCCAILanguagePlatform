@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -489,8 +491,8 @@ export const WorkspacePage: React.FC = () => {
               }}
             >
               <div className="flex items-center justify-between px-3 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-              <div className="flex items-center gap-0">
-                  <img src={"/logo.png?v=2"} alt="Logo" className="h-14 w-14 min-w-[56px] object-contain transform scale-125 origin-center -ml-2 -mr-3 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180" />
+                <div className="flex items-center gap-2">
+                  <img src={"/logo.png?v=3"} alt="Logo" className="h-8 w-auto object-contain dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180" />
                   <span className="text-sm font-bold text-[var(--text-primary)]">{globalConfig?.branding?.platform_name || "Fluentia"}</span>
                 </div>
                 <button onClick={() => setSidebarOpen(false)} className="rounded-lg p-1.5 hover:bg-white/40" style={{ color: '#ffffff' }}>
@@ -554,18 +556,18 @@ export const WorkspacePage: React.FC = () => {
       >
         <div className="flex flex-col flex-1 min-h-0">
           <div className={`flex items-center select-none w-full pr-1 mt-1 mb-6 transition-all duration-300 ${isCollapsed ? 'flex-col gap-4 justify-center' : 'justify-between'}`}>
-            <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-0 ml-0.5'}`}>
+            <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2.5 ml-0.5'}`}>
               <img
-                src={"/logo.png?v=2"}
+                src={"/logo.png?v=3"}
                 alt="Logo"
-                className={`object-contain flex-shrink-0 transform origin-center dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180 transition-all duration-300 ${isCollapsed ? 'h-11 w-11 min-w-[44px] scale-[1.4]' : 'h-16 w-16 min-w-[64px] scale-[1.45] -ml-2 -mr-3'}`}
+                className={`object-contain flex-shrink-0 origin-center dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180 transition-all duration-300 ${isCollapsed ? 'h-8 w-auto' : 'h-10 w-auto'}`}
               />
               {!isCollapsed && (
-                <div className="flex flex-col min-w-0 justify-center mt-1">
-                  <span className="text-[26px] leading-[0.95] font-black tracking-tight text-[var(--text-primary)] drop-shadow-sm truncate" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                    Fluentia
+                <div className="flex flex-col min-w-0 justify-center">
+                  <span className="text-[22px] leading-tight font-black tracking-tight text-[var(--text-primary)] drop-shadow-sm truncate" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                    {globalConfig?.branding?.platform_name || "Fluentia"}
                   </span>
-                  <span className="text-[11.5px] text-[var(--text-secondary)] font-bold tracking-[0.08em] truncate mt-1 opacity-80 uppercase">
+                  <span className="text-[10px] text-[var(--text-secondary)] font-bold tracking-[0.08em] truncate opacity-80 uppercase">
                     AI Language Platform
                   </span>
                 </div>

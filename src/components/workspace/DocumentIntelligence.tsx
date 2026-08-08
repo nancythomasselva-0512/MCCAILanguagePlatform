@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
 import { UploadCloud, FileText, File as FileIcon, X, Check, Globe2, Languages, Type, Copy, Download, RefreshCw, FileUp, Sparkles, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

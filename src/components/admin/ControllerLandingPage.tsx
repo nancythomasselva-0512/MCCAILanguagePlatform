@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { Shield, ArrowRight, Lock, Sun, Moon, CheckCircle2 } from 'lucide-react';
@@ -65,11 +67,11 @@ export const ControllerLandingPage: React.FC = () => {
       {/* Header Container */}
       <div className="absolute top-0 left-0 w-full h-16 md:h-20 z-[60] bg-[#f4f7f6] dark:bg-slate-950/80 border-b border-slate-200 dark:border-white/5 shadow-sm backdrop-blur-md px-4 lg:px-8 flex justify-center">
         <div className="w-full max-w-6xl h-full flex items-center justify-between">
-          <div className="flex cursor-pointer items-center gap-0" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+          <div className="flex cursor-pointer items-center gap-2" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
             <img
-              src={"/logo.png?v=2"}
+              src={"/logo.png?v=3"}
               alt="Logo"
-              className="h-16 w-16 min-w-[64px] md:h-20 md:w-20 md:min-w-[80px] object-contain transform scale-125 origin-center -ml-2 -mr-4 hover:scale-[1.35] transition-transform duration-200 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180"
+              className="h-9 w-auto md:h-11 object-contain hover:scale-105 transition-transform duration-200 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180"
             />
             <div className="flex flex-col justify-center select-none">
               <span className="font-display text-xl md:text-2xl font-black tracking-tight leading-none text-emerald-900 dark:text-emerald-50 flex items-center gap-1">

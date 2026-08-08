@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from "react";
 import { Mail, Save, Send, History, Eye, EyeOff } from "lucide-react";
 import { apiRequest } from "../../../utils/api";

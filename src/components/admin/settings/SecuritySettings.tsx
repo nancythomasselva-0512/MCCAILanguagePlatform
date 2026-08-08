@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from "react";
 import { ShieldCheck, Save, AlertTriangle, ShieldAlert } from "lucide-react";
 

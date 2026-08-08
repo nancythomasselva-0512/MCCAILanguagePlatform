@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -128,12 +130,12 @@ useEffect(() => {
     setRecordSeconds(0);
     
     const samplePhrases = {
-      'en-US': 'Hello! Welcome to the MCC AI language workstation. This is an English voice transcription test.',
-      'ta-IN': 'Hello! Welcome to the MCC AI language workstation. Spoken Tamil speech translated to English successfully.',
-      'hi-IN': 'Hello! Welcome to the MCC AI language workstation. Spoken Hindi speech translated to English successfully.',
-      'es-ES': 'Hello! Welcome to the MCC AI language workstation. Spoken Spanish speech translated to English successfully.',
-      'fr-FR': 'Hello! Welcome to the MCC AI language workstation. Spoken French speech translated to English successfully.',
-      'de-DE': 'Hello! Welcome to the MCC AI language workstation. Spoken German speech translated to English successfully.',
+      'en-US': 'Hello! Welcome to the Fluentia language workstation. This is an English voice transcription test.',
+      'ta-IN': 'Hello! Welcome to the Fluentia language workstation. Spoken Tamil speech translated to English successfully.',
+      'hi-IN': 'Hello! Welcome to the Fluentia language workstation. Spoken Hindi speech translated to English successfully.',
+      'es-ES': 'Hello! Welcome to the Fluentia language workstation. Spoken Spanish speech translated to English successfully.',
+      'fr-FR': 'Hello! Welcome to the Fluentia language workstation. Spoken French speech translated to English successfully.',
+      'de-DE': 'Hello! Welcome to the Fluentia language workstation. Spoken German speech translated to English successfully.',
     };
 
     const textToSimulate = samplePhrases[selectedLanguage as keyof typeof samplePhrases] || samplePhrases['en-US'];

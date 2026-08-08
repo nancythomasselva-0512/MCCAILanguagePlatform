@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Sun, Moon, Menu, X, ArrowRight, LogOut, ChevronDown, User, LogIn, Search, Activity } from 'lucide-react';
@@ -139,13 +141,13 @@ export const Header: React.FC = () => {
         <div className="flex items-center gap-2 md:gap-3 min-w-0 overflow-hidden flex-shrink">
           {viewMode !== 'workspace' ? (
             <div
-              className="flex cursor-pointer items-center gap-0"
+              className="flex cursor-pointer items-center gap-2"
               onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             >
               <img
-                src={"/logo.png?v=2"}
+                src={"/logo.png?v=3"}
                 alt="Logo"
-                className="h-8 w-8 sm:h-10 sm:w-10 min-w-[32px] sm:min-w-[40px] md:h-11 md:w-11 md:min-w-[44px] object-contain transform scale-110 origin-center -ml-1 -mr-2 hover:scale-[1.2] transition-transform duration-200 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180"
+                className="h-8 sm:h-9 md:h-10 w-auto object-contain hover:scale-105 transition-transform duration-200 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180"
               />
               <div className="flex flex-col justify-center select-none min-w-0">
                 <span className="font-display text-sm sm:text-base md:text-lg font-black tracking-tight leading-none text-emerald-900 dark:text-emerald-50 flex items-center gap-1 truncate">

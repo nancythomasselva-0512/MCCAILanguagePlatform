@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from "react";
 import { Key, Save, Lock, Users, UserPlus, Loader2 } from "lucide-react";
 import { apiRequest } from "../../../utils/api";

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { apiRequest } from '../../utils/api';
 import { useApp } from '../../context/AppContext';

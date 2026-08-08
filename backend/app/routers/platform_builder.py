@@ -17,6 +17,12 @@ router = APIRouter(prefix="/platform-builder", tags=["Platform Builder Operation
 # GET GLOBAL CONFIG (Unauthenticated for landing/home page)
 @router.get("/global-config")
 def get_global_config(db: Session = Depends(get_db)):
+    branding = None
+    theme = None
+    platform = None
+    nav_items = []
+    features = []
+    pages = []
     try:
         branding = db.query(BrandingSettings).filter(BrandingSettings.tenant_id == None).first()
         theme = db.query(ThemeSettings).filter(ThemeSettings.tenant_id == None).first()
@@ -24,95 +30,91 @@ def get_global_config(db: Session = Depends(get_db)):
         nav_items = db.query(NavigationItem).filter(NavigationItem.tenant_id == None).order_by(NavigationItem.order.asc()).all()
         features = db.query(FeatureFlag).filter(FeatureFlag.tenant_id == None).all()
         pages = db.query(WebsitePage).filter(WebsitePage.tenant_id == None, WebsitePage.is_active == True).order_by(WebsitePage.order.asc()).all()
-
-        return {
-            "branding": {
-                "platform_name": branding.platform_name if branding else "MCC AI",
-                "tagline": branding.tagline if branding else "Language Platform",
-                "logo_url": branding.logo_url if branding else "/logo.png",
-                "logo_size": branding.logo_size if branding else "32px",
-                "logo_position": branding.logo_position if branding else "left",
-                "favicon_url": branding.favicon_url if branding else "",
-                "app_icon_url": branding.app_icon_url if branding else "",
-                "footer_text": branding.footer_text if branding else "Powering Next-Gen AI",
-                "copyright_text": branding.copyright_text if branding else "© 2026 MCC AI"
-            } if branding else {},
-            "theme": {
-                "mode": theme.mode if theme else "dark",
-                "primary_color": theme.primary_color if theme else "#2563EB",
-                "secondary_color": theme.secondary_color if theme else "#4F46E5",
-                "accent_color": theme.accent_color if theme else "#06B6D4",
-                "success_color": theme.success_color if theme else "#10B981",
-                "warning_color": theme.warning_color if theme else "#F59E0B",
-                "error_color": theme.error_color if theme else "#EF4444",
-                "font_family": theme.font_family if theme else "Inter",
-                "border_radius": theme.border_radius if theme else "16px"
-            } if theme else {},
-            "platform": {
-                "invite_only": platform.invite_only if platform else False,
-                "enable_email_login": platform.enable_email_login if platform else True,
-                "enable_google_login": platform.enable_google_login if platform else False,
-                "enable_otp_login": platform.enable_otp_login if platform else False,
-                "enable_magic_link": platform.enable_magic_link if platform else False,
-                "allowed_document_extensions": platform.allowed_document_extensions if platform else ".doc,.docx,.xls,.xlsx"
-            } if platform else {},
-            "navigation": [
-                {
-                    "id": item.id,
-                    "label": item.label,
-                    "route": item.route,
-                    "icon": item.icon,
-                    "order": item.order,
-                    "is_visible": item.is_visible
-                } for item in nav_items
-            ],
-            "features": {
-                f.name: {
-                    "display_name": f.display_name,
-                    "is_enabled": f.is_enabled
-                } for f in features
-            },
-            "pages": [
-                {
-                    "id": p.id,
-                    "slug": p.slug,
-                    "title": p.title,
-                    "subtitle": p.subtitle
-                } for p in pages
-            ],
-            "admin_landing": {
-                "title": "Platform Controller",
-                "description": "Welcome to the centralized management console. Control infrastructure, oversee tenants, and monitor global usage in real-time.",
-                "features": [
-                    {
-                        "icon": "Server",
-                        "title": "Infrastructure Control",
-                        "description": "Manage global AI model deployments, API keys, and system resources from a central hub."
-                    },
-                    {
-                        "icon": "Users",
-                        "title": "Tenant Management",
-                        "description": "Oversee all platform workspaces, monitor usage, and configure tenant-specific limits."
-                    },
-                    {
-                        "icon": "CreditCard",
-                        "title": "Billing & Plans",
-                        "description": "Configure subscription tiers, handle payments, and review global platform revenue."
-                    },
-                    {
-                        "icon": "Activity",
-                        "title": "Audit & Compliance",
-                        "description": "Track system health, review detailed audit logs, and enforce security policies."
-                    }
-                ]
-            }
-        }
     except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Global Config Error: {str(e)}"
-        )
+        print(f"[WARN] get_global_config DB query exception, using default fallback: {e}")
+
+    return {
+        "branding": {
+            "platform_name": branding.platform_name if (branding and hasattr(branding, 'platform_name')) else "MCC AI",
+            "tagline": branding.tagline if (branding and hasattr(branding, 'tagline')) else "Language Platform",
+            "logo_url": branding.logo_url if (branding and hasattr(branding, 'logo_url')) else "/logo.png",
+            "logo_size": branding.logo_size if (branding and hasattr(branding, 'logo_size')) else "32px",
+            "logo_position": branding.logo_position if (branding and hasattr(branding, 'logo_position')) else "left",
+            "favicon_url": branding.favicon_url if (branding and hasattr(branding, 'favicon_url')) else "",
+            "app_icon_url": branding.app_icon_url if (branding and hasattr(branding, 'app_icon_url')) else "",
+            "footer_text": branding.footer_text if (branding and hasattr(branding, 'footer_text')) else "Powering Next-Gen AI",
+            "copyright_text": branding.copyright_text if (branding and hasattr(branding, 'copyright_text')) else "© 2026 MCC AI"
+        },
+        "theme": {
+            "mode": theme.mode if (theme and hasattr(theme, 'mode')) else "dark",
+            "primary_color": theme.primary_color if (theme and hasattr(theme, 'primary_color')) else "#2563EB",
+            "secondary_color": theme.secondary_color if (theme and hasattr(theme, 'secondary_color')) else "#4F46E5",
+            "accent_color": theme.accent_color if (theme and hasattr(theme, 'accent_color')) else "#06B6D4",
+            "success_color": theme.success_color if (theme and hasattr(theme, 'success_color')) else "#10B981",
+            "warning_color": theme.warning_color if (theme and hasattr(theme, 'warning_color')) else "#F59E0B",
+            "error_color": theme.error_color if (theme and hasattr(theme, 'error_color')) else "#EF4444",
+            "font_family": theme.font_family if (theme and hasattr(theme, 'font_family')) else "Inter",
+            "border_radius": theme.border_radius if (theme and hasattr(theme, 'border_radius')) else "16px"
+        },
+        "platform": {
+            "invite_only": platform.invite_only if (platform and hasattr(platform, 'invite_only')) else False,
+            "enable_email_login": platform.enable_email_login if (platform and hasattr(platform, 'enable_email_login')) else True,
+            "enable_google_login": platform.enable_google_login if (platform and hasattr(platform, 'enable_google_login')) else False,
+            "enable_otp_login": platform.enable_otp_login if (platform and hasattr(platform, 'enable_otp_login')) else False,
+            "enable_magic_link": platform.enable_magic_link if (platform and hasattr(platform, 'enable_magic_link')) else False,
+            "allowed_document_extensions": platform.allowed_document_extensions if (platform and hasattr(platform, 'allowed_document_extensions')) else ".doc,.docx,.xls,.xlsx"
+        },
+        "navigation": [
+            {
+                "id": getattr(item, 'id', None),
+                "label": getattr(item, 'label', ''),
+                "route": getattr(item, 'route', ''),
+                "icon": getattr(item, 'icon', ''),
+                "order": getattr(item, 'order', 0),
+                "is_visible": getattr(item, 'is_visible', True)
+            } for item in nav_items
+        ],
+        "features": {
+            getattr(f, 'name', ''): {
+                "display_name": getattr(f, 'display_name', ''),
+                "is_enabled": getattr(f, 'is_enabled', True)
+            } for f in features if hasattr(f, 'name') and getattr(f, 'name', None)
+        },
+        "pages": [
+            {
+                "id": getattr(p, 'id', None),
+                "slug": getattr(p, 'slug', ''),
+                "title": getattr(p, 'title', ''),
+                "subtitle": getattr(p, 'subtitle', '')
+            } for p in pages
+        ],
+        "admin_landing": {
+            "title": "Platform Controller",
+            "description": "Welcome to the centralized management console. Control infrastructure, oversee tenants, and monitor global usage in real-time.",
+            "features": [
+                {
+                    "icon": "Server",
+                    "title": "Infrastructure Control",
+                    "description": "Manage global AI model deployments, API keys, and system resources from a central hub."
+                },
+                {
+                    "icon": "Users",
+                    "title": "Tenant Management",
+                    "description": "Oversee all platform workspaces, monitor usage, and configure tenant-specific limits."
+                },
+                {
+                    "icon": "CreditCard",
+                    "title": "Billing & Plans",
+                    "description": "Configure subscription tiers, handle payments, and review global platform revenue."
+                },
+                {
+                    "icon": "Activity",
+                    "title": "Audit & Compliance",
+                    "description": "Track system health, review detailed audit logs, and enforce security policies."
+                }
+            ]
+        }
+    }
 
 # UPDATE BRANDING (Super Admin Only)
 @router.patch("/branding", dependencies=[super_admin_only])

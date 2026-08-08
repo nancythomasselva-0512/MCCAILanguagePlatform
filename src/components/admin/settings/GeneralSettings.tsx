@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from "react";
 import { Settings, Save, Upload, Globe, Type } from "lucide-react";
 
@@ -14,7 +16,7 @@ export const GeneralSettings: React.FC = () => {
     dateFormat: "MM/DD/YYYY",
     currency: "USD",
     footerText: "Powering Next-Gen Language AI",
-    copyright: "© 2026 MCC AI. All rights reserved.",
+    copyright: "© 2026 Fluentia. All rights reserved.",
   });
 
   return (

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Search, ChevronDown, Trash2, Clock, History as HistoryIcon, Eye, Download, X } from 'lucide-react';

@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import { useApp, type ActiveTabType } from './context/AppContext';
 import { Header } from './components/common/Header';

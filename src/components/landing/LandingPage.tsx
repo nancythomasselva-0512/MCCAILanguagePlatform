@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -5,7 +7,7 @@ import {
   Zap, Globe, Shield, Clock, Star, ChevronRight, Play,
   CheckCircle2, Users, BarChart3, Headphones, Plus, Activity,
   Server, Database, ArrowRightLeft, FileCode, X, Menu,
-  Mail, Phone, MapPin
+  Mail, Phone, MapPin, Sun, Moon
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { ActiveTabType } from '../../context/AppContext';
@@ -13,6 +15,9 @@ import { HeroNeuralSphere } from './HeroNeuralSphere';
 import { AnimatedCounter } from './AnimatedCounter';
 import { NeuralBackground } from './NeuralBackground';
 import { HeroShaderBackground } from './HeroShaderBackground';
+import { CoreFeatures } from './CoreFeatures';
+import { ProcessSteps } from './ProcessSteps';
+import { PinnedWorkflow } from './PinnedWorkflow';
 
 // ── STARBURST COMPASS ICON FOR PARTNER BADGE ─────────────────────────────────
 const StarburstIcon = () => (
@@ -211,7 +216,7 @@ const STATS = [
 // ];
 
 export const LandingPage: React.FC = () => {
-  const { user, setViewMode, setActiveTab, globalConfig, setIsAuthModalOpen, setAuthModalMode, logout } = useApp();
+  const { user, setViewMode, setActiveTab, globalConfig, setIsAuthModalOpen, setAuthModalMode, logout, theme, toggleTheme } = useApp();
   const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [dbPlans, setDbPlans] = useState<any[]>([]);
@@ -275,11 +280,11 @@ export const LandingPage: React.FC = () => {
                   setAuthModalMode('login');
                   setIsAuthModalOpen(true);
                 }}
-                className="flex items-center gap-2.5 cursor-pointer"
+                className="flex items-center gap-2 cursor-pointer"
               >
-                <img src="/logo.png?v=2" alt="Logo" className="h-7 w-7 sm:h-8 sm:w-8 object-contain brightness-125" />
+                <img src="/logo.png?v=3" alt="Logo" className="h-8 sm:h-9 md:h-10 w-auto object-contain hover:scale-105 dark:invert-0 dark:brightness-100 invert brightness-90 filter transition-all duration-200" />
                 <span className="font-extrabold text-sm sm:text-base tracking-tight text-gray-900 dark:text-white">
-                  {globalConfig?.branding?.platform_name || 'MCC AI'}
+                  {globalConfig?.branding?.platform_name || 'Fluentia'}
                 </span>
               </button>
               <div className="hidden md:flex items-center gap-6 text-[14px] font-medium text-gray-900 dark:text-gray-100 pl-4">
@@ -291,15 +296,19 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* RIGHT */}
-            <div className="hidden md:flex items-center gap-4 pr-1">
-              <span className="text-[13px] text-emerald-600 dark:text-emerald-400 font-semibold hidden lg:flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                Engine Status: Online
-              </span>
-              <div className="flex items-center gap-1.5 text-[13px] text-gray-600 dark:text-gray-400 font-normal">
-                <Clock size={14} className="text-gray-500 shrink-0" />
-                <span>{londonTime || '12:00'} in London</span>
-              </div>
+            <div className="hidden md:flex items-center gap-3 pr-1">
+              <button
+                id="landing-theme-toggle-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toggleTheme();
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex-shrink-0 bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-white/15"
+                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                aria-label="Toggle theme"
+              >
+                {theme === 'light' ? <Moon size={16} className="transition-transform duration-300 hover:rotate-12" /> : <Sun size={16} className="transition-transform duration-300 hover:rotate-45" />}
+              </button>
               <TextRollButton
                 text="Launch AI Workstation"
                 onClick={() => {
@@ -340,13 +349,19 @@ export const LandingPage: React.FC = () => {
                 className="bg-white dark:bg-slate-900 rounded-2xl mx-3 mb-3 p-6 shadow-2xl space-y-6"
               >
                 <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-4">
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <Clock size={14} />
-                    <span>{londonTime} in London</span>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Navigation</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleTheme()}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-white/15"
+                      aria-label="Toggle theme"
+                    >
+                      {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+                    </button>
+                    <button onClick={() => setMobileMenuOpen(false)} className="text-gray-500">
+                      <X size={20} />
+                    </button>
                   </div>
-                  <button onClick={() => setMobileMenuOpen(false)} className="text-gray-500">
-                    <X size={20} />
-                  </button>
                 </div>
                 <div className="flex flex-col space-y-4 text-[28px] font-medium text-gray-900 dark:text-white">
                   <a href="#ai-language-tools" onClick={() => setMobileMenuOpen(false)}>AI Tools</a>
@@ -373,11 +388,11 @@ export const LandingPage: React.FC = () => {
         {/* Hero Content (z-20) */}
         <div className="relative z-20 max-w-[1440px] w-full mx-auto px-5 sm:px-8 lg:px-12 pb-14 sm:pb-16 lg:pb-20 flex-1 flex flex-col justify-end">
           <p className="text-[13px] sm:text-[14px] text-gray-900 dark:text-gray-100 tracking-wide font-semibold mb-5 sm:mb-8 uppercase">
-            [ {globalConfig?.branding?.platform_name || 'MCC AI'} LANGUAGE PLATFORM ]
+            [ {globalConfig?.branding?.platform_name || 'Fluentia'} LANGUAGE PLATFORM ]
           </p>
 
           <h1 className="text-[clamp(1.75rem,7vw,4.2rem)] sm:text-[clamp(2.5rem,5vw,4.2rem)] font-medium leading-[1.08] tracking-[-0.03em] text-gray-900 dark:text-white max-w-5xl">
-            {globalConfig?.branding?.platform_name || 'MCC AI'} — Next-Gen{' '}
+            {globalConfig?.branding?.platform_name || 'Fluentia'} — Next-Gen{' '}
             <br className="hidden sm:block" />
             <span className="sm:hidden"> </span>
             AI Language Platform for Voice,{' '}
@@ -416,92 +431,14 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ── SECTION 2: ABOUT ─────────────────────────────────────────────────── */}
-      <section id="about-studio" className="bg-white dark:bg-[#030712] pt-16 sm:pt-20 lg:pt-32 pb-12 sm:pb-16 lg:pb-24 overflow-hidden border-b border-gray-100 dark:border-white/5">
-        <div className="max-w-[1440px] mx-auto">
-          {/* Badge Row */}
-          <div className="px-5 sm:px-8 lg:px-12 flex items-center gap-3 mb-6 sm:mb-8">
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-900 text-white text-[11px] sm:text-[12px] font-semibold flex items-center justify-center">
-              1
-            </div>
-            <span className="text-[12px] sm:text-[13px] font-medium border border-gray-200 dark:border-white/10 text-gray-900 dark:text-gray-100 rounded-full px-3 sm:px-4 py-1 sm:py-1.5">
-              Introducing {globalConfig?.branding?.platform_name || 'MCC AI'} Engine
-            </span>
-          </div>
+      {/* ── SECTION 1: PINNED WORKFLOW ROADMAP (4 CORE AI MODULES) ───────────── */}
+      <PinnedWorkflow onLaunchTool={(tab) => setActiveTab(tab)} />
 
-          {/* Heading h2 */}
-          <h2 className="text-[clamp(1.5rem,4vw,3.2rem)] font-medium leading-[1.12] tracking-[-0.02em] text-gray-900 dark:text-white mb-12 sm:mb-16 lg:mb-28 px-5 sm:px-8 lg:px-12">
-            Neural speech processing, delivering{' '}
-            <br className="hidden sm:block" />
-            unmatched accuracy across 100+ languages.
-          </h2>
+      {/* ── SECTION 2: PROCESS STEPS WORKFLOW ─────────────────────────────────── */}
+      <ProcessSteps onLaunchTool={(tab) => setActiveTab(tab)} />
 
-          {/* DESKTOP LAYOUT (lg:grid) */}
-          <div className="hidden lg:grid grid-cols-[26%_1fr_48%] items-end gap-6 xl:gap-8 px-5 sm:px-8 lg:px-12">
-            {/* Left Col: Small Image */}
-            <div className="self-end overflow-hidden rounded-2xl aspect-[438/346] shadow-lg group">
-              <img
-                src="https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260516_090123_74be96d4-9c1b-40cf-932a-96f4f4babed3.png&w=1280&q=85"
-                alt="AI Speech Intelligence"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-
-            {/* Center Col: Paragraph + Button */}
-            <div className="self-start flex flex-col justify-end items-start pb-2">
-              <p className="text-[16px] xl:text-[18px] leading-[1.65] font-medium text-gray-900 dark:text-gray-200 mb-6">
-                Through deep learning models, <br />
-                client-side Whisper processing, and <br />
-                neural voice cloning, we empower global teams.
-              </p>
-              <TextRollButton
-                text="Explore AI Modules"
-                bgClass="bg-[#F26522] hover:bg-[#e05a1a] text-white"
-                arrowColorClass="text-[#F26522]"
-                onClick={() => document.getElementById('ai-language-tools')?.scrollIntoView({ behavior: 'smooth' })}
-              />
-            </div>
-
-            {/* Right Col: Large Image */}
-            <div className="self-end overflow-hidden rounded-2xl aspect-[3/2] shadow-lg group">
-              <img
-                src="https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260516_090133_c157d30b-a99a-4477-bec1-a446149ec3f2.png&w=1280&q=85"
-                alt="Language Workstation"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-          </div>
-
-          {/* MOBILE/TABLET LAYOUT (lg:hidden) */}
-          <div className="lg:hidden px-5 sm:px-8 space-y-8">
-            <p className="text-[15px] sm:text-[17px] leading-[1.6] font-medium text-gray-900 dark:text-gray-200">
-              Through deep learning models, client-side Whisper processing, and neural voice cloning, we empower global teams to automate language workflows.
-            </p>
-            <TextRollButton
-              text="Explore AI Modules"
-              bgClass="bg-[#F26522] hover:bg-[#e05a1a] text-white"
-              arrowColorClass="text-[#F26522]"
-              onClick={() => document.getElementById('ai-language-tools')?.scrollIntoView({ behavior: 'smooth' })}
-            />
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 pt-4">
-              <div className="sm:w-[45%] aspect-[438/346] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
-                <img
-                  src="https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260516_090123_74be96d4-9c1b-40cf-932a-96f4f4babed3.png&w=1280&q=85"
-                  alt="AI Speech Intelligence"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="sm:w-[55%] aspect-[900/600] rounded-xl sm:rounded-2xl overflow-hidden shadow-md">
-                <img
-                  src="https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260516_090133_c157d30b-a99a-4477-bec1-a446149ec3f2.png&w=1280&q=85"
-                  alt="Language Workstation"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── CORE FEATURES MARKETING SECTION ───────────────────────────────────── */}
+      <CoreFeatures />
 
       {/* ── SECTION 3: CASE STUDIES / FEATURED AI MODULES ─────────────────────── */}
       <section id="ai-language-tools" className="bg-[#F5F5F5] dark:bg-[#090f1d] pt-16 sm:pt-20 lg:pt-28 pb-16 sm:pb-20 lg:pb-28">
@@ -509,7 +446,7 @@ export const LandingPage: React.FC = () => {
           {/* Badge Row */}
           <div className="px-5 sm:px-8 lg:px-12 flex items-center gap-3 mb-6 sm:mb-8">
             <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-900 text-white text-[11px] sm:text-[12px] font-semibold flex items-center justify-center">
-              2
+              3
             </div>
             <span className="text-[12px] sm:text-[13px] font-medium border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-100 rounded-full px-3 sm:px-4 py-1 sm:py-1.5">
               Featured AI Workstations
@@ -1045,7 +982,7 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <h3 className="font-display text-3xl font-black text-slate-900 dark:text-white mb-2">Free Trial</h3>
                 <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mb-6">
-                  Perfect for experiencing the complete {globalConfig?.branding?.platform_name || 'MCC AI'} platform workstation locally on your device.
+                  Perfect for experiencing the complete {globalConfig?.branding?.platform_name || 'Fluentia'} platform workstation locally on your device.
                 </p>
                 <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-4" />
                 <ul className="space-y-4">

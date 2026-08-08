@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';

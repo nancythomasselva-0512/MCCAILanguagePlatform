@@ -1,7 +1,8 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from "react";
 import { X, Send, Save, AlertTriangle } from "lucide-react";
 import ReactQuill from 'react-quill-new';
-import "quill/dist/quill.snow.css";
 import { apiRequest } from "../../../utils/api";
 
 interface EmailTemplateModalProps {

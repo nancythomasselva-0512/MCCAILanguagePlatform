@@ -4,21 +4,24 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "next dev",
     "dev:full": "concurrently \"npm:dev\" \"npm:dev:backend\"",
     "dev:backend": "powershell -ExecutionPolicy Bypass -File backend/start_backend.ps1",
-    "build": "tsc -b && vite build",
+    "build": "next build",
+    "start": "next start",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "next start"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",
+    "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/vite": "^4.0.0",
     "@xenova/transformers": "^2.17.2",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.17.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "next": "^16.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "react-quill-new": "^3.8.3"
   },
   "devDependencies": {

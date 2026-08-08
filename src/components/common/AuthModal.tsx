@@ -1,8 +1,9 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useGoogleLogin } from '@react-oauth/google';
 import { motion, AnimatePresence } from 'framer-motion';
-import './EchoidAuth.css';
 
 export const AuthModal: React.FC = () => {
   const {
@@ -109,7 +110,7 @@ export const AuthModal: React.FC = () => {
 
         if (!response.ok) {
           const errData = await response.json();
-          const msg = Array.isArray(data.detail) ? data.detail.map((e: any) => e.msg || 'Invalid field').join(', ') : (errData.detail || "Google Sign-In failed.");
+          const msg = Array.isArray(errData.detail) ? errData.detail.map((e: any) => e.msg || 'Invalid field').join(', ') : (errData.detail || "Google Sign-In failed.");
           throw new Error(msg);
         }
 
@@ -233,8 +234,8 @@ export const AuthModal: React.FC = () => {
 
         {/* Row 1: Navbar (Top) */}
         <header className="echoid-nav">
-          <button onClick={() => handleClose(false)} className="echoid-logo flex items-center gap-2.5">
-            <img src="/logo.png?v=2" alt="Logo" className="h-8 w-8 object-contain brightness-125" />
+          <button onClick={() => handleClose(false)} className="echoid-logo flex items-center gap-2">
+            <img src="/logo.png?v=3" alt="Logo" className="h-8 sm:h-9 w-auto object-contain dark:invert-0 dark:brightness-100 invert brightness-90 filter transition-all duration-200" />
             <span className="font-extrabold tracking-tight">{platformName}</span>
           </button>
 
