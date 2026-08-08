@@ -1,9 +1,0 @@
-{
-  "/_global-error/page": "/_global-error",
-  "/_not-found/page": "/_not-found",
-  "/controller/[tab]/page": "/controller/[tab]",
-  "/controller/page": "/controller",
-  "/dashboard/[tab]/page": "/dashboard/[tab]",
-  "/dashboard/page": "/dashboard",
-  "/page": "/"
-}
