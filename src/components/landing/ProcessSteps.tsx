@@ -1,5 +1,6 @@
 import React from 'react';
-import { Mic, Volume2, Languages, FileAudio, Sparkles, ArrowUpRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Mic, Server, Languages, FileText, ArrowUpRight } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { ActiveTabType } from '../../context/AppContext';
 
@@ -24,48 +25,39 @@ export const ProcessSteps: React.FC<ProcessStepsProps> = ({ onLaunchTool }) => {
   const steps = [
     {
       num: '1',
-      title: 'Voice to Text',
-      description: 'Capture live speech or audio recordings into instant text with automatic language detection.',
+      title: 'Input Capture',
+      description: 'Speak, type, or drag-and-drop raw audio streams directly inside the web browser.',
       icon: Mic,
       tab: 'voice-to-text' as ActiveTabType,
-      bgColor: '#4EA8DE', // Sky Blue
+      bgColor: '#FF7A00', // Vibrant Sunset Orange
       align: 'right', // Number cap on right
     },
     {
       num: '2',
-      title: 'Text to Voice',
-      description: 'Transform written text into ultra-realistic neural speech with customizable speed & pitch controls.',
-      icon: Volume2,
-      tab: 'text-to-speech' as ActiveTabType,
-      bgColor: '#2B7BB9', // Ocean Blue
+      title: 'AI Processing',
+      description: 'Our ONNX runtime extracts acoustic spectrogram parameters locally.',
+      icon: Server,
+      tab: 'audio-transcription' as ActiveTabType,
+      bgColor: '#FF5500', // Warm Coral Orange
       align: 'left', // Number cap on left
     },
     {
       num: '3',
-      title: 'Text Translation',
-      description: 'Translate documents and real-time conversations seamlessly across 100+ global languages.',
+      title: 'Neural Translation',
+      description: 'Transformers map tokens and semantic fields into target accent dictionaries.',
       icon: Languages,
       tab: 'translation' as ActiveTabType,
-      bgColor: '#0A7E8C', // Teal
+      bgColor: '#E04828', // Deep Flame Orange
       align: 'right', // Number cap on right
     },
     {
       num: '4',
-      title: 'Audio to Text',
-      description: 'Upload MP3, WAV, or M4A files for automated transcription with speaker & timestamp tags.',
-      icon: FileAudio,
-      tab: 'audio-transcription' as ActiveTabType,
-      bgColor: '#185B75', // Dark Teal
+      title: 'Output Generation',
+      description: 'Export formatted transcripts, download MP3 synthesis, or copy translations.',
+      icon: FileText,
+      tab: 'text-to-speech' as ActiveTabType,
+      bgColor: '#C8371A', // Rich Terracotta Orange
       align: 'left', // Number cap on left
-    },
-    {
-      num: '5',
-      title: 'Unified Workstation',
-      description: 'Bridge speech, text, translation, and audio transcription into one seamless AI language workspace.',
-      icon: Sparkles,
-      tab: 'voice-to-text' as ActiveTabType,
-      bgColor: '#48BFE3', // Seafoam Cyan
-      align: 'right', // Number cap on right
     },
   ];
 
@@ -74,7 +66,13 @@ export const ProcessSteps: React.FC<ProcessStepsProps> = ({ onLaunchTool }) => {
       <div className="max-w-[1240px] mx-auto px-5 sm:px-8 lg:px-12">
         
         {/* Header Block */}
-        <div className="mb-14 sm:mb-20 text-left">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="mb-14 sm:mb-20 text-left"
+        >
           <div className="inline-flex items-center gap-2.5 mb-4">
             <div className="w-7 h-7 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[12px] font-bold flex items-center justify-center shadow-sm">
               1
@@ -87,7 +85,7 @@ export const ProcessSteps: React.FC<ProcessStepsProps> = ({ onLaunchTool }) => {
           <h2 className="text-[clamp(1.8rem,4vw,3.2rem)] font-medium leading-[1.12] tracking-[-0.02em] text-slate-900 dark:text-white max-w-[760px]">
             Steps to automate your speech &amp; language workflows
           </h2>
-        </div>
+        </motion.div>
 
         {/* Process Steps Staggered Container */}
         <div className="flex flex-col gap-6 max-w-[920px] mx-auto relative">
@@ -98,7 +96,15 @@ export const ProcessSteps: React.FC<ProcessStepsProps> = ({ onLaunchTool }) => {
 
             return (
               <React.Fragment key={idx}>
-                <div
+                <motion.div
+                  initial={{ opacity: 0, y: 50, x: isRightCap ? 35 : -35, scale: 0.94 }}
+                  whileInView={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+                  viewport={{ once: false, amount: 0.25 }}
+                  transition={{
+                    duration: 0.65,
+                    delay: 0.05,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
                   className={`w-full flex ${
                     isRightCap ? 'justify-end pl-0 sm:pl-16' : 'justify-start pr-0 sm:pr-16'
                   }`}
@@ -109,12 +115,15 @@ export const ProcessSteps: React.FC<ProcessStepsProps> = ({ onLaunchTool }) => {
                   >
                     {/* LEFT CAP (If Number Cap is on Left) */}
                     {!isRightCap && (
-                      <div
+                      <motion.div
+                        initial={{ scale: 0.8 }}
+                        whileInView={{ scale: 1 }}
+                        transition={{ duration: 0.4, delay: 0.15 }}
                         className="w-[90px] sm:w-[110px] shrink-0 flex items-center justify-center text-white text-3xl sm:text-4xl font-extrabold rounded-l-[50px] shadow-inner transition-transform group-hover:scale-105"
                         style={{ backgroundColor: step.bgColor }}
                       >
                         {step.num}
-                      </div>
+                      </motion.div>
                     )}
 
                     {/* CONTENT BODY */}
@@ -146,25 +155,34 @@ export const ProcessSteps: React.FC<ProcessStepsProps> = ({ onLaunchTool }) => {
 
                     {/* RIGHT CAP (If Number Cap is on Right) */}
                     {isRightCap && (
-                      <div
+                      <motion.div
+                        initial={{ scale: 0.8 }}
+                        whileInView={{ scale: 1 }}
+                        transition={{ duration: 0.4, delay: 0.15 }}
                         className="w-[90px] sm:w-[110px] shrink-0 flex items-center justify-center text-white text-3xl sm:text-4xl font-extrabold rounded-r-[50px] shadow-inner transition-transform group-hover:scale-105"
                         style={{ backgroundColor: step.bgColor }}
                       >
                         {step.num}
-                      </div>
+                      </motion.div>
                     )}
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Subtle Dotted Separator Line between steps */}
                 {idx < steps.length - 1 && (
-                  <div className="flex justify-center items-center py-1 opacity-40">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    whileInView={{ opacity: 0.5, scale: 1 }}
+                    viewport={{ once: false }}
+                    transition={{ duration: 0.4 }}
+                    className="flex justify-center items-center py-1 opacity-40"
+                  >
                     <div className="flex gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-600" />
                     </div>
-                  </div>
+                  </motion.div>
                 )}
               </React.Fragment>
             );
@@ -173,15 +191,21 @@ export const ProcessSteps: React.FC<ProcessStepsProps> = ({ onLaunchTool }) => {
         </div>
 
         {/* Footer Action matching "Visit site ↗" */}
-        <div className="mt-14 pt-6 flex items-center justify-between border-t border-slate-200/60 dark:border-white/5">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false }}
+          transition={{ duration: 0.5 }}
+          className="mt-14 pt-6 flex items-center justify-between border-t border-slate-200/60 dark:border-white/5"
+        >
           <button
             onClick={() => handleLaunch('voice-to-text')}
-            className="inline-flex items-center gap-2 text-[15px] font-bold text-slate-900 dark:text-white hover:text-[#2B7BB9] dark:hover:text-[#4EA8DE] transition-colors group"
+            className="inline-flex items-center gap-2 text-[15px] font-bold text-slate-900 dark:text-white hover:text-[#FF7A00] dark:hover:text-[#FF9F1C] transition-colors group"
           >
             <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             Launch Platform Workstation
           </button>
-        </div>
+        </motion.div>
 
       </div>
     </section>

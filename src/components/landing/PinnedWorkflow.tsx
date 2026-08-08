@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
 import type { ActiveTabType } from '../../context/AppContext';
 
@@ -8,6 +9,47 @@ interface PinnedWorkflowProps {
 
 export const PinnedWorkflow: React.FC<PinnedWorkflowProps> = ({ onLaunchTool }) => {
   const { setActiveTab, user, setIsAuthModalOpen, setAuthModalMode, logout } = useApp();
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pinRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [svgPath, setSvgPath] = useState<string>(
+    'M 240 45 C 550 80, 800 180, 760 310 C 700 450, 200 480, 240 640 C 280 800, 550 940, 760 955'
+  );
+
+  const updatePath = useCallback(() => {
+    if (!containerRef.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const points: { x: number; y: number }[] = [];
+
+    pinRefs.current.forEach((pinEl) => {
+      if (pinEl) {
+        const pinRect = pinEl.getBoundingClientRect();
+        const x = pinRect.left + pinRect.width / 2 - containerRect.left;
+        const y = pinRect.top + pinRect.height / 2 - containerRect.top;
+        points.push({ x, y });
+      }
+    });
+
+    if (points.length >= 4) {
+      const [p0, p1, p2, p3] = points;
+      const d = `M ${p0.x} ${p0.y} C ${p0.x + (p1.x - p0.x) * 0.5} ${p0.y}, ${p0.x + (p1.x - p0.x) * 0.5} ${p1.y}, ${p1.x} ${p1.y} C ${p1.x + (p2.x - p1.x) * 0.5} ${p1.y}, ${p1.x + (p2.x - p1.x) * 0.5} ${p2.y}, ${p2.x} ${p2.y} C ${p2.x + (p3.x - p2.x) * 0.5} ${p2.y}, ${p2.x + (p3.x - p2.x) * 0.5} ${p3.y}, ${p3.x} ${p3.y}`;
+      setSvgPath(d);
+    }
+  }, []);
+
+  useEffect(() => {
+    updatePath();
+    window.addEventListener('resize', updatePath);
+    window.addEventListener('scroll', updatePath, { passive: true });
+    const timer = setTimeout(updatePath, 150);
+    const timer2 = setTimeout(updatePath, 500);
+    return () => {
+      window.removeEventListener('resize', updatePath);
+      window.removeEventListener('scroll', updatePath);
+      clearTimeout(timer);
+      clearTimeout(timer2);
+    };
+  }, [updatePath]);
 
   const handleLaunch = (tab: ActiveTabType) => {
     if (onLaunchTool) {
@@ -165,7 +207,13 @@ export const PinnedWorkflow: React.FC<PinnedWorkflowProps> = ({ onLaunchTool }) 
 
       <div className="pw-paper-bg max-w-[1240px] mx-auto px-5 sm:px-8 lg:px-12 relative">
         {/* Header Row matching Section 1 badge style */}
-        <div className="flex flex-col items-center text-center mb-16 sm:mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="flex flex-col items-center text-center mb-16 sm:mb-20"
+        >
           <div className="inline-flex items-center gap-2.5 mb-5">
             <div className="w-7 h-7 rounded-full bg-slate-900 text-white text-[12px] font-bold flex items-center justify-center">
               1
@@ -181,22 +229,26 @@ export const PinnedWorkflow: React.FC<PinnedWorkflowProps> = ({ onLaunchTool }) 
           <p className="mt-4 text-[16px] sm:text-[18px] text-slate-600 dark:text-slate-300 max-w-[620px] leading-[1.6]">
             Interactive pinned roadmap featuring our 4 primary speech and language translation engines.
           </p>
-        </div>
+        </motion.div>
 
         {/* Dynamic Curved Dashed Path Connecting the Cards */}
-        <div className="relative min-h-[850px] flex flex-col justify-between py-6">
+        <div ref={containerRef} className="relative min-h-[850px] flex flex-col justify-between py-6">
           {/* SVG Connecting Path for Desktop */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none hidden md:block"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path
-              d="M 300 100 Q 600 220 750 340 T 300 580 T 750 800"
+            <motion.path
+              d={svgPath}
               fill="none"
               stroke="#CBD5E1"
               strokeWidth="2.5"
               strokeDasharray="8 8"
               className="dark:stroke-slate-700"
+              initial={{ pathLength: 0, opacity: 0 }}
+              whileInView={{ pathLength: 1, opacity: 1 }}
+              viewport={{ once: false, amount: 0.1 }}
+              transition={{ duration: 1.4, ease: 'easeInOut' }}
             />
           </svg>
 
@@ -204,8 +256,16 @@ export const PinnedWorkflow: React.FC<PinnedWorkflowProps> = ({ onLaunchTool }) 
           {cards.map((card, index) => {
             const isLeft = card.align === 'left';
             return (
-              <div
+              <motion.div
                 key={index}
+                initial={{ opacity: 0, y: 55, scale: 0.93 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: false, amount: 0.25 }}
+                transition={{
+                  duration: 0.65,
+                  delay: 0.05,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
                 className={`w-full flex ${
                   isLeft ? 'justify-start md:pl-8 lg:pl-16' : 'justify-end md:pr-8 lg:pr-16'
                 } my-6 relative`}
@@ -218,7 +278,21 @@ export const PinnedWorkflow: React.FC<PinnedWorkflowProps> = ({ onLaunchTool }) 
                   onClick={() => handleLaunch(card.tab)}
                 >
                   {/* 3D Glass Pushpin */}
-                  <div className="pw-pin">
+                  <motion.div
+                    className="pw-pin"
+                    initial={{ y: -20, scale: 0.3, opacity: 0 }}
+                    whileInView={{ y: 0, scale: 1, opacity: 1 }}
+                    viewport={{ once: false, amount: 0.25 }}
+                    transition={{
+                      delay: 0.2,
+                      type: 'spring',
+                      stiffness: 350,
+                      damping: 18,
+                    }}
+                    ref={(el) => {
+                      pinRefs.current[index] = el;
+                    }}
+                  >
                     <div
                       className="pw-pin-head"
                       style={{
@@ -226,7 +300,7 @@ export const PinnedWorkflow: React.FC<PinnedWorkflowProps> = ({ onLaunchTool }) 
                       }}
                     />
                     <div className="pw-pin-shadow" />
-                  </div>
+                  </motion.div>
 
                   {/* Card Content Box */}
                   <div className="pw-inner-box" style={{ background: card.cardBg }}>
@@ -237,7 +311,7 @@ export const PinnedWorkflow: React.FC<PinnedWorkflowProps> = ({ onLaunchTool }) 
                     <p className="pw-desc">{card.description}</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
@@ -245,3 +319,4 @@ export const PinnedWorkflow: React.FC<PinnedWorkflowProps> = ({ onLaunchTool }) 
     </section>
   );
 };
+
