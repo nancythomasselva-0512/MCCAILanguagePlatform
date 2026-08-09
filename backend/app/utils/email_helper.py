@@ -179,10 +179,11 @@ def log_email_action(db: Session, tenant_id: str, subject: str, body_text: str,
             msg.attach(part)
             logger.info(f"Attached PDF: {attachment_path}")
 
+        timeout_val = min(db_smtp.connection_timeout or 3, 3)
         if db_smtp.encryption_type == "SSL":
-            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=db_smtp.connection_timeout or 10)
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=timeout_val)
         else:
-            server = smtplib.SMTP(smtp_host, smtp_port, timeout=db_smtp.connection_timeout or 10)
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=timeout_val)
             if db_smtp.encryption_type == "TLS":
                 server.starttls()
 

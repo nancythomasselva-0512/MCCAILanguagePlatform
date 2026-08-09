@@ -70,14 +70,14 @@ export function HistoryPage() {
       [part1, part2] = details.split(' · ');
     } else if (details.toLowerCase().includes('words')) {
       // Just words
-      return <span className="font-semibold text-teal-600 dark:text-teal-400">{details}</span>;
+      return <span className="font-semibold text-orange-600 dark:text-orange-400">{details}</span>;
     }
     
     if (part2) {
       return (
         <div className="flex flex-col gap-1">
           <span className="truncate" title={part1}>{part1}</span>
-          <span className="font-semibold text-teal-600 dark:text-teal-400">{part2}</span>
+          <span className="font-semibold text-orange-600 dark:text-orange-400">{part2}</span>
         </div>
       );
     }
@@ -91,7 +91,7 @@ export function HistoryPage() {
       <div className="flex items-center justify-between mb-8 print:hidden">
         <div>
           <h2 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            <HistoryIcon className="text-teal-500" size={24} />
+            <HistoryIcon className="text-orange-500" size={24} />
             History & Records
           </h2>
           <p className="text-xs text-slate-500 mt-1">View and manage all your historical AI tool usage and records.</p>
@@ -128,7 +128,7 @@ export function HistoryPage() {
             <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-slate-700 dark:text-slate-300">
               <input 
                 type="checkbox" 
-                className="rounded text-teal-500 focus:ring-teal-500 bg-slate-100 border-slate-300 w-4 h-4 cursor-pointer"
+                className="rounded text-orange-500 focus:ring-orange-500 bg-slate-100 border-slate-300 w-4 h-4 cursor-pointer"
                 checked={selectedItems.length === filteredHistory.length && filteredHistory.length > 0}
                 onChange={handleSelectAll}
               />
@@ -152,7 +152,7 @@ export function HistoryPage() {
               <input 
                 type="text" 
                 placeholder="Search records..." 
-                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/50 w-64 text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
+                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 w-64 text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -197,12 +197,12 @@ export function HistoryPage() {
                 return (
                   <tr 
                     key={item.id} 
-                    className={`border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${isSelected ? 'bg-teal-50/50 dark:bg-teal-900/10' : ''} print:border-slate-300 print:text-black`}
+                    className={`border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${isSelected ? 'bg-orange-50/50 dark:bg-orange-900/10' : ''} print:border-slate-300 print:text-black`}
                   >
                     <td className="py-4 pl-4 pr-2 text-center print:hidden">
                       <input 
                         type="checkbox" 
-                        className="rounded text-teal-500 focus:ring-teal-500 bg-slate-100 border-slate-300 w-4 h-4 cursor-pointer"
+                        className="rounded text-orange-500 focus:ring-orange-500 bg-slate-100 border-slate-300 w-4 h-4 cursor-pointer"
                         checked={isSelected}
                         onChange={() => handleSelectItem(item.id)}
                       />
@@ -232,7 +232,7 @@ export function HistoryPage() {
                     <td className="py-4 px-4 text-center print:hidden">
                       <div className="flex items-center justify-center gap-2">
                         <button 
-                          className="p-1.5 text-slate-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-500/10 rounded-md transition-colors"
+                          className="p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded-md transition-colors"
                           onClick={() => setViewingItem(item)}
                           title="View Details"
                         >

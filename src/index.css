@@ -6,49 +6,49 @@
 
 /* ─── Design Tokens / CSS Variables ─────────────────────────────────────────── */
 :root {
-  /* Light Mode - CoachPro Glassmorphic Teal Theme */
-  --bg-base:        #D2EAE1;
-  --bg-subtle:      #C2DFD4;
-  --bg-card:        rgba(255, 255, 255, 0.65);
-  --bg-elevated:    rgba(255, 255, 255, 0.85);
-  --bg-overlay:     rgba(255, 255, 255, 0.5);
+  /* Light Mode - Orange & Pure White Landing Page Theme */
+  --bg-base:        #FFFBF9;
+  --bg-subtle:      #FFF3ED;
+  --bg-card:        rgba(255, 255, 255, 0.92);
+  --bg-elevated:    #FFFFFF;
+  --bg-overlay:     rgba(255, 255, 255, 0.85);
   
-  --text-primary:   #064E3B;
-  --text-secondary: #0F766E;
-  --text-muted:     #115E59;
-  --text-disabled:  #389A89;
+  --text-primary:   #1C1917;
+  --text-secondary: #C2410C;
+  --text-muted:     #9A3412;
+  --text-disabled:  #FB923C;
   
-  --border-base:    rgba(255, 255, 255, 0.6);
-  --border-subtle:  rgba(255, 255, 255, 0.3);
-  --border-strong: #718096;
+  --border-base:    rgba(254, 215, 170, 0.6);
+  --border-subtle:  rgba(254, 215, 170, 0.3);
+  --border-strong:  #F97316;
 
   /* Fonts */
   --content-font: 'TAU-Marutham', sans-serif;
 
-  /* Brand Colors - Teal/Emerald */
-  --accent:         #0D9488;
-  --accent-hover:   #0F766E;
-  --accent-light:   rgba(13, 148, 136, 0.1);
-  --accent-muted:   rgba(13, 148, 136, 0.2);
-  --accent-glow:    rgba(13, 148, 136, 0.15);
+  /* Brand Colors - Vibrant Orange */
+  --accent:         #FF5F03;
+  --accent-hover:   #EA580C;
+  --accent-light:   rgba(255, 95, 3, 0.1);
+  --accent-muted:   rgba(255, 95, 3, 0.2);
+  --accent-glow:    rgba(255, 95, 3, 0.25);
 
   /* Cyber Glow Colors */
-  --glow-cyan: rgba(6, 182, 212, 0.15);
-  --glow-purple: rgba(139, 92, 246, 0.15);
+  --glow-cyan: rgba(255, 95, 3, 0.15);
+  --glow-purple: rgba(234, 88, 12, 0.15);
 
   /* Status */
   --success: #10b981;
   --warning: #f59e0b;
   --error: #ef4444;
 
-  /* Sidebar (Glassmorphic) */
-  --sidebar-bg:                 rgba(255, 255, 255, 0.4);
+  /* Sidebar (Glassmorphic Orange & Pure White) */
+  --sidebar-bg:                 rgba(255, 255, 255, 0.9);
   --sidebar-panel-bg:           transparent;
-  --sidebar-panel-text:         #0F766E;
+  --sidebar-panel-text:         #EA580C;
   --sidebar-panel-text-active:  #FFFFFF;
-  --sidebar-panel-active-bg:    linear-gradient(to right, #0D9488, #14B8A6);
-  --sidebar-panel-hover-bg:     rgba(255, 255, 255, 0.5);
-  --sidebar-panel-border:       rgba(255, 255, 255, 0.5);
+  --sidebar-panel-active-bg:    linear-gradient(to right, #FF5F03, #FF7E33);
+  --sidebar-panel-hover-bg:     rgba(255, 237, 213, 0.6);
+  --sidebar-panel-border:       rgba(254, 215, 170, 0.6);
 
   /* Shadows */
   --shadow-sm: 0 1px 3px 0 rgba(9, 13, 22, 0.08);

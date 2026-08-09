@@ -18,6 +18,9 @@ import { HeroShaderBackground } from './HeroShaderBackground';
 import { CoreFeatures } from './CoreFeatures';
 import { ProcessSteps } from './ProcessSteps';
 import { PinnedWorkflow } from './PinnedWorkflow';
+import { LanguageMarquee } from './LanguageMarquee';
+import { FaqAccordion } from './FaqAccordion';
+import { ContactSection } from './ContactSection';
 import { FooterParallax } from './FooterParallax';
 
 // ── STARBURST COMPASS ICON FOR PARTNER BADGE ─────────────────────────────────
@@ -289,9 +292,10 @@ export const LandingPage: React.FC = () => {
                 </span>
               </button>
               <div className="hidden md:flex items-center gap-6 text-[14px] font-medium text-gray-900 dark:text-gray-100 pl-4">
-                <a href="#ai-language-tools" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">AI Tools</a>
-                <a href="#about-studio" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">Capabilities</a>
+                <a href="#ai-models" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">AI Models</a>
+                <a href="#process" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">Process</a>
                 <a href="#pricing" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">Pricing</a>
+                <a href="#faq" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">FAQ</a>
                 <a href="#contact" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">Contact</a>
               </div>
             </div>
@@ -364,10 +368,11 @@ export const LandingPage: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                <div className="flex flex-col space-y-4 text-[28px] font-medium text-gray-900 dark:text-white">
-                  <a href="#ai-language-tools" onClick={() => setMobileMenuOpen(false)}>AI Tools</a>
-                  <a href="#about-studio" onClick={() => setMobileMenuOpen(false)}>Capabilities</a>
+                <div className="flex flex-col space-y-3 text-[22px] font-medium text-gray-900 dark:text-white">
+                  <a href="#ai-models" onClick={() => setMobileMenuOpen(false)}>AI Models</a>
+                  <a href="#process" onClick={() => setMobileMenuOpen(false)}>Process</a>
                   <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
+                  <a href="#faq" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
                   <a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
                 </div>
                 <TextRollButton
@@ -432,34 +437,26 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ── SECTION 1: PINNED WORKFLOW ROADMAP (4 CORE AI MODULES) ───────────── */}
+      {/* ── SECTION 1: PINNED WORKFLOW (4 CORE AI MODULES) ───────────── */}
       <PinnedWorkflow onLaunchTool={(tab) => setActiveTab(tab)} />
+
+      {/* ── LANGUAGE MARQUEE SECTION (100+ SUPPORTED LANGUAGES) ─────────────── */}
+      <LanguageMarquee />
 
       {/* ── SECTION 2: PROCESS STEPS WORKFLOW ─────────────────────────────────── */}
       <ProcessSteps onLaunchTool={(tab) => setActiveTab(tab)} />
 
-      {/* ── CORE FEATURES MARKETING SECTION ───────────────────────────────────── */}
+      {/* ── CORE FEATURES MARKETING SECTION (SECTION 3: PRICING) ─────────────────── */}
       <CoreFeatures />
 
+      {/* ── SECTION 4: FREQUENTLY ASKED QUESTIONS ACCORDION ───────────────────── */}
+      <FaqAccordion />
 
-
-
-
-
-
-
+      {/* ── SECTION 5: ENTERPRISE CONTACT & INQUIRY FORM ─────────────────────── */}
+      <ContactSection />
 
       {/* ── ABOUT SECTION (Process, Features, Languages) ─────────────────────────── */}
       <div id="about">
-
-
-
-
-
-
-
-
-
       </div>
 
 

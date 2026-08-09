@@ -62,7 +62,7 @@ export const ProcessSteps: React.FC<ProcessStepsProps> = ({ onLaunchTool }) => {
   ];
 
   return (
-    <section id="about-studio" className="bg-[#F8FAFC] dark:bg-[#030712] py-16 sm:py-24 overflow-hidden border-b border-gray-100 dark:border-white/5">
+    <section id="process" className="bg-[#F8FAFC] dark:bg-[#030712] py-8 sm:py-12 overflow-hidden border-b border-gray-100 dark:border-white/5">
       <div className="max-w-[1240px] mx-auto px-5 sm:px-8 lg:px-12">
         
         {/* Header Block */}
@@ -71,11 +71,11 @@ export const ProcessSteps: React.FC<ProcessStepsProps> = ({ onLaunchTool }) => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, amount: 0.3 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="mb-14 sm:mb-20 text-left"
+          className="mb-8 sm:mb-10 text-left"
         >
           <div className="inline-flex items-center gap-2.5 mb-4">
             <div className="w-7 h-7 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[12px] font-bold flex items-center justify-center shadow-sm">
-              1
+              2
             </div>
             <span className="text-[13px] font-semibold border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-full px-4 py-1.5 bg-white dark:bg-slate-900 shadow-sm">
               Our Process Workflow

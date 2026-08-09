@@ -39,7 +39,7 @@ export const CoreFeatures: React.FC<CoreFeaturesProps> = ({ onLaunchTool }) => {
 
         .c1-section {
           background-color: #ffffff;
-          padding: 90px 24px;
+          padding: 48px 24px 80px 24px;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
@@ -59,7 +59,7 @@ export const CoreFeatures: React.FC<CoreFeaturesProps> = ({ onLaunchTool }) => {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          margin-bottom: 24px;
+          margin-bottom: 16px;
         }
 
         .c1-badge-num {
@@ -92,7 +92,7 @@ export const CoreFeatures: React.FC<CoreFeaturesProps> = ({ onLaunchTool }) => {
           font-weight: 500;
           color: #111827;
           letter-spacing: -0.02em;
-          margin-bottom: 20px;
+          margin-bottom: 14px;
           line-height: 1.12;
           text-align: left;
         }
@@ -343,7 +343,7 @@ export const CoreFeatures: React.FC<CoreFeaturesProps> = ({ onLaunchTool }) => {
       <div className="c1-container">
         {/* Header Block */}
         <div className="c1-badge-row">
-          <div className="c1-badge-num">2</div>
+          <div className="c1-badge-num">3</div>
           <span className="c1-badge-pill">Flexible Pricing Plans</span>
         </div>
         <h2 className="c1-title">Choose the Perfect Plan for You</h2>

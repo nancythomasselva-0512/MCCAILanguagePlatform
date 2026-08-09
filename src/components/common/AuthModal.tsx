@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
 import { useGoogleLogin } from '@react-oauth/google';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, EyeOff, X, Sparkles, CheckCircle2, Lock, Mail, User, Building } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
   const {
@@ -13,7 +14,7 @@ export const AuthModal: React.FC = () => {
     setAuthModalMode,
     login: saveLoginSession,
     setViewMode,
-    globalConfig
+    globalConfig,
   } = useApp();
 
   const [email, setEmail] = useState('');
@@ -21,51 +22,55 @@ export const AuthModal: React.FC = () => {
   const [name, setName] = useState('');
   const [tenantName, setTenantName] = useState('');
   const [tenantSlug, setTenantSlug] = useState('');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  const platformName = globalConfig?.branding?.platform_name || 'Fluentia';
-  const taglineText = globalConfig?.branding?.tagline || 'AI Language Platform';
-  const footerText = globalConfig?.branding?.footer_text || 'Powering Next-Gen Language AI';
+  // Character Interaction State: 'idle' | 'email-focus' | 'password-focus' | 'password-peek'
+  const [characterMood, setCharacterMood] = useState<'idle' | 'email-focus' | 'password-focus' | 'password-peek'>('idle');
 
-  // Update page title when modal opens
+  const platformName = globalConfig?.branding?.platform_name || 'Fluentia';
+
   useEffect(() => {
     if (isAuthModalOpen) {
-      document.title = `${platformName} — ${taglineText}`;
       document.body.style.overflow = 'hidden';
+      setEmail('');
+      setPassword('');
+      setName('');
+      setTenantName('');
+      setTenantSlug('');
+      setError('');
+      setIsSuccess(false);
+      setCharacterMood('idle');
     } else {
       document.body.style.overflow = 'unset';
     }
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isAuthModalOpen, platformName, taglineText]);
+  }, [isAuthModalOpen]);
 
-  // Handle ESC key to close
+  // Handle ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isAuthModalOpen) {
-        if (mobileMenuOpen) {
-          setMobileMenuOpen(false);
-        } else {
-          handleClose(false);
-        }
+        handleClose(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAuthModalOpen, mobileMenuOpen]);
+  }, [isAuthModalOpen]);
 
   const handleClose = (force = false) => {
     setIsAuthModalOpen(false);
-    setMobileMenuOpen(false);
     if (!force) {
       setTimeout(() => {
         setError('');
         setIsSuccess(false);
+        setCharacterMood('idle');
       }, 300);
     }
   };
@@ -75,22 +80,25 @@ export const AuthModal: React.FC = () => {
     setIsLoading(true);
     try {
       if (authModalMode === 'tenant-signup') {
-        if (!tenantName || !tenantSlug) {
-           throw new Error("Please fill in Workspace Name and URL Slug before using Google Sign up.");
-        }
-        const response = await fetch("/api/auth/google/register-tenant", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const autoName = name || 'User';
+        const autoTenantName = tenantName || `${autoName}'s Workspace`;
+        const autoTenantSlug = (tenantSlug || autoName.toLowerCase().replace(/[^a-z0-9]/g, '')) || 'workspace';
+
+        const response = await fetch('/api/auth/google/register-tenant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            tenant_name: tenantName,
-            slug: tenantSlug.toLowerCase().trim(),
-            credential: tokenResponse.access_token || tokenResponse.credential
-          })
+            tenant_name: autoTenantName,
+            slug: autoTenantSlug,
+            credential: tokenResponse.access_token || tokenResponse.credential,
+          }),
         });
 
         if (!response.ok) {
           const data = await response.json();
-          const msg = Array.isArray(data.detail) ? data.detail.map((e: any) => e.msg || 'Invalid field').join(', ') : (data.detail || "Workspace registration failed.");
+          const msg = Array.isArray(data.detail)
+            ? data.detail.map((e: any) => e.msg || 'Invalid field').join(', ')
+            : data.detail || 'Workspace registration failed.';
           throw new Error(msg);
         }
 
@@ -100,17 +108,19 @@ export const AuthModal: React.FC = () => {
           setAuthModalMode('login');
         }, 1500);
       } else {
-        const response = await fetch("/api/auth/google/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const response = await fetch('/api/auth/google/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            credential: tokenResponse.access_token || tokenResponse.credential
-          })
+            credential: tokenResponse.access_token || tokenResponse.credential,
+          }),
         });
 
         if (!response.ok) {
           const errData = await response.json();
-          const msg = Array.isArray(errData.detail) ? errData.detail.map((e: any) => e.msg || 'Invalid field').join(', ') : (errData.detail || "Google Sign-In failed.");
+          const msg = Array.isArray(errData.detail)
+            ? errData.detail.map((e: any) => e.msg || 'Invalid field').join(', ')
+            : errData.detail || 'Google Sign-In failed.';
           throw new Error(msg);
         }
 
@@ -118,13 +128,20 @@ export const AuthModal: React.FC = () => {
         setIsSuccess(true);
         setTimeout(() => {
           const displayName = data.name || (data.email ? data.email.split('@')[0] : 'User');
-          saveLoginSession(displayName, data.email || email || 'user@fluentia.ai', data.role || 'user', data.access_token, data.refresh_token, data.tenant_slug || null);
+          saveLoginSession(
+            displayName,
+            data.email || email || 'user@fluentia.ai',
+            data.role || 'user',
+            data.access_token,
+            data.refresh_token,
+            data.tenant_slug || null
+          );
           setViewMode('workspace');
           handleClose(true);
         }, 1200);
       }
     } catch (err: any) {
-      setError(err.message || "Google authentication failed.");
+      setError(err.message || 'Google authentication failed.');
     } finally {
       setIsLoading(false);
     }
@@ -146,44 +163,67 @@ export const AuthModal: React.FC = () => {
 
     try {
       if (authModalMode === 'tenant-signup') {
-        const response = await fetch("/api/auth/register-tenant", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const autoName = name || (email ? email.split('@')[0] : 'User');
+        const autoTenantName = `${autoName}'s Workspace`;
+        let rawSlug = autoName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (!rawSlug || rawSlug.length < 2) {
+          rawSlug = 'workspace';
+        }
+        const autoSlug = `${rawSlug}-${Math.random().toString(36).substring(2, 6)}`;
+
+        const response = await fetch('/api/auth/register-tenant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            tenant_name: tenantName || `${name || 'User'}'s Workspace`,
-            slug: (tenantSlug || name || 'workspace').toLowerCase().replace(/[^a-z0-9]/g, ''),
-            admin_name: name || 'Admin',
+            tenant_name: autoTenantName,
+            slug: autoSlug,
+            admin_name: autoName,
             admin_email: email,
-            admin_password: password || 'defaultpass123'
-          })
+            admin_password: password || 'defaultpass123',
+          }),
         });
 
         if (!response.ok) {
-          const data = await response.json();
-          const msg = Array.isArray(data.detail) ? data.detail.map((e: any) => `${e.loc?.join('.') || 'field'}: ${e.msg}`).join(', ') : (data.detail || "Workspace registration failed.");
-          throw new Error(msg);
+          let errorMsg = 'Workspace registration failed.';
+          try {
+            const data = await response.json();
+            errorMsg = Array.isArray(data.detail)
+              ? data.detail.map((e: any) => (typeof e === 'string' ? e : e.msg || 'Invalid field')).join(', ')
+              : (typeof data.detail === 'string' ? data.detail : errorMsg);
+          } catch {
+            errorMsg = `Server response error (${response.status}). Please check your input.`;
+          }
+          throw new Error(errorMsg);
         }
 
+        await response.json();
         setIsSuccess(true);
+        setPassword('');
         setTimeout(() => {
           setIsSuccess(false);
           setAuthModalMode('login');
         }, 1500);
-
       } else {
-        const response = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             username: email,
-            password: password || 'defaultpass123'
-          })
+            password: password || 'defaultpass123',
+          }),
         });
 
         if (!response.ok) {
-          const data = await response.json();
-          const msg = Array.isArray(data.detail) ? data.detail.map((e: any) => e.msg || 'Invalid credentials').join(', ') : (data.detail || "Incorrect email or password.");
-          throw new Error(msg);
+          let errorMsg = 'Incorrect email or password.';
+          try {
+            const data = await response.json();
+            errorMsg = Array.isArray(data.detail)
+              ? data.detail.map((e: any) => (typeof e === 'string' ? e : e.msg || 'Invalid credentials')).join(', ')
+              : (typeof data.detail === 'string' ? data.detail : errorMsg);
+          } catch {
+            errorMsg = `Authentication error (${response.status}).`;
+          }
+          throw new Error(errorMsg);
         }
 
         const data = await response.json();
@@ -195,7 +235,7 @@ export const AuthModal: React.FC = () => {
         }, 1200);
       }
     } catch (err: any) {
-      setError(err.message || "Authentication request failed.");
+      setError(err.message || 'Authentication request failed.');
     } finally {
       setIsLoading(false);
     }
@@ -203,211 +243,360 @@ export const AuthModal: React.FC = () => {
 
   if (!isAuthModalOpen) return null;
 
+  const isPasswordFocused = characterMood === 'password-focus';
+  const isPasswordPeek = characterMood === 'password-peek' || (isPasswordFocused && showPassword);
+  const isShy = isPasswordFocused && !showPassword;
+  const isEmailFocused = characterMood === 'email-focus';
+
   return (
     <AnimatePresence>
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.4 }}
-        className="echoid-hero"
-      >
-        {/* Full-bleed Background Video Layer */}
-        <div className="echoid-media">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            poster="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260806_132328_5f9029c8-218f-4489-82b6-29ff2849920e.png"
-          >
-            <source
-              src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260806_133255_956f653f-5d80-4b06-abd5-0f46c98b60fa.mp4"
-              type="video/mp4"
-            />
-          </video>
-        </div>
-
-        {/* Dual Gradient Scrim Overlay */}
-        <div className="echoid-scrim" />
-
-        {/* Row 1: Navbar (Top) */}
-        <header className="echoid-nav">
-          <button onClick={() => handleClose(false)} className="echoid-logo flex items-center gap-2">
-            <img src="/logo.png?v=3" alt="Logo" className="h-8 sm:h-9 w-auto object-contain dark:invert-0 dark:brightness-100 invert brightness-90 filter transition-all duration-200" />
-            <span className="font-extrabold tracking-tight">{platformName}</span>
-          </button>
-
-          {/* Desktop Nav Cluster */}
-          <div className="echoid-nav-links">
-            <nav className="echoid-nav-items">
-              <a href="#ai-language-tools" className="echoid-nav-link" onClick={() => handleClose(false)}>AI Tools</a>
-              <a href="#pricing" className="echoid-nav-link" onClick={() => handleClose(false)}>Plans</a>
-              <a href="#contact" className="echoid-nav-link" onClick={() => handleClose(false)}>Contact</a>
-            </nav>
-            <a href="#join" className="echoid-cta-btn" onClick={(e) => { e.preventDefault(); setAuthModalMode('login'); }}>
-              JOIN UP
-            </a>
-            <button
-              type="button"
-              onClick={() => handleClose(false)}
-              className="echoid-close-btn"
-              title="Close overlay"
-              aria-label="Close menu"
-            >
-              [ X ]
-            </button>
-          </div>
-
-          {/* Mobile Hamburger Button */}
-          <button
-            type="button"
-            className={`echoid-hamburger ${mobileMenuOpen ? 'active' : ''}`}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobileMenu"
-            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-          >
-            <span className="echoid-hamburger-bar" />
-            <span className="echoid-hamburger-bar" />
-            <span className="echoid-hamburger-bar" />
-          </button>
-        </header>
-
-        {/* Mobile Menu Overlay */}
-        <div
-          id="mobileMenu"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Site menu"
-          aria-hidden={!mobileMenuOpen}
-          className={`echoid-mobile-menu ${mobileMenuOpen ? 'open' : ''}`}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#0a0a0f]/80 backdrop-blur-md overflow-y-auto">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.94, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.94, y: 20 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="relative w-full max-w-[940px] bg-white rounded-[32px] shadow-2xl overflow-hidden border border-slate-100 flex flex-col my-auto"
         >
-          <a href="#ai-language-tools" className="echoid-mobile-item" style={{ transitionDelay: '180ms' }} onClick={() => { setMobileMenuOpen(false); handleClose(false); }}>
-            AI Tools
-          </a>
-          <a href="#pricing" className="echoid-mobile-item" style={{ transitionDelay: '250ms' }} onClick={() => { setMobileMenuOpen(false); handleClose(false); }}>
-            Plans
-          </a>
-          <a href="#contact" className="echoid-mobile-item" style={{ transitionDelay: '320ms' }} onClick={() => { setMobileMenuOpen(false); handleClose(false); }}>
-            Contact
-          </a>
-          <a href="#join" className="echoid-mobile-item echoid-mobile-cta" style={{ transitionDelay: '390ms' }} onClick={() => { setMobileMenuOpen(false); setAuthModalMode('login'); }}>
-            JOIN UP
-          </a>
+          {/* Close Modal Button */}
           <button
-            type="button"
-            onClick={() => setMobileMenuOpen(false)}
-            className="echoid-close-btn mt-6"
+            onClick={() => handleClose(false)}
+            className="absolute top-5 right-5 z-20 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Close modal"
           >
-            [ CLOSE MENU ]
+            <X className="w-5 h-5" />
           </button>
-        </div>
 
-        {/* Row 2: Right Panel Form (Voice Entry Signup) */}
-        <main className="echoid-body">
-          <div className="echoid-panel">
-            {/* 1) Chip */}
-            <div className="echoid-chip">
-              [ {taglineText.toUpperCase()} ]
+          {/* Main 2-Column Container */}
+          <div className="grid grid-cols-1 md:grid-cols-12 min-h-[560px]">
+            {/* ── LEFT COLUMN: Animated Characters Playground ────────────────── */}
+            <div className="md:col-span-5 bg-[#F4F4F6] relative p-8 flex flex-col justify-between items-center overflow-hidden min-h-[280px] md:min-h-full">
+              {/* Top Platform Tag */}
+              <div className="w-full flex items-center justify-start">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono">
+                  {platformName}
+                </span>
+              </div>
+
+              {/* SVG Animated Characters Group */}
+              <div className="relative w-full max-w-[280px] h-[220px] my-auto flex items-end justify-center">
+                <svg viewBox="0 0 320 240" className="w-full h-full overflow-visible">
+                  {/* 1. Orange Dome Character (Bottom Left) */}
+                  <motion.g
+                    animate={{
+                      rotate: isShy ? -28 : isEmailFocused ? 4 : 0,
+                      x: isShy ? -12 : isEmailFocused ? 6 : 0,
+                      y: isShy ? 8 : 0,
+                    }}
+                    transition={{ type: 'spring', stiffness: 220, damping: 16 }}
+                  >
+                    {/* Body */}
+                    <path
+                      d="M 20 220 C 20 120, 150 120, 150 220 Z"
+                      fill="#FF6B4A"
+                    />
+                    {/* Face Details */}
+                    {isShy ? (
+                      /* Turned away face / blush dots */
+                      <g transform="translate(45, 160)">
+                        <circle cx="15" cy="0" r="3" fill="#C0392B" opacity="0.6" />
+                        <circle cx="45" cy="0" r="3" fill="#C0392B" opacity="0.6" />
+                        <path d="M 25 10 Q 30 15 35 10" fill="none" stroke="#7F1D1D" strokeWidth="2.5" strokeLinecap="round" />
+                      </g>
+                    ) : (
+                      /* Expressive Eyes & Mouth */
+                      <g transform={isEmailFocused ? 'translate(75, 155)' : 'translate(65, 155)'}>
+                        <circle cx="0" cy="0" r="4.5" fill="#1E293B" />
+                        <circle cx="30" cy="0" r="4.5" fill="#1E293B" />
+                        {/* Cheeks */}
+                        <circle cx="-10" cy="8" r="4" fill="#E74C3C" opacity="0.4" />
+                        <circle cx="40" cy="8" r="4" fill="#E74C3C" opacity="0.4" />
+                        {/* Mouth */}
+                        <path d="M 8 12 Q 15 18 22 12" fill="none" stroke="#1E293B" strokeWidth="2.5" strokeLinecap="round" />
+                      </g>
+                    )}
+                  </motion.g>
+
+                  {/* 2. Purple Tall Character (Middle Left/Back) */}
+                  <motion.g
+                    animate={{
+                      rotate: isShy ? -35 : isEmailFocused ? 6 : 0,
+                      x: isShy ? -16 : isEmailFocused ? 8 : 0,
+                      y: isShy ? 12 : 0,
+                    }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                  >
+                    {/* Body */}
+                    <rect x="90" y="55" width="85" height="165" rx="22" fill="#7C3AED" />
+                    {/* Eyes & Mouth */}
+                    {isShy ? (
+                      /* Shy Eyes Closed */
+                      <g transform="translate(115, 85)">
+                        <path d="M 0 0 Q 5 -5 10 0" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+                        <path d="M 25 0 Q 30 -5 35 0" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+                      </g>
+                    ) : (
+                      <g transform={isEmailFocused ? 'translate(125, 85)' : 'translate(118, 85)'}>
+                        <circle cx="0" cy="0" r="5" fill="#FFFFFF" />
+                        <circle cx="0" cy="0" r="2.5" fill="#000000" />
+                        <circle cx="28" cy="0" r="5" fill="#FFFFFF" />
+                        <circle cx="28" cy="0" r="2.5" fill="#000000" />
+                        <circle cx="14" cy="18" r="4" fill="#000000" />
+                      </g>
+                    )}
+                  </motion.g>
+
+                  {/* 3. Black Pillar Character with Big Eyes (Center Right) */}
+                  <motion.g
+                    animate={{
+                      rotate: isShy ? 45 : isEmailFocused ? 3 : 0,
+                      x: isShy ? 25 : isEmailFocused ? 5 : 0,
+                      scaleY: isShy ? 0.9 : 1,
+                    }}
+                    transition={{ type: 'spring', stiffness: 240, damping: 18 }}
+                  >
+                    {/* Body */}
+                    <rect x="160" y="85" width="60" height="135" rx="18" fill="#18181B" />
+                    {/* Eyes */}
+                    {isShy ? (
+                      /* Turned completely around / Eyes hiding */
+                      <g transform="translate(180, 115)">
+                        <circle cx="10" cy="5" r="2" fill="#666666" />
+                      </g>
+                    ) : (
+                      <g transform={isEmailFocused ? 'translate(178, 110)' : 'translate(172, 110)'}>
+                        {/* Eye 1 */}
+                        <circle cx="0" cy="0" r="10" fill="#FFFFFF" />
+                        <circle cx={isEmailFocused ? 3 : 0} cy={isEmailFocused ? 1 : 0} r="4.5" fill="#000000" />
+                        {/* Eye 2 */}
+                        <circle cx="22" cy="0" r="10" fill="#FFFFFF" />
+                        <circle cx={isEmailFocused ? 25 : 22} cy={isEmailFocused ? 1 : 0} r="4.5" fill="#000000" />
+                      </g>
+                    )}
+                  </motion.g>
+
+                  {/* 4. Yellow Arch Character (Front Right) */}
+                  <motion.g
+                    animate={{
+                      rotate: isShy ? 30 : isEmailFocused ? 2 : 0,
+                      x: isShy ? 20 : isEmailFocused ? 4 : 0,
+                    }}
+                    transition={{ type: 'spring', stiffness: 210, damping: 17 }}
+                  >
+                    {/* Body */}
+                    <path
+                      d="M 195 220 C 195 110, 275 110, 275 220 Z"
+                      fill="#F59E0B"
+                    />
+                    {/* Eyes & Mouth */}
+                    {isShy ? (
+                      <g transform="translate(240, 145)">
+                        <line x1="0" y1="0" x2="10" y2="0" stroke="#78350F" strokeWidth="3" strokeLinecap="round" />
+                      </g>
+                    ) : (
+                      <g transform={isEmailFocused ? 'translate(235, 140)' : 'translate(230, 140)'}>
+                        <circle cx="0" cy="0" r="4" fill="#1E293B" />
+                        <line x1="-15" y1="18" x2="15" y2="18" stroke="#1E293B" strokeWidth="3" strokeLinecap="round" />
+                      </g>
+                    )}
+                  </motion.g>
+                </svg>
+              </div>
+
+              {/* Bottom Interactive Hint Caption */}
+              <div className="w-full text-center">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  {isShy ? (
+                    <span className="text-purple-600 font-bold animate-pulse">
+                      🙈 Shh! They turned around to protect your password.
+                    </span>
+                  ) : isPasswordPeek ? (
+                    <span className="text-amber-600 font-bold">
+                      😳 Whoa! Password revealed!
+                    </span>
+                  ) : (
+                    <span>Type your password. Watch them look away.</span>
+                  )}
+                </p>
+              </div>
             </div>
 
-            {/* 2) H1 */}
-            <h1 className="echoid-h1">
-              {platformName.toUpperCase()}
-            </h1>
+            {/* ── RIGHT COLUMN: Modern Clean Auth Form ────────────────────────── */}
+            <div className="md:col-span-7 p-6 sm:p-10 flex flex-col justify-between">
+              <div>
+                {/* Starburst Icon */}
+                <div className="w-full flex justify-center mb-4">
+                  <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-900 shadow-sm">
+                    <Sparkles className="w-5 h-5 text-slate-800" />
+                  </div>
+                </div>
 
-            {/* 3) Tagline */}
-            <p className="echoid-tagline">
-              {footerText.toUpperCase()}
-            </p>
+                {/* Form Title & Subtitle */}
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+                    {authModalMode === 'tenant-signup'
+                      ? 'Register Workspace'
+                      : authModalMode === 'signup'
+                      ? 'Create an Account'
+                      : 'Welcome back'}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                    {authModalMode === 'tenant-signup'
+                      ? 'Set up your dedicated AI Language platform workspace.'
+                      : authModalMode === 'signup'
+                      ? 'Start for free with instant access to AI tools.'
+                      : 'Please enter your details.'}
+                  </p>
+                </div>
 
-            {/* Success State Notification */}
-            {isSuccess ? (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-8 p-6 border border-emerald-500/50 bg-emerald-500/10 text-white font-mono text-sm uppercase tracking-widest text-center w-full"
-              >
-                ✓ AUTHENTICATION GRANTED. REDIRECTING...
-              </motion.div>
-            ) : (
-              /* 4) Form */
-              <form noValidate onSubmit={handleSubmit} className="echoid-form">
+                {/* Error Message Alert */}
                 {error && (
-                  <div className="p-3 border border-red-500/40 bg-red-500/10 text-red-300 font-mono text-xs uppercase tracking-wider mb-2">
-                    ERROR: {error}
+                  <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-semibold">
+                    {error}
                   </div>
                 )}
 
-                {/* Additional workspace fields if registering workspace */}
-                {authModalMode === 'tenant-signup' && (
-                  <>
-                    <div>
-                      <label htmlFor="tenantName" className="sr-only">Workspace Name</label>
-                      <input
-                        id="tenantName"
-                        type="text"
-                        required
-                        value={tenantName}
-                        onChange={(e) => {
-                          setTenantName(e.target.value);
-                          setTenantSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''));
-                        }}
-                        placeholder="Workspace Name (e.g. Acme Corp)"
-                        className="echoid-input mb-2"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="adminName" className="sr-only">Full Name</label>
-                      <input
-                        id="adminName"
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Full Name"
-                        className="echoid-input mb-2"
-                      />
-                    </div>
-                  </>
+                {/* Success Notification */}
+                {isSuccess && (
+                  <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center justify-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>
+                      {authModalMode === 'tenant-signup'
+                        ? 'Registration Successful! Redirecting to Log In...'
+                        : 'Authentication Granted! Redirecting...'}
+                    </span>
+                  </div>
                 )}
 
-                {/* a) Email Field */}
-                <div>
-                  <label htmlFor="echoidEmail" className="sr-only">Email</label>
-                  <input
-                    id="echoidEmail"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email"
-                    className="echoid-input"
-                  />
+                {/* Main Auth Form */}
+                <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
+                  {/* Additional Workspace Fields */}
+                  {authModalMode === 'tenant-signup' && (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Full Name
+                      </label>
+                      <div className="relative">
+                        <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input
+                          type="text"
+                          required
+                          autoComplete="off"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Alex Morgan"
+                          className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Email Field */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Email
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                      <input
+                        type="email"
+                        required
+                        autoComplete="off"
+                        value={email}
+                        onFocus={() => setCharacterMood('email-focus')}
+                        onBlur={() => setCharacterMood('idle')}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        className="w-full pl-10 pr-3 py-2.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all shadow-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password Field */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        autoComplete="new-password"
+                        value={password}
+                        onFocus={() => setCharacterMood(showPassword ? 'password-peek' : 'password-focus')}
+                        onBlur={() => setCharacterMood('idle')}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowPassword(!showPassword);
+                          setCharacterMood(!showPassword ? 'password-peek' : 'password-focus');
+                        }}
+                        className="absolute right-3 top-3 text-slate-400 hover:text-slate-700 transition-colors"
+                        title={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Checkbox & Forgot Password Row */}
+                  <div className="flex items-center justify-between pt-1">
+                    <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer font-medium">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer"
+                      />
+                      <span>Remember for 30 days</span>
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() => setError('Password reset instructions sent to your email.')}
+                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-[#18181B] hover:bg-black text-white font-bold py-3 rounded-full text-xs sm:text-sm transition-all shadow-md active:scale-[0.99] cursor-pointer disabled:opacity-50 mt-2"
+                  >
+                    {isLoading
+                      ? 'Processing...'
+                      : authModalMode === 'tenant-signup'
+                      ? 'Register Workspace'
+                      : authModalMode === 'signup'
+                      ? 'Sign Up'
+                      : 'Log in'}
+                  </button>
+                </form>
+
+                {/* Or Divider */}
+                <div className="relative my-5">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-white px-3 text-slate-400 font-medium">or</span>
+                  </div>
                 </div>
 
-                {/* Password Field */}
-                <div>
-                  <label htmlFor="echoidPassword" className="sr-only">Password</label>
-                  <input
-                    id="echoidPassword"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
-                    className="echoid-input"
-                  />
-                </div>
-
-                {/* b) Button "Proceed with Google" (.btn--ghost) -> Google Sign In */}
+                {/* Google Sign-In Button */}
                 <button
                   type="button"
                   onClick={() => loginWithGoogle()}
                   disabled={isLoading}
-                  className="echoid-btn-ghost flex items-center justify-center gap-3"
+                  className="w-full bg-[#F4F4F6] hover:bg-[#EAEAEA] text-slate-800 font-bold py-2.5 px-4 rounded-full text-xs sm:text-sm transition-colors flex items-center justify-center gap-3 border border-slate-200/60 cursor-pointer"
                 >
                   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                     <path
@@ -427,38 +616,38 @@ export const AuthModal: React.FC = () => {
                       d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 22.3 12 23z"
                     />
                   </svg>
-                  <span>SIGN IN WITH GOOGLE</span>
+                  <span>Log in with Google</span>
                 </button>
+              </div>
 
-                {/* c) Button "Access" (.btn--solid) -> Submit form */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="echoid-btn-solid"
-                >
-                  {isLoading ? 'AUTHENTICATING...' : (authModalMode === 'tenant-signup' ? 'REGISTER WORKSPACE' : 'ACCESS')}
-                </button>
-
-                {/* 5) Referral Link */}
-                <button
-                  type="button"
-                  onClick={() => setAuthModalMode(authModalMode === 'tenant-signup' ? 'login' : 'tenant-signup')}
-                  className="echoid-referral"
-                >
-                  {authModalMode === 'tenant-signup' ? 'SIGN IN WITH EXISTING ACCOUNT' : "I'VE GOT AN INVITE KEY"}
-                </button>
-              </form>
-            )}
+              {/* Modal Footer Switch Mode */}
+              <div className="mt-6 text-center text-xs text-slate-500">
+                {authModalMode === 'login' ? (
+                  <>
+                    Don't have an account?{' '}
+                    <button
+                      onClick={() => setAuthModalMode('tenant-signup')}
+                      className="font-bold text-[#6366F1] hover:underline cursor-pointer"
+                    >
+                      Sign up
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Already have an account?{' '}
+                    <button
+                      onClick={() => setAuthModalMode('login')}
+                      className="font-bold text-[#6366F1] hover:underline cursor-pointer"
+                    >
+                      Log in
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
-        </main>
-
-        {/* Row 3: Legal Footer */}
-        <footer className="echoid-footer">
-          Opening a {platformName} account signals that you accept our{' '}
-          <a href="#privacy" onClick={(e) => e.preventDefault()}>Privacy Notice</a> and{' '}
-          <a href="#terms" onClick={(e) => e.preventDefault()}>Service Contract</a>.
-        </footer>
-      </motion.section>
+        </motion.div>
+      </div>
     </AnimatePresence>
   );
 };

@@ -109,7 +109,7 @@ export const TenantDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <Loader2 className="animate-spin text-teal-500" size={32} />
+        <Loader2 className="animate-spin text-orange-500" size={32} />
       </div>
     );
   }
@@ -125,7 +125,7 @@ export const TenantDashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/5 pb-5">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Settings className="text-teal-500" size={20} />
+            <Settings className="text-orange-500" size={20} />
             Workspace Settings & Dashboard
           </h1>
           <p className="text-base text-slate-500 dark:text-slate-400 font-semibold mt-1">
@@ -138,7 +138,7 @@ export const TenantDashboard: React.FC = () => {
             onClick={() => setActiveSubTab('metrics')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-base font-bold transition-all cursor-pointer ${
               activeSubTab === 'metrics' 
-                ? 'bg-teal-600 text-white' 
+                ? 'bg-orange-500 text-white' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
@@ -148,7 +148,7 @@ export const TenantDashboard: React.FC = () => {
             onClick={() => setActiveSubTab('team')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-base font-bold transition-all cursor-pointer ${
               activeSubTab === 'team' 
-                ? 'bg-teal-600 text-white' 
+                ? 'bg-orange-500 text-white' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
@@ -158,7 +158,7 @@ export const TenantDashboard: React.FC = () => {
             onClick={() => setActiveSubTab('keys')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-base font-bold transition-all cursor-pointer ${
               activeSubTab === 'keys' 
-                ? 'bg-teal-600 text-white' 
+                ? 'bg-orange-500 text-white' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
@@ -183,7 +183,7 @@ export const TenantDashboard: React.FC = () => {
                 <span className="text-slate-500 dark:text-slate-400">{roundValue(metrics.audio_minutes_used)} mins consumed</span>
               </div>
               <div className="w-full h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-teal-500 rounded-full" style={{ width: `${Math.min(100, (metrics.audio_minutes_used / audioMax) * 100)}%` }} />
+                <div className="h-full bg-orange-500 rounded-full" style={{ width: `${Math.min(100, (metrics.audio_minutes_used / audioMax) * 100)}%` }} />
               </div>
               <p className="text-sm text-slate-500">Starter Plan allocation: {audioMax} minutes</p>
             </div>
@@ -218,7 +218,7 @@ export const TenantDashboard: React.FC = () => {
           {/* Invite Member form */}
           <div className="app-card rounded-2xl p-5 h-fit space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <UserPlus className="text-teal-500" size={16} />
+              <UserPlus className="text-orange-500" size={16} />
               Add Team Member
             </h3>
             <form onSubmit={handleInviteUser} className="space-y-3">
@@ -274,7 +274,7 @@ export const TenantDashboard: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-base font-bold cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-base font-bold cursor-pointer"
               >
                 Create Member Account
               </button>
@@ -332,7 +332,7 @@ export const TenantDashboard: React.FC = () => {
           {/* Key Input Form */}
           <div className="app-card rounded-2xl p-5 h-fit space-y-4">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Key className="text-teal-500" size={16} />
+              <Key className="text-orange-500" size={16} />
               Set Custom API Keys
             </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
@@ -389,7 +389,7 @@ export const TenantDashboard: React.FC = () => {
                   
                   <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/5 text-sm font-semibold text-slate-550 dark:text-slate-400 flex justify-between">
                     <span>Key: configured</span>
-                    <span className="text-teal-500 dark:text-teal-400">Workspace Level</span>
+                    <span className="text-orange-500 dark:text-orange-400">Workspace Level</span>
                   </div>
                 </div>
               ))}

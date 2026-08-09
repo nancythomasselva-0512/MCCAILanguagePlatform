@@ -17,18 +17,18 @@ export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDash
     {
       id: 'text-to-speech',
       badge: 'Text Generation',
-      badgeColor: '#0d9488',
+      badgeColor: '#ff5f03',
       title: 'Text to Voice',
       description: 'Convert text into lifelike speech with ultra-realistic AI voices.',
       linkText: 'Start generating',
-      bgClass: 'bg-[#f0fdfa]',
-      hoverClass: 'hover:bg-[#ccfbf1]',
+      bgClass: 'bg-[#fff7ed]',
+      hoverClass: 'hover:bg-[#ffedd5]',
       pattern: (
         <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-30 pointer-events-none flex items-center justify-end overflow-hidden pr-4">
           <div className="flex gap-2">
-            <div className="h-32 w-12 rounded-full bg-[#14b8a6] transform rotate-45 -mr-4" />
-            <div className="h-32 w-12 rounded-full bg-[#2dd4bf] transform rotate-45 -mr-4" />
-            <div className="h-32 w-12 rounded-full bg-[#5eead4] transform rotate-45" />
+            <div className="h-32 w-12 rounded-full bg-[#ff5f03] transform rotate-45 -mr-4" />
+            <div className="h-32 w-12 rounded-full bg-[#f97316] transform rotate-45 -mr-4" />
+            <div className="h-32 w-12 rounded-full bg-[#fdba74] transform rotate-45" />
           </div>
         </div>
       )
@@ -40,8 +40,8 @@ export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDash
       title: 'Audio to Text',
       description: 'Transcribe audio files into highly accurate text instantly.',
       linkText: 'Start transcribing',
-      bgClass: 'bg-[#f5f5f5]',
-      hoverClass: 'hover:bg-[#eaeaea]',
+      bgClass: 'bg-[#fafaf9]',
+      hoverClass: 'hover:bg-[#f5f5f4]',
       pattern: (
         <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-20 pointer-events-none flex flex-col items-end justify-center overflow-hidden pr-4 gap-4">
           <div className="h-20 w-20 rounded-full bg-black" />
@@ -52,16 +52,16 @@ export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDash
     {
       id: 'voice-to-text',
       badge: 'Live Processing',
-      badgeColor: '#8b5cf6',
+      badgeColor: '#f97316',
       title: 'Transcription',
       description: 'Real-time voice-to-text transcription for live speech and dictation.',
       linkText: 'Start recording',
-      bgClass: 'bg-[#ede9fe]',
-      hoverClass: 'hover:bg-[#e4dcff]',
+      bgClass: 'bg-[#fffbe6]',
+      hoverClass: 'hover:bg-[#fef3c7]',
       pattern: (
         <div className="absolute right-[-10%] top-[-10%] bottom-0 w-2/3 opacity-30 pointer-events-none flex items-center justify-center overflow-hidden">
-          <div className="h-48 w-48 rounded-full border-[24px] border-[#a78bfa] flex items-center justify-center">
-             <div className="h-24 w-24 rounded-full bg-[#c4b5fd]" />
+          <div className="h-48 w-48 rounded-full border-[24px] border-[#fb923c] flex items-center justify-center">
+             <div className="h-24 w-24 rounded-full bg-[#fdba74]" />
           </div>
         </div>
       )
@@ -69,19 +69,19 @@ export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDash
     {
       id: 'translation',
       badge: 'Multi-language',
-      badgeColor: '#10b981',
+      badgeColor: '#ff5f03',
       title: 'Translation',
       description: 'Translate text across languages with contextual AI understanding.',
       linkText: 'Start translating',
-      bgClass: 'bg-[#dcfce7]',
-      hoverClass: 'hover:bg-[#c9fbd8]',
+      bgClass: 'bg-[#fff7ed]',
+      hoverClass: 'hover:bg-[#ffedd5]',
       pattern: (
         <div className="absolute right-0 bottom-0 w-1/2 h-full opacity-30 pointer-events-none flex items-end justify-end overflow-hidden p-4">
           <div className="grid grid-cols-2 gap-2 transform rotate-12 translate-x-4 translate-y-4">
-            <div className="h-20 w-20 rounded-[20px] bg-[#6ee7b7]" />
-            <div className="h-20 w-20 rounded-[20px] bg-[#34d399]" />
-            <div className="h-20 w-20 rounded-[20px] rounded-bl-[40px] bg-[#10b981]" />
-            <div className="h-20 w-20 rounded-[20px] bg-[#a7f3d0]" />
+            <div className="h-20 w-20 rounded-[20px] bg-[#fdba74]" />
+            <div className="h-20 w-20 rounded-[20px] bg-[#fb923c]" />
+            <div className="h-20 w-20 rounded-[20px] rounded-bl-[40px] bg-[#ff5f03]" />
+            <div className="h-20 w-20 rounded-[20px] bg-[#fed7aa]" />
           </div>
         </div>
       )
@@ -89,16 +89,16 @@ export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDash
     {
       id: 'tenant-billing',
       badge: 'Workspace',
-      badgeColor: '#06b6d4',
+      badgeColor: '#c2410c',
       title: 'Plans & Billing',
       description: 'Manage your subscription, limits, and billing history easily.',
       linkText: 'View plans',
-      bgClass: 'bg-[#cffafe]',
-      hoverClass: 'hover:bg-[#bbf7d0]', // Actually wait, #bbf7d0 is green. #a5f3fc is cyan.
+      bgClass: 'bg-[#fff1f2]',
+      hoverClass: 'hover:bg-[#ffe4e6]',
       pattern: (
         <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-30 pointer-events-none flex items-center justify-end overflow-hidden pr-4">
-          <div className="h-32 w-32 rounded-full border-4 border-[#22d3ee] flex items-center justify-center">
-             <div className="h-16 w-16 bg-[#67e8f9] rotate-45" />
+          <div className="h-32 w-32 rounded-full border-4 border-[#fb923c] flex items-center justify-center">
+             <div className="h-16 w-16 bg-[#fdba74] rotate-45" />
           </div>
         </div>
       )
@@ -106,15 +106,15 @@ export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDash
     {
       id: 'history',
       badge: 'Activity',
-      badgeColor: '#3b82f6',
+      badgeColor: '#ea580c',
       title: 'Activity History',
       description: 'Review your past generations, transcriptions, and usage logs.',
       linkText: 'View history',
-      bgClass: 'bg-[#dbeafe]',
-      hoverClass: 'hover:bg-[#bfdbfe]',
+      bgClass: 'bg-[#fff7ed]',
+      hoverClass: 'hover:bg-[#ffedd5]',
       pattern: (
         <div className="absolute right-[-5%] top-[-5%] bottom-0 w-1/2 opacity-30 pointer-events-none flex items-center justify-center overflow-hidden">
-          <div className="w-full h-full bg-gradient-to-bl from-[#60a5fa] to-transparent rounded-full blur-2xl transform scale-150" />
+          <div className="w-full h-full bg-gradient-to-bl from-[#f97316] to-transparent rounded-full blur-2xl transform scale-150" />
         </div>
       )
     }

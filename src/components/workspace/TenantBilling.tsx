@@ -282,13 +282,13 @@ export const TenantBilling: React.FC = () => {
 
 
       {/* Plans Pricing Selection Section */}
-      <div className="space-y-10 bg-teal-900/10 dark:bg-[#031c19] p-8 sm:p-12 md:p-14 lg:p-16 rounded-[3rem] relative overflow-hidden shadow-2xl border border-teal-500/20 w-full">
+      <div className="space-y-10 bg-orange-950/10 dark:bg-[#1a0b02] p-8 sm:p-12 md:p-14 lg:p-16 rounded-[3rem] relative overflow-hidden shadow-2xl border border-orange-500/20 w-full">
         {/* Subtle background glow effect */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-teal-400/20 blur-[120px] pointer-events-none rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-orange-400/20 blur-[120px] pointer-events-none rounded-full" />
         
         <div className="relative z-10 text-center space-y-2">
-          <h3 className="text-5xl sm:text-6xl md:text-7xl font-black text-teal-950 dark:text-teal-50 tracking-[0.2em] uppercase drop-shadow-md">Our Prices</h3>
-          <p className="text-xs sm:text-sm text-teal-700 dark:text-teal-300 font-extrabold tracking-[0.25em] uppercase">Select a target tier to upgrade or downgrade your active workspace instantly.</p>
+          <h3 className="text-5xl sm:text-6xl md:text-7xl font-black text-orange-950 dark:text-orange-50 tracking-[0.2em] uppercase drop-shadow-md">Our Prices</h3>
+          <p className="text-xs sm:text-sm text-orange-700 dark:text-orange-300 font-extrabold tracking-[0.25em] uppercase">Select a target tier to upgrade or downgrade your active workspace instantly.</p>
         </div>
 
         {/* Monthly / Yearly Toggle */}
@@ -297,8 +297,8 @@ export const TenantBilling: React.FC = () => {
             onClick={() => setBillingCycle('monthly')}
             className={`px-7 py-3 rounded-full text-xs sm:text-sm font-black uppercase tracking-[0.15em] transition-all duration-200 ${
               billingCycle === 'monthly'
-                ? 'bg-teal-500 text-white shadow-[0_4px_20px_rgba(20,184,166,0.5)]'
-                : 'bg-white/80 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-teal-200/60 dark:border-white/10 hover:border-teal-300'
+                ? 'bg-orange-500 text-white shadow-[0_4px_20px_rgba(249,115,22,0.5)]'
+                : 'bg-white/80 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-orange-200/60 dark:border-white/10 hover:border-orange-300'
             }`}
           >
             Monthly
@@ -307,8 +307,8 @@ export const TenantBilling: React.FC = () => {
             onClick={() => setBillingCycle('yearly')}
             className={`px-7 py-3 rounded-full text-xs sm:text-sm font-black uppercase tracking-[0.15em] transition-all duration-200 flex items-center gap-2.5 ${
               billingCycle === 'yearly'
-                ? 'bg-teal-500 text-white shadow-[0_4px_20px_rgba(20,184,166,0.5)]'
-                : 'bg-white/80 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-teal-200/60 dark:border-white/10 hover:border-teal-300'
+                ? 'bg-orange-500 text-white shadow-[0_4px_20px_rgba(249,115,22,0.5)]'
+                : 'bg-white/80 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-orange-200/60 dark:border-white/10 hover:border-orange-300'
             }`}
           >
             Yearly
@@ -338,11 +338,11 @@ export const TenantBilling: React.FC = () => {
                   key={p.id}
                   glowColor={isPopular ? "rgba(20, 184, 166, 0.25)" : "rgba(59, 130, 246, 0.15)"}
                   className={`p-8 flex flex-col justify-between items-center text-center bg-white dark:bg-[#0c1427] border rounded-3xl shadow-xl relative w-full h-full min-h-[520px] ${
-                    isPopular ? 'border-teal-500 dark:border-teal-400 ring-2 ring-teal-500/30' : 'border-slate-200 dark:border-white/10'
+                    isPopular ? 'border-orange-500 dark:border-orange-400 ring-2 ring-orange-500/30' : 'border-slate-200 dark:border-white/10'
                   }`}
                 >
                   {isPopular && (
-                    <div className="w-[calc(100%+4rem)] bg-teal-500 text-white text-[11px] font-black uppercase tracking-widest py-2 text-center rounded-t-3xl -mt-8 mb-6 shadow-md">
+                    <div className="w-[calc(100%+4rem)] bg-orange-500 text-white text-[11px] font-black uppercase tracking-widest py-2 text-center rounded-t-3xl -mt-8 mb-6 shadow-md">
                       RECOMMENDED
                     </div>
                   )}
@@ -370,7 +370,7 @@ export const TenantBilling: React.FC = () => {
                           onClick={() => handleStartCheckout(p, billingCycle)}
                           className={`w-full py-3.5 px-6 rounded-2xl text-sm font-extrabold transition-all shadow-lg cursor-pointer text-center block ${
                             isPopular
-                              ? 'bg-teal-500 hover:bg-teal-600 text-white shadow-teal-500/30'
+                              ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/30'
                               : 'bg-white dark:bg-white/10 hover:bg-slate-50 border border-slate-200 dark:border-white/15 text-slate-900 dark:text-white'
                           }`}
                         >
@@ -441,7 +441,7 @@ export const TenantBilling: React.FC = () => {
 
                         return labels.map((labelStr, idx) => (
                           <li key={idx} className="flex items-center gap-3">
-                            <CheckCircle2 size={16} className="text-teal-500 flex-shrink-0" />
+                            <CheckCircle2 size={16} className="text-orange-500 flex-shrink-0" />
                             <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
                               {labelStr}
                             </span>
@@ -466,7 +466,7 @@ export const TenantBilling: React.FC = () => {
             onClick={() => setActiveHistoryTab('invoices')}
             className={`text-xs font-bold pb-2 transition-all cursor-pointer ${
               activeHistoryTab === 'invoices' 
-                ? 'text-slate-900 dark:text-white border-b-2 border-teal-500' 
+                ? 'text-slate-900 dark:text-white border-b-2 border-orange-500' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
@@ -476,7 +476,7 @@ export const TenantBilling: React.FC = () => {
             onClick={() => setActiveHistoryTab('payments')}
             className={`text-xs font-bold pb-2 transition-all cursor-pointer ${
               activeHistoryTab === 'payments' 
-                ? 'text-slate-900 dark:text-white border-b-2 border-teal-500' 
+                ? 'text-slate-900 dark:text-white border-b-2 border-orange-500' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
@@ -486,7 +486,7 @@ export const TenantBilling: React.FC = () => {
             onClick={() => setActiveHistoryTab('subscriptions')}
             className={`text-xs font-bold pb-2 transition-all cursor-pointer ${
               activeHistoryTab === 'subscriptions' 
-                ? 'text-slate-900 dark:text-white border-b-2 border-teal-500' 
+                ? 'text-slate-900 dark:text-white border-b-2 border-orange-500' 
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white'
             }`}
           >

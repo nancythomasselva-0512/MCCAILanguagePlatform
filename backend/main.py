@@ -180,6 +180,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail, "message": exc.detail},
+        headers=getattr(exc, "headers", None)
+    )
+
 @app.exception_handler(ResponseValidationError)
 async def validation_exception_handler(request: Request, exc: ResponseValidationError):
     import traceback
@@ -189,6 +199,12 @@ async def validation_exception_handler(request: Request, exc: ResponseValidation
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, (HTTPException, StarletteHTTPException)):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail, "message": exc.detail},
+            headers=getattr(exc, "headers", None)
+        )
     import traceback
     traceback.print_exc()
     return JSONResponse(status_code=500, content={"message": str(exc), "traceback": traceback.format_exc()})

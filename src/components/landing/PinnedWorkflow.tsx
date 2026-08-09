@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
 import type { ActiveTabType } from '../../context/AppContext';
+import { Sparkles, Zap, ShieldCheck, Globe2 } from 'lucide-react';
 
 interface PinnedWorkflowProps {
   onLaunchTool?: (tab: ActiveTabType) => void;
@@ -114,7 +115,7 @@ export const PinnedWorkflow: React.FC<PinnedWorkflowProps> = ({ onLaunchTool }) 
   ];
 
   return (
-    <section id="about-studio" className="relative bg-[#FAFAFC] dark:bg-[#040814] py-16 sm:py-24 overflow-hidden border-b border-gray-100 dark:border-white/5">
+    <section id="ai-models" className="relative bg-[#FAFAFC] dark:bg-[#040814] pt-8 pb-4 sm:pt-10 sm:pb-6 overflow-hidden border-b border-gray-100 dark:border-white/5">
       {/* Google Font Caveat for numbers & Inter for clean text */}
       <link
         href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700&display=swap"
@@ -206,33 +207,83 @@ export const PinnedWorkflow: React.FC<PinnedWorkflowProps> = ({ onLaunchTool }) 
       `}</style>
 
       <div className="pw-paper-bg max-w-[1240px] mx-auto px-5 sm:px-8 lg:px-12 relative">
-        {/* Header Row matching Section 1 badge style */}
+        {/* Header Row with 2-Column Split Layout */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, amount: 0.3 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="flex flex-col items-center text-center mb-16 sm:mb-20"
+          className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-12 mb-10 sm:mb-14"
         >
-          <div className="inline-flex items-center gap-2.5 mb-5">
-            <div className="w-7 h-7 rounded-full bg-slate-900 text-white text-[12px] font-bold flex items-center justify-center">
-              1
+          {/* Left Column: Badge, Title & Description */}
+          <div className="flex flex-col items-start text-left max-w-[620px]">
+            <div className="inline-flex items-center gap-2.5 mb-3">
+              <div className="w-7 h-7 rounded-full bg-slate-900 text-white text-[12px] font-bold flex items-center justify-center">
+                1
+              </div>
+              <span className="text-[13px] font-semibold border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-full px-4 py-1.5 bg-white dark:bg-slate-900 shadow-sm">
+                AI Models
+              </span>
             </div>
-            <span className="text-[13px] font-semibold border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-full px-4 py-1.5 bg-white dark:bg-slate-900 shadow-sm">
-              Our Pinned Roadmap
-            </span>
+
+            <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-medium leading-[1.12] tracking-[-0.02em] text-slate-900 dark:text-white">
+              AI Models
+            </h2>
+            <p className="mt-2.5 text-[16px] sm:text-[18px] text-slate-600 dark:text-slate-300 leading-[1.6]">
+              Interactive suite featuring our 4 primary speech and language translation engines.
+            </p>
           </div>
 
-          <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-medium leading-[1.12] tracking-[-0.02em] text-slate-900 dark:text-white max-w-[800px]">
-            4 Core AI Modules Roadmap
-          </h2>
-          <p className="mt-4 text-[16px] sm:text-[18px] text-slate-600 dark:text-slate-300 max-w-[620px] leading-[1.6]">
-            Interactive pinned roadmap featuring our 4 primary speech and language translation engines.
-          </p>
+          {/* Right Column: Glassmorphism Info Card */}
+          <div className="w-full lg:w-auto flex-shrink-0">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-5 shadow-lg shadow-slate-900/5 dark:shadow-black/20 max-w-md w-full">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-3 mb-3.5">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  Key Capabilities
+                </span>
+                <span className="text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 rounded-full px-2.5 py-0.5">
+                  v2.4 Active
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Zap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-900 dark:text-white">Low Latency Engine</h4>
+                    <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-snug">Sub-second speech processing & real-time translation</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-900 dark:text-white">Enterprise Privacy</h4>
+                    <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-snug">Zero data retention with end-to-end encryption</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Globe2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-900 dark:text-white">100+ Global Languages</h4>
+                    <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-snug">Context-aware dialect & neural accent support</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Dynamic Curved Dashed Path Connecting the Cards */}
-        <div ref={containerRef} className="relative min-h-[850px] flex flex-col justify-between py-6">
+        <div ref={containerRef} className="relative min-h-[660px] flex flex-col justify-between py-2">
           {/* SVG Connecting Path for Desktop */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none hidden md:block"

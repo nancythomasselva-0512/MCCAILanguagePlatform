@@ -121,7 +121,7 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
             ? 'text-[var(--sidebar-panel-text)] hover:text-[var(--sidebar-panel-text-active)] hover:bg-[var(--sidebar-panel-hover-bg)]'
             : active
               ? 'text-[var(--sidebar-panel-text-active)] font-bold'
-              : 'text-teal-600 hover:text-teal-800 hover:bg-[var(--sidebar-panel-hover-bg)]'
+              : 'text-orange-600 hover:text-orange-800 hover:bg-[var(--sidebar-panel-hover-bg)]'
           }`}
       >
         {/* Selection Indicator background */}
