@@ -218,7 +218,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (path === '/') return 'landing';
     if (path.startsWith('/controller')) {
-      return (token && isSuperAdmin) ? 'workspace' : 'admin-login';
+      return 'admin-login';
     }
     if (path.startsWith('/dashboard')) {
       return token ? 'workspace' : 'landing';

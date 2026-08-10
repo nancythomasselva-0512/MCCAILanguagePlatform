@@ -475,7 +475,7 @@ export const LandingPage: React.FC = () => {
       <ProcessSteps onLaunchTool={(tab) => setActiveTab(tab)} />
 
       {/* ── CORE FEATURES MARKETING SECTION (SECTION 3: PRICING) ─────────────────── */}
-      <CoreFeatures />
+      <CoreFeatures dbPlans={dbPlans} />
 
       {/* ── SECTION 4: FREQUENTLY ASKED QUESTIONS ACCORDION ───────────────────── */}
       <FaqAccordion />

@@ -27,18 +27,7 @@ function App() {
       const isSuperAdmin = user?.role === 'super_admin';
 
       if (window.location.pathname.startsWith('/controller')) {
-        if (user) {
-          setViewMode('workspace');
-          if (user.role === 'super_admin') {
-            const sub = window.location.pathname.replace('/controller/', '').replace('/controller', '');
-            if (sub && sub !== '/') setActiveTab(`sa-${sub}` as ActiveTabType);
-            else setActiveTab('sa-overview');
-          } else {
-            setActiveTab('tenant-dashboard');
-          }
-        } else {
-          setViewMode('admin-login');
-        }
+        setViewMode('admin-login');
       } else if (window.location.pathname.startsWith('/dashboard')) {
         if (!user) {
           logout(); // Clear any invalid session

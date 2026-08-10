@@ -1,17 +1,53 @@
 import React from 'react';
-import { CheckCircle2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import type { ActiveTabType } from '../../context/AppContext';
 
 interface CoreFeaturesProps {
-  onLaunchTool?: (tab: ActiveTabType) => void;
+  onLaunchTool?: (tab: any) => void;
+  dbPlans?: any[];
 }
 
-export const CoreFeatures: React.FC<CoreFeaturesProps> = ({ onLaunchTool }) => {
+const FEATURE_LABEL_MAP: Record<string, string> = {
+  v2t_live: 'Live Voice-to-Text',
+  v2t_vocab: 'Custom Vocabulary',
+  v2t_export: 'Transcript Export (SRT/VTT)',
+  t2v_neural: 'Neural Voices',
+  t2v_controls: 'Voice Pitch/Speed Controls',
+  t2v_download: 'HD Audio Download (WAV/MP3)',
+  trans_instant: 'Instant Translation',
+  doc_5pages: 'Doc Upload (5 Pages)',
+  doc_25pages: 'Doc Upload (25 Pages)',
+  doc_parallel: 'Parallel Document Chunking',
+  audio_whatsapp: 'WhatsApp Audio Transcribe',
+  audio_long: 'Long Audio (60+ mins)',
+  audio_timestamps: 'Automated Timestamps',
+  cloud_storage: 'Cloud Storage & History',
+  custom_api: 'Custom API & Webhooks Access',
+
+  // Fallback keys
+  audio_processing: 'Live Voice-to-Text',
+  translation_services: 'Instant Translation',
+  text_to_speech: 'Neural Voice TTS',
+};
+
+export const CoreFeatures: React.FC<CoreFeaturesProps> = ({ onLaunchTool, dbPlans: propDbPlans }) => {
   const { setActiveTab, user, setIsAuthModalOpen, setAuthModalMode, logout } = useApp();
   const [billingCycle, setBillingCycle] = React.useState<'monthly' | 'yearly'>('monthly');
+  const [fetchedPlans, setFetchedPlans] = React.useState<any[]>([]);
 
-  const handleLaunch = (tab: ActiveTabType) => {
+  React.useEffect(() => {
+    if (!propDbPlans || propDbPlans.length === 0) {
+      fetch('/api/billing/plans')
+        .then(res => res.ok ? res.json() : [])
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) setFetchedPlans(data);
+        })
+        .catch(() => {});
+    }
+  }, [propDbPlans]);
+
+  const activePlans = (propDbPlans && propDbPlans.length > 0) ? propDbPlans : fetchedPlans;
+
+  const handleLaunch = (tab: any) => {
     if (onLaunchTool) {
       onLaunchTool(tab);
     } else {
@@ -22,569 +58,117 @@ export const CoreFeatures: React.FC<CoreFeaturesProps> = ({ onLaunchTool }) => {
     }
   };
 
+  const fallbackPlans = [
+    { id: 'free', name: 'Free', price: 0, transcription_limit: 15, translation_limit: 10000, storage_limit: 50, features: ['v2t_live', 't2v_neural', 'trans_instant', 'doc_5pages'] },
+    { id: 'starter', name: 'Starter', price: 19, transcription_limit: 60, translation_limit: 100000, storage_limit: 500, features: ['v2t_live', 't2v_neural', 'trans_instant', 'doc_5pages', 'audio_whatsapp', 'cloud_storage'] },
+    { id: 'pro', name: 'Professional', price: 49, transcription_limit: 300, translation_limit: 500000, storage_limit: 5000, features: ['v2t_live', 'v2t_vocab', 'v2t_export', 't2v_neural', 't2v_controls', 't2v_download', 'trans_instant', 'doc_25pages', 'audio_whatsapp', 'audio_long', 'cloud_storage'] },
+    { id: 'ent', name: 'Enterprise', price: 149, transcription_limit: 1200, translation_limit: 2000000, storage_limit: 10000, features: ['v2t_live', 'v2t_vocab', 'v2t_export', 't2v_neural', 't2v_controls', 't2v_download', 'trans_instant', 'doc_25pages', 'doc_parallel', 'audio_whatsapp', 'audio_long', 'audio_timestamps', 'cloud_storage', 'custom_api'] }
+  ];
+
+  const displayPlans = activePlans.length > 0 ? activePlans : fallbackPlans;
+
   return (
-    <div className="c1-section">
-      {/* Inject Google Font Inter */}
-      <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-      />
-
-      <style>{`
-        .c1-section * {
-          box-sizing: border-box;
-          margin: 0;
-          padding: 0;
-        }
-
-        .c1-section {
-          background-color: #ffffff;
-          padding: 48px 24px 80px 24px;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          justify-content: center;
-          font-family: 'Inter', sans-serif;
-          width: 100%;
-        }
-
-        .c1-container {
-          max-width: 1360px;
-          width: 100%;
-          text-align: left;
-          margin: 0 auto;
-        }
-
-        .c1-badge-row {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 16px;
-        }
-
-        .c1-badge-num {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: #0f172a;
-          color: #ffffff;
-          font-size: 13px;
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .c1-badge-pill {
-          font-size: 13px;
-          font-weight: 600;
-          color: #0f172a;
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 30px;
-          padding: 6px 20px;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        }
-
-        .c1-title {
-          font-size: clamp(1.75rem, 5vw, 4.2rem);
-          font-weight: 500;
-          color: #111827;
-          letter-spacing: -0.02em;
-          margin-bottom: 14px;
-          line-height: 1.12;
-          text-align: left;
-        }
-
-        .c1-subtitle {
-          font-size: clamp(1rem, 2vw, 1.25rem);
-          font-weight: 400;
-          color: #6b7280;
-          line-height: 1.6;
-          margin-bottom: 24px;
-          text-align: left;
-        }
-
-        /* DARK MODE OVERRIDES FOR PRICING SECTION */
-        :where(.dark, .dark *) .c1-section,
-        [data-theme="dark"] .c1-section {
-          background-color: #030712 !important;
-        }
-
-        :where(.dark, .dark *) .c1-badge-pill,
-        [data-theme="dark"] .c1-badge-pill {
-          background-color: #0f172a !important;
-          color: #f8fafc !important;
-          border-color: #334155 !important;
-        }
-
-        :where(.dark, .dark *) .c1-badge-num,
-        [data-theme="dark"] .c1-badge-num {
-          background-color: #f8fafc !important;
-          color: #030712 !important;
-        }
-
-        :where(.dark, .dark *) .c1-title,
-        [data-theme="dark"] .c1-title {
-          color: #f8fafc !important;
-        }
-
-        :where(.dark, .dark *) .c1-subtitle,
-        [data-theme="dark"] .c1-subtitle {
-          color: #94a3b8 !important;
-        }
-
-        :where(.dark, .dark *) .c1-toggle-container,
-        [data-theme="dark"] .c1-toggle-container {
-          background-color: #0f172a !important;
-          border-color: #334155 !important;
-        }
-
-        :where(.dark, .dark *) .c1-toggle-btn,
-        [data-theme="dark"] .c1-toggle-btn {
-          color: #94a3b8 !important;
-        }
-
-        :where(.dark, .dark *) .c1-toggle-btn.c1-toggle-active,
-        [data-theme="dark"] .c1-toggle-btn.c1-toggle-active {
-          background-color: #f8fafc !important;
-          color: #030712 !important;
-        }
-
-        /* Dark Mode Pricing Cards */
-        :where(.dark, .dark *) .c1-card,
-        [data-theme="dark"] .c1-card {
-          background-color: #0f172a !important;
-          border: 1px solid rgba(255, 255, 255, 0.1) !important;
-          box-shadow: 0 12px 36px -10px rgba(0,0,0,0.5) !important;
-        }
-
-        :where(.dark, .dark *) .c1-card-1,
-        [data-theme="dark"] .c1-card-1 {
-          background: radial-gradient(circle at 50% 0%, rgba(255, 179, 71, 0.25) 0%, rgba(249, 237, 150, 0.12) 35%, #0f172a 75%) !important;
-        }
-
-        :where(.dark, .dark *) .c1-card-2,
-        [data-theme="dark"] .c1-card-2 {
-          background: radial-gradient(circle at 50% 0%, rgba(229, 161, 245, 0.25) 0%, rgba(248, 172, 160, 0.12) 35%, #0f172a 75%) !important;
-        }
-
-        :where(.dark, .dark *) .c1-card-3,
-        [data-theme="dark"] .c1-card-3 {
-          background: radial-gradient(circle at 50% 0%, rgba(249, 237, 150, 0.25) 0%, rgba(229, 161, 245, 0.12) 35%, #0f172a 75%) !important;
-        }
-
-        :where(.dark, .dark *) .c1-card-4,
-        [data-theme="dark"] .c1-card-4 {
-          background: radial-gradient(circle at 50% 0%, rgba(248, 172, 160, 0.25) 0%, rgba(255, 179, 71, 0.12) 35%, #0f172a 75%) !important;
-        }
-
-        :where(.dark, .dark *) .c1-prompt-box,
-        [data-theme="dark"] .c1-prompt-box {
-          background-color: rgba(30, 41, 59, 0.95) !important;
-          color: #f1f5f9 !important;
-          border: 1px solid rgba(255, 255, 255, 0.12) !important;
-        }
-
-        :where(.dark, .dark *) .c1-pill-btn,
-        :where(.dark, .dark *) .c1-search,
-        [data-theme="dark"] .c1-pill-btn,
-        [data-theme="dark"] .c1-search {
-          background-color: #1e293b !important;
-          border-color: rgba(255, 255, 255, 0.2) !important;
-          color: #f8fafc !important;
-        }
-
-        :where(.dark, .dark *) .c1-card-meta,
-        [data-theme="dark"] .c1-card-meta {
-          border-top-color: rgba(255, 255, 255, 0.1) !important;
-        }
-
-        :where(.dark, .dark *) .c1-stats-left,
-        [data-theme="dark"] .c1-stats-left {
-          color: #94a3b8 !important;
-        }
-
-        :where(.dark, .dark *) .c1-meta-tag,
-        [data-theme="dark"] .c1-meta-tag {
-          background-color: rgba(30, 41, 59, 0.9) !important;
-          border-color: rgba(255, 255, 255, 0.15) !important;
-          color: #f8fafc !important;
-          font-weight: 700 !important;
-        }
-
-        /* TOGGLE SWITCH STYLES - OUR THEME (#0f172a + SLATE) */
-        .c1-toggle-container {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: #ffffff;
-          border: 1.5px solid #0f172a;
-          padding: 5px;
-          border-radius: 40px;
-          margin-bottom: 42px;
-          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-        }
-
-        .c1-toggle-btn {
-          border: none;
-          background: transparent;
-          padding: 10px 24px;
-          border-radius: 30px;
-          font-size: 0.82rem;
-          font-weight: 800;
-          letter-spacing: 0.05em;
-          color: #64748b;
-          cursor: pointer;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .c1-toggle-btn:hover {
-          color: #0f172a;
-        }
-
-        .c1-toggle-btn.c1-toggle-active {
-          background: #0f172a;
-          color: #ffffff;
-          box-shadow: 0 6px 18px rgba(15, 23, 42, 0.3);
-        }
-
-        .c1-save-badge {
-          background: #f1f5f9;
-          color: #0f172a;
-          border: 1px solid #cbd5e1;
-          font-size: 0.66rem;
-          font-weight: 900;
-          padding: 3px 8px;
-          border-radius: 14px;
-          letter-spacing: 0.04em;
-          transition: all 0.2s ease;
-        }
-
-        .c1-toggle-active .c1-save-badge {
-          background: rgba(255, 255, 255, 0.2);
-          color: #ffffff;
-          border: 1px solid rgba(255, 255, 255, 0.35);
-        }
-
-        .c1-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 28px;
-        }
-
-        @media (max-width: 1150px) {
-          .c1-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-          .c1-title {
-            font-size: 2.85rem;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .c1-grid {
-            grid-template-columns: 1fr;
-          }
-          .c1-title {
-            font-size: 2.2rem;
-          }
-        }
-
-        .c1-card {
-          border-radius: 24px;
-          height: 420px;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          position: relative;
-          overflow: hidden;
-          text-align: left;
-          background: #F4F8F9;
-          box-shadow: 0 12px 36px -10px rgba(0,0,0,0.1);
-          cursor: pointer;
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
-        }
-
-        .c1-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 20px 45px -10px rgba(0,0,0,0.16);
-        }
-
-        .c1-card h3 {
-          font-size: 1.35rem;
-          font-weight: 700;
-          color: #0f172a;
-          padding: 20px 24px 28px 24px;
-          z-index: 2;
-          margin: 0;
-        }
-
-        /* CARD RADIAL BACKGROUND GRADIENTS */
-        .c1-card-1 {
-          background: radial-gradient(circle at 50% 0%, #FFB347 0%, #F9ED96 30%, #F4F8F9 60%, #F4F8F9 100%);
-        }
-        .c1-card-2 {
-          background: radial-gradient(circle at 50% 0%, #E5A1F5 0%, #F8ACA0 30%, #F4F8F9 60%, #F4F8F9 100%);
-        }
-        .c1-card-3 {
-          background: radial-gradient(circle at 50% 0%, #F9ED96 0%, #E5A1F5 30%, #F4F8F9 60%, #F4F8F9 100%);
-        }
-        .c1-card-4 {
-          background: radial-gradient(circle at 50% 0%, #F8ACA0 0%, #FFB347 30%, #F4F8F9 60%, #F4F8F9 100%);
-        }
-
-        .c1-prompt-box {
-          background: #ffffff;
-          border-radius: 14px;
-          padding: 14px 16px;
-          font-size: 0.85rem;
-          color: #475569;
-          line-height: 1.5;
-          box-shadow: 0 8px 22px rgba(0,0,0,0.05);
-          position: absolute;
-          top: 68px;
-          left: 22px;
-          right: 22px;
-          text-align: left;
-        }
-
-        .c1-blur-text {
-          background: linear-gradient(90deg, #FFB347, #E5A1F5);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          font-weight: 700;
-        }
-
-        .c1-pill-btn, .c1-search {
-          position: absolute;
-          top: 20px;
-          left: 22px;
-          background: #ffffff;
-          border: 1px solid #000000;
-          padding: 5px 10px 5px 14px;
-          border-radius: 24px;
-          font-size: 0.82rem;
-          font-weight: 700;
-          color: #1e293b;
-          box-shadow: 0 4px 18px rgba(0,0,0,0.09);
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          z-index: 5;
-        }
-
-        /* HIGHLIGHTED PRICE TEXT (NO BLACK BG, RUPEES COLOR ONLY) */
-        .c1-price-highlight {
-          background: transparent !important;
-          border: none !important;
-          padding: 0 !important;
-          box-shadow: none !important;
-          font-weight: 800;
-          font-size: 0.85rem;
-          letter-spacing: 0;
-          margin-left: 2px;
-        }
-
-        .c1-mesh {
-          position: absolute;
-          inset: 0;
-          background-image: 
-            linear-gradient(to right, rgba(255,255,255,0.8) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255,255,255,0.8) 1px, transparent 1px);
-          background-size: 18px 18px;
-          mask-image: radial-gradient(circle at center top, black 0%, transparent 80%);
-          -webkit-mask-image: radial-gradient(circle at center top, black 0%, transparent 80%);
-        }
-
-        /* METADATA / TAGS SECTION INSIDE CARDS */
-        .c1-card-meta {
-          padding: 0 18px 24px 18px;
-          z-index: 2;
-        }
-
-        .c1-stats-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          margin-bottom: 10px;
-        }
-
-        .c1-stats-left {
-          color: #64748b;
-        }
-        .c1-stats-right {
-          color: #10b981;
-        }
-
-        .c1-tag-list {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 6px;
-        }
-
-        .c1-meta-tag {
-          font-size: 11px;
-          font-weight: 600;
-          color: #334155;
-          background: rgba(255, 255, 255, 0.92);
-          border: 1px solid rgba(0, 0, 0, 0.08);
-          padding: 5px 6px;
-          border-radius: 12px;
-          backdrop-filter: blur(4px);
-          text-align: center;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          display: block;
-        }
-      `}</style>
-
-      <div className="c1-container">
-        {/* Header Block */}
-        <div className="c1-badge-row">
-          <div className="c1-badge-num">3</div>
-          <span className="c1-badge-pill">Flexible Pricing Plans</span>
+    <div className="w-full bg-white dark:bg-[#0b1120] text-slate-900 dark:text-slate-100 py-12 px-6 lg:py-20 flex flex-col items-start justify-center font-sans">
+      <div className="max-w-7xl mx-auto w-full">
+        {/* Header Badge */}
+        <div className="inline-flex items-center gap-3 mb-4">
+          <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">3</div>
+          <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider">
+            Flexible Pricing Plans
+          </span>
         </div>
-        <h2 className="c1-title">Choose the Perfect Plan for You</h2>
-        <p className="c1-subtitle">
-          Start for free with a 7-day trial, or scale up with flexible monthly plans<br />
-          tailored for your speech, translation, and AI processing needs.
+
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight mb-2">
+          Choose the Perfect Plan for You
+        </h2>
+        <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+          Start for free or scale with our flexible monthly/yearly plans.
         </p>
 
-        {/* Monthly / Yearly Toggle */}
-        <div className="c1-toggle-container">
+        {/* Toggle */}
+        <div className="inline-flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-full mb-8 border border-slate-200 dark:border-slate-700">
           <button
             onClick={() => setBillingCycle('monthly')}
-            className={`c1-toggle-btn ${billingCycle === 'monthly' ? 'c1-toggle-active' : ''}`}
+            className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              billingCycle === 'monthly'
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400'
+            }`}
           >
             MONTHLY
           </button>
           <button
             onClick={() => setBillingCycle('yearly')}
-            className={`c1-toggle-btn ${billingCycle === 'yearly' ? 'c1-toggle-active' : ''}`}
+            className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              billingCycle === 'yearly'
+                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-500 dark:text-slate-400'
+            }`}
           >
-            YEARLY <span className="c1-save-badge">SAVE 30%</span>
+            YEARLY <span className="bg-emerald-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">SAVE 30%</span>
           </button>
         </div>
 
-        {/* 4 Gradient Cards Grid combining Prompt Specification Box UI + AI Models Content */}
-        <div className="c1-grid">
-          
-          {/* CARD 1: FREE PLAN (Display Only) */}
-          <div className="c1-card c1-card-1 cursor-default">
-            <div className="c1-pill-btn">
-              <span style={{ color: '#10b981', fontSize: '1rem' }}>✦</span> Free Plan — <span className="c1-price-highlight" style={{ color: '#059669' }}>₹0/mo</span>
-            </div>
+        {/* Plan Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+          {displayPlans.map((plan: any, idx: number) => {
+            const isFree = plan.price === 0;
+            const displayPrice = isFree
+              ? '₹0/mo'
+              : billingCycle === 'yearly'
+              ? `₹${Math.round(plan.price * 0.7)}/mo`
+              : `₹${plan.price}/mo`;
 
-            <div className="c1-prompt-box">
-              <span className="c1-blur-text">7 Days Free Trial</span> with{' '}
-              <span className="c1-blur-text">15 mins audio</span>, 10k translation chars, 5k TTS synthesis &amp; 50 MB storage.
-            </div>
+            const planFeatures: string[] = plan.features || ['v2t_live', 't2v_neural', 'trans_instant', 'cloud_storage'];
 
-            <div className="c1-card-meta">
-              <div className="c1-stats-row">
-                <span className="c1-stats-left">BASIC TIER</span>
-                <span className="c1-stats-right">ACTIVE PLAN</span>
+            const accentColors = [
+              'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+              'text-amber-500 bg-amber-500/10 border-amber-500/20',
+              'text-purple-500 bg-purple-500/10 border-purple-500/20',
+              'text-pink-500 bg-pink-500/10 border-pink-500/20'
+            ];
+
+            return (
+              <div
+                key={plan.id || idx}
+                onClick={() => !isFree && handleLaunch('text-to-speech')}
+                className={`rounded-3xl p-6 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-xl relative overflow-hidden min-h-[380px] ${
+                  isFree ? 'cursor-default' : 'cursor-pointer'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className={`text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border ${accentColors[idx % 4]}`}>
+                      {plan.name} Tier
+                    </span>
+                    <span className="text-xl font-black text-slate-900 dark:text-white">{displayPrice}</span>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                    <span className="font-bold text-slate-900 dark:text-white">{plan.name} Plan</span>: includes{' '}
+                    <span className="font-bold text-emerald-500">{plan.transcription_limit || 15} mins audio</span>,{' '}
+                    {((plan.translation_limit || 0) / 1000).toFixed(0)}k translation & {plan.storage_limit || 50} MB storage.
+                  </div>
+                </div>
+
+                <div className="mt-auto border-t border-slate-200 dark:border-slate-700/60 pt-3">
+                  <div className="text-[10px] font-extrabold uppercase tracking-wider mb-2 text-slate-400">
+                    INCLUDED FEATURES ({planFeatures.length})
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {planFeatures.map((fId: string, fIdx: number) => (
+                      <span
+                        key={fIdx}
+                        className="text-[11px] font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-lg inline-flex items-center gap-1"
+                      >
+                        ✓ {FEATURE_LABEL_MAP[fId] || fId}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="c1-tag-list">
-                <span className="c1-meta-tag">✓ 15 mins audio</span>
-                <span className="c1-meta-tag">✓ 10k translation</span>
-                <span className="c1-meta-tag">✓ 5k TTS chars</span>
-                <span className="c1-meta-tag">✓ 50 MB storage</span>
-              </div>
-            </div>
-          </div>
-
-          {/* CARD 2: STARTER PLAN */}
-          <div className="c1-card c1-card-2" onClick={() => handleLaunch('text-to-speech')}>
-            <div className="c1-pill-btn">
-              <span style={{ color: '#f59e0b', fontSize: '1rem' }}>★</span> Starter Plan — <span className="c1-price-highlight" style={{ color: '#d97706' }}>
-                {billingCycle === 'yearly' ? '₹13/mo' : '₹19/mo'}
-              </span>
-            </div>
-
-            <div className="c1-prompt-box" style={{ background: 'rgba(255,255,255,0.92)' }}>
-              <span className="c1-blur-text">Starter Plan</span>: <span className="c1-blur-text">60 mins audio processing</span>, 100k translation chars, 50k TTS synthesis &amp; 500 MB secure storage.
-            </div>
-
-            <div className="c1-card-meta">
-              <div className="c1-stats-row">
-                <span className="c1-stats-left">STARTER TIER</span>
-                <span className="c1-stats-right" style={{ color: '#f59e0b' }}>RECOMMENDED</span>
-              </div>
-              <div className="c1-tag-list">
-                <span className="c1-meta-tag">✓ 60 mins audio</span>
-                <span className="c1-meta-tag">✓ 100k translation</span>
-                <span className="c1-meta-tag">✓ 50k TTS chars</span>
-                <span className="c1-meta-tag">✓ 500 MB storage</span>
-              </div>
-            </div>
-          </div>
-
-          {/* CARD 3: PROFESSIONAL PLAN */}
-          <div className="c1-card c1-card-3" onClick={() => handleLaunch('translation')}>
-            <div className="c1-mesh" />
-
-            <div className="c1-search">
-              <span style={{ color: '#a855f7', fontWeight: 700 }}>✦ Professional Plan — </span>
-              <span className="c1-price-highlight" style={{ color: '#7c3aed' }}>
-                {billingCycle === 'yearly' ? '₹34/mo' : '₹49/mo'}
-              </span>
-            </div>
-
-            <div className="c1-prompt-box" style={{ background: 'rgba(255,255,255,0.92)' }}>
-              <span className="c1-blur-text">Professional Plan</span>: <span className="c1-blur-text">300 mins audio processing</span>, 500k translation chars, 250k TTS synthesis &amp; 2000 MB storage.
-            </div>
-
-            <div className="c1-card-meta">
-              <div className="c1-stats-row">
-                <span className="c1-stats-left">PRO TIER</span>
-                <span className="c1-stats-right" style={{ color: '#a855f7' }}>HIGH CAPACITY</span>
-              </div>
-              <div className="c1-tag-list">
-                <span className="c1-meta-tag">✓ 300 mins audio</span>
-                <span className="c1-meta-tag">✓ 500k translation</span>
-                <span className="c1-meta-tag">✓ 250k TTS chars</span>
-                <span className="c1-meta-tag">✓ 2000 MB storage</span>
-              </div>
-            </div>
-          </div>
-
-          {/* CARD 4: ENTERPRISE PLAN */}
-          <div className="c1-card c1-card-4" onClick={() => handleLaunch('audio-transcription')}>
-            <div className="c1-pill-btn">
-              <span style={{ color: '#ec4899', fontSize: '1rem' }}>✦</span> Enterprise Plan — <span className="c1-price-highlight" style={{ color: '#db2777' }}>
-                {billingCycle === 'yearly' ? '₹104/mo' : '₹149/mo'}
-              </span>
-            </div>
-
-            <div className="c1-prompt-box">
-              <span className="c1-blur-text">Enterprise Plan</span>: <span className="c1-blur-text">1200 mins audio processing</span>, 2000k translation chars, 1000k TTS synthesis &amp; 10 GB storage.
-            </div>
-
-            <div className="c1-card-meta">
-              <div className="c1-stats-row">
-                <span className="c1-stats-left">ENTERPRISE TIER</span>
-                <span className="c1-stats-right" style={{ color: '#ec4899' }}>UNLIMITED SCALING</span>
-              </div>
-              <div className="c1-tag-list">
-                <span className="c1-meta-tag">✓ 1200 mins audio</span>
-                <span className="c1-meta-tag">✓ 2000k translation</span>
-                <span className="c1-meta-tag">✓ 1000k TTS chars</span>
-                <span className="c1-meta-tag">✓ 10 GB storage</span>
-              </div>
-            </div>
-          </div>
-
+            );
+          })}
         </div>
       </div>
     </div>

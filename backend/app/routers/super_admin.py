@@ -28,7 +28,7 @@ def get_system_metrics(db: Session = Depends(get_db)):
     total_transcription_seconds = sum(t.duration_seconds for t in transcription_items if t.duration_seconds)
     total_transcriptions_minutes = round(total_transcription_seconds / 60.0, 2)
     total_translations_chars = sum(len(t.source_text or "") for t in translation_items)
-    total_tts_chars = sum(len(t.text_prompt or "") for t in tts_items)
+    total_tts_chars = sum((t.characters_count if hasattr(t, "characters_count") and t.characters_count is not None else len(getattr(t, "text", "") or "")) for t in tts_items)
 
     total_api_calls = len(transcription_items) + len(translation_items) + len(tts_items)
 
@@ -66,12 +66,12 @@ def get_system_metrics(db: Session = Depends(get_db)):
     db_tenants = db.query(Tenant).all()
     top_usage_tenants = []
     for tenant in db_tenants:
-        t_minutes = sum(item.duration_seconds for item in transcription_items if item.tenant_slug == tenant.slug and item.duration_seconds) / 60.0
-        tr_chars = sum(len(item.source_text or "") for item in translation_items if item.tenant_slug == tenant.slug)
-        tts_c = sum(len(item.text_prompt or "") for item in tts_items if item.tenant_slug == tenant.slug)
-        calls = sum(1 for item in transcription_items if item.tenant_slug == tenant.slug) + \
-                sum(1 for item in translation_items if item.tenant_slug == tenant.slug) + \
-                sum(1 for item in tts_items if item.tenant_slug == tenant.slug)
+        t_minutes = sum(item.duration_seconds for item in transcription_items if (item.tenant_id == tenant.id or (getattr(item, "tenant", None) and item.tenant.slug == tenant.slug)) and item.duration_seconds) / 60.0
+        tr_chars = sum(len(item.source_text or "") for item in translation_items if (item.tenant_id == tenant.id or (getattr(item, "tenant", None) and item.tenant.slug == tenant.slug)))
+        tts_c = sum((item.characters_count if hasattr(item, "characters_count") and item.characters_count is not None else len(getattr(item, "text", "") or "")) for item in tts_items if (item.tenant_id == tenant.id or (getattr(item, "tenant", None) and item.tenant.slug == tenant.slug)))
+        calls = sum(1 for item in transcription_items if (item.tenant_id == tenant.id or (getattr(item, "tenant", None) and item.tenant.slug == tenant.slug))) + \
+                sum(1 for item in translation_items if (item.tenant_id == tenant.id or (getattr(item, "tenant", None) and item.tenant.slug == tenant.slug))) + \
+                sum(1 for item in tts_items if (item.tenant_id == tenant.id or (getattr(item, "tenant", None) and item.tenant.slug == tenant.slug)))
         
         top_usage_tenants.append({
             "name": tenant.tenant_name,
@@ -356,18 +356,35 @@ def get_global_providers(db: Session = Depends(get_db)):
     configs = db.query(ProviderConfiguration).filter(ProviderConfiguration.tenant_id == None).all()
     config_map = {c.provider_name: c for c in configs}
     
+    transcriptions = db.query(TranscriptionHistory).all()
+    translations = db.query(TranslationHistory).all()
+    tts = db.query(TtsHistory).all()
+
     defaults = [
-        {"provider_name": "openai", "is_enabled": True, "priority": 1, "credentials_encrypted": "CONFIGURED", "usage_calls": 150000, "cost": 210.0, "status": "Healthy"},
-        {"provider_name": "deepgram", "is_enabled": True, "priority": 2, "credentials_encrypted": "CONFIGURED", "usage_calls": 92000, "cost": 120.0, "status": "Healthy"},
-        {"provider_name": "elevenlabs", "is_enabled": True, "priority": 3, "credentials_encrypted": "NOT_CONFIGURED", "usage_calls": 35000, "cost": 45.0, "status": "Healthy"},
-        {"provider_name": "google-translate", "is_enabled": False, "priority": 4, "credentials_encrypted": "NOT_CONFIGURED", "usage_calls": 12000, "cost": 15.0, "status": "Healthy"},
-        {"provider_name": "azure-openai", "is_enabled": False, "priority": 5, "credentials_encrypted": "NOT_CONFIGURED", "usage_calls": 0, "cost": 0.0, "status": "Healthy"},
-        {"provider_name": "local-whisper", "is_enabled": True, "priority": 6, "credentials_encrypted": "NOT_CONFIGURED", "usage_calls": 8500, "cost": 0.0, "status": "High CPU"}
+        {"provider_name": "openai", "is_enabled": True, "priority": 1, "credentials_encrypted": "CONFIGURED", "status": "Healthy"},
+        {"provider_name": "deepgram", "is_enabled": True, "priority": 2, "credentials_encrypted": "CONFIGURED", "status": "Healthy"},
+        {"provider_name": "elevenlabs", "is_enabled": True, "priority": 3, "credentials_encrypted": "NOT_CONFIGURED", "status": "Healthy"},
+        {"provider_name": "google-translate", "is_enabled": False, "priority": 4, "credentials_encrypted": "NOT_CONFIGURED", "status": "Healthy"},
+        {"provider_name": "azure-openai", "is_enabled": False, "priority": 5, "credentials_encrypted": "NOT_CONFIGURED", "status": "Healthy"},
+        {"provider_name": "local-whisper", "is_enabled": True, "priority": 6, "credentials_encrypted": "NOT_CONFIGURED", "status": "Healthy"}
     ]
     
     results = []
     for d in defaults:
         name = d["provider_name"]
+        # Calculate real usage and cost from DB records
+        audio_calls = sum(1 for x in transcriptions if x.provider and name.lower() in x.provider.lower())
+        audio_mins = sum(x.duration_seconds for x in transcriptions if x.provider and name.lower() in x.provider.lower() and x.duration_seconds) / 60.0
+        
+        trans_calls = sum(1 for x in translations if x.provider and name.lower() in x.provider.lower())
+        trans_chars = sum(len(x.source_text or "") for x in translations if x.provider and name.lower() in x.provider.lower())
+        
+        tts_calls = sum(1 for x in tts if x.provider and name.lower() in x.provider.lower())
+        tts_chars = sum(len(x.text_prompt or "") for x in tts if x.provider and name.lower() in x.provider.lower())
+        
+        real_calls = audio_calls + trans_calls + tts_calls
+        real_cost = round((audio_mins * 0.006) + (trans_chars * 0.00002) + (tts_chars * 0.000015), 2)
+        
         if name in config_map:
             c = config_map[name]
             results.append({
@@ -376,8 +393,8 @@ def get_global_providers(db: Session = Depends(get_db)):
                 "is_enabled": c.is_enabled,
                 "priority": c.priority,
                 "credentials_encrypted": "CONFIGURED" if c.credentials_encrypted else "NOT_CONFIGURED",
-                "usage_calls": d["usage_calls"],
-                "cost": d["cost"],
+                "usage_calls": real_calls,
+                "cost": real_cost,
                 "status": d["status"]
             })
         else:
@@ -387,8 +404,8 @@ def get_global_providers(db: Session = Depends(get_db)):
                 "is_enabled": d["is_enabled"],
                 "priority": d["priority"],
                 "credentials_encrypted": d["credentials_encrypted"],
-                "usage_calls": d["usage_calls"],
-                "cost": d["cost"],
+                "usage_calls": real_calls,
+                "cost": real_cost,
                 "status": d["status"]
             })
     return results
@@ -491,24 +508,26 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
 def get_usage_analytics(db: Session = Depends(get_db)):
     tenants = db.query(Tenant).all()
     results = []
+    
+    # Calculate real usage directly from history tables for precision
+    transcription_items = db.query(TranscriptionHistory).all()
+    translation_items = db.query(TranslationHistory).all()
+    tts_items = db.query(TtsHistory).all()
+
     for t in tenants:
         u = db.query(UsageTracking).filter(UsageTracking.tenant_id == t.id).first()
+        t_mins = sum(item.duration_seconds for item in transcription_items if item.tenant_id == t.id and item.duration_seconds) / 60.0
+        tr_chars = sum(len(item.source_text or "") for item in translation_items if item.tenant_id == t.id)
+        tts_c = sum(len(getattr(item, 'text', None) or getattr(item, 'text_prompt', None) or "") for item in tts_items if item.tenant_id == t.id)
+        
         results.append({
             "tenant_name": t.tenant_name,
             "slug": t.slug,
-            "speech_minutes": round(u.audio_minutes_used, 1) if u else 0.0,
-            "translation_chars": u.translation_chars_used if u else 0,
-            "tts_chars": u.tts_chars_used if u else 0,
+            "speech_minutes": round(t_mins if t_mins > 0 else (u.audio_minutes_used if u else 0.0), 1),
+            "translation_chars": tr_chars if tr_chars > 0 else (u.translation_chars_used if u else 0),
+            "tts_chars": tts_c if tts_c > 0 else (u.tts_chars_used if u else 0),
             "storage_mb": round((u.storage_bytes_used if u else 0) / (1024 * 1024), 2)
         })
-    default_analytics = [
-        {"tenant_name": "ABC School", "slug": "abc-school", "speech_minutes": 212.0, "translation_chars": 185000, "tts_chars": 40000, "storage_mb": 420.5},
-        {"tenant_name": "Acme Corp", "slug": "acme", "speech_minutes": 150.2, "translation_chars": 120000, "tts_chars": 25000, "storage_mb": 310.0},
-        {"tenant_name": "Stark Industries", "slug": "stark", "speech_minutes": 95.0, "translation_chars": 75000, "tts_chars": 15000, "storage_mb": 180.2}
-    ]
-    for da in default_analytics:
-        if not any(r["slug"] == da["slug"] for r in results):
-            results.append(da)
     return results
 
 @router.get("/billing/overview")
