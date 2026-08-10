@@ -118,17 +118,17 @@ export const SidebarMenuNode: React.FC<SidebarMenuNodeProps> = ({
       <button
         onClick={handleClick}
         className={`w-full flex flex-row items-center ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} py-3 rounded-xl gap-3 text-left transition-all relative overflow-hidden select-none cursor-pointer ${isFolder
-            ? 'text-[var(--sidebar-panel-text)] hover:text-[var(--sidebar-panel-text-active)] hover:bg-[var(--sidebar-panel-hover-bg)]'
+            ? 'text-[var(--sidebar-panel-text)] hover:text-[var(--text-primary)] hover:bg-[var(--sidebar-panel-hover-bg)]'
             : active
-              ? 'text-[var(--sidebar-panel-text-active)] font-bold'
-              : 'text-orange-600 hover:text-orange-800 hover:bg-[var(--sidebar-panel-hover-bg)]'
+              ? 'text-[var(--sidebar-panel-text-active)] font-semibold shadow-sm'
+              : 'text-[var(--sidebar-panel-text)] hover:text-[var(--text-primary)] hover:bg-[var(--sidebar-panel-hover-bg)]'
           }`}
       >
         {/* Selection Indicator background */}
         {active && !isFolder && (
           <motion.div
             layoutId="sidebarNodeActiveBg"
-            className="absolute inset-0 rounded-xl"
+            className="absolute inset-0 rounded-xl shadow-[0_4px_14px_rgba(249,115,22,0.3)]"
             style={{ zIndex: 0, background: "var(--sidebar-panel-active-bg)" }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
           />

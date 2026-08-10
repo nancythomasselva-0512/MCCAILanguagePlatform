@@ -393,15 +393,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addHistoryItem = (type: string, title: string, details: string, content?: string) => {
-    const newItem: HistoryItem = {
-      id: Math.random().toString(36).substring(2, 9),
-      type,
-      title,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      details,
-      content,
-    };
-    setHistory((prev) => [newItem, ...prev].slice(0, 50));
+    setHistory((prev) => {
+      // Prevent duplicate insertion of identical consecutive entries
+      if (prev.length > 0) {
+        const top = prev[0];
+        if (top.type === type && top.title === title && top.details === details) {
+          return prev;
+        }
+      }
+      const newItem: HistoryItem = {
+        id: Math.random().toString(36).substring(2, 9),
+        type,
+        title,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        details,
+        content,
+      };
+      const updated = [newItem, ...prev].slice(0, 50);
+      try {
+        storage.setItem('mcc-ai-history', JSON.stringify(updated));
+      } catch (_) {}
+      return updated;
+    });
   };
 
   const clearHistory = () => {

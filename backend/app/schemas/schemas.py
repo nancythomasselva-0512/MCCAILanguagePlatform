@@ -9,10 +9,11 @@ class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
-    user_id: uuid.UUID
+    user_id: Union[uuid.UUID, str]
     role: str
     tenant_slug: Optional[str] = None
-    name: str
+    name: Optional[str] = None
+    email: Optional[str] = None
 
 class TokenRefreshRequest(BaseModel):
     refresh_token: str

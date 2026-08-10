@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "dev:full": "concurrently \"npm:dev\" \"npm:dev:backend\"",
+    "dev": "concurrently \"npm:dev:next\" \"npm:dev:backend\"",
+    "dev:next": "next dev",
+    "dev:full": "concurrently \"npm:dev:next\" \"npm:dev:backend\"",
     "dev:backend": "powershell -ExecutionPolicy Bypass -File backend/start_backend.ps1",
     "build": "next build",
     "start": "next start",

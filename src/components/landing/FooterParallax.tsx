@@ -15,14 +15,12 @@ export const FooterParallax: React.FC = () => {
   const truckY = useTransform(scrollYProgress, [0, 1], [-50, 150]);
 
   return (
-    <div className="w-full bg-[#f8f9fa] font-sans antialiased">
+    <div className="w-full bg-[#f8f9fa] dark:bg-[#030712] font-sans antialiased">
       {/* Inject Google Font Inter */}
       <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet"
       />
-
-
 
       {/* ── 3. MAIN PARALLAX CONTAINER ──────────────────────────────────────── */}
       <section
@@ -38,7 +36,7 @@ export const FooterParallax: React.FC = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="max-w-7xl mx-auto bg-white/95 backdrop-blur-sm shadow-xl rounded-2xl md:rounded-3xl overflow-hidden"
+            className="max-w-7xl mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-xl rounded-2xl md:rounded-3xl overflow-hidden border border-slate-100 dark:border-white/10"
           >
             {/* Footer Content (Top Half) */}
             <div className="p-6 md:p-10 lg:p-12 flex flex-col md:flex-row justify-between items-start gap-8 md:gap-12">
@@ -51,13 +49,13 @@ export const FooterParallax: React.FC = () => {
                 <img
                   src="/logo.png?v=3"
                   alt="Fluentia Logo"
-                  className="h-10 md:h-12 w-auto object-contain hover:scale-105 transition-transform duration-200"
+                  className="h-10 md:h-12 w-auto object-contain hover:scale-105 transition-transform duration-200 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180"
                 />
                 <div className="flex flex-col justify-center">
-                  <span className="font-display text-xl md:text-2xl font-black tracking-tight text-gray-900 leading-none">
+                  <span className="font-display text-xl md:text-2xl font-black tracking-tight text-gray-900 dark:text-white leading-none">
                     Fluentia
                   </span>
-                  <span className="text-[9px] md:text-[10px] font-bold tracking-[0.2em] uppercase mt-1 text-teal-600">
+                  <span className="text-[9px] md:text-[10px] font-extrabold tracking-[0.15em] uppercase mt-1 text-orange-500">
                     AI Language Platform
                   </span>
                 </div>
@@ -67,7 +65,7 @@ export const FooterParallax: React.FC = () => {
               <div className="flex flex-wrap gap-8 sm:gap-10 md:gap-12 lg:gap-16">
                 {/* Column 1: Company */}
                 <div>
-                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4">
+                  <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest mb-4">
                     Company
                   </h4>
                   <ul className="space-y-2.5">
@@ -75,7 +73,7 @@ export const FooterParallax: React.FC = () => {
                       <li key={link}>
                         <a
                           href="#"
-                          className="text-gray-500 text-sm font-medium hover:text-orange-600 transition-colors duration-200"
+                          className="text-gray-500 dark:text-slate-400 text-sm font-medium hover:text-orange-600 dark:hover:text-orange-400 transition-colors duration-200"
                         >
                           {link}
                         </a>
@@ -86,7 +84,7 @@ export const FooterParallax: React.FC = () => {
 
                 {/* Column 2: Mobile */}
                 <div>
-                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4">
+                  <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest mb-4">
                     Mobile
                   </h4>
                   <ul className="space-y-2.5">
@@ -94,7 +92,7 @@ export const FooterParallax: React.FC = () => {
                       <li key={link}>
                         <a
                           href="#"
-                          className="text-gray-500 text-sm font-medium hover:text-orange-600 transition-colors duration-200"
+                          className="text-gray-500 dark:text-slate-400 text-sm font-medium hover:text-orange-600 dark:hover:text-orange-400 transition-colors duration-200"
                         >
                           {link}
                         </a>
@@ -105,7 +103,7 @@ export const FooterParallax: React.FC = () => {
 
                 {/* Column 3: Contracts */}
                 <div>
-                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4">
+                  <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest mb-4">
                     Contracts
                   </h4>
                   <ul className="space-y-2.5">
@@ -113,7 +111,7 @@ export const FooterParallax: React.FC = () => {
                       <li key={link}>
                         <a
                           href="#"
-                          className="text-gray-500 text-sm font-medium hover:text-orange-600 transition-colors duration-200"
+                          className="text-gray-500 dark:text-slate-400 text-sm font-medium hover:text-orange-600 dark:hover:text-orange-400 transition-colors duration-200"
                         >
                           {link}
                         </a>
@@ -124,7 +122,7 @@ export const FooterParallax: React.FC = () => {
 
                 {/* Column 4: Contact Us */}
                 <div>
-                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-4">
+                  <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest mb-4">
                     Contact Us
                   </h4>
                   <ul className="space-y-3">
@@ -133,7 +131,7 @@ export const FooterParallax: React.FC = () => {
                         href="https://mail.google.com/mail/?view=cm&fs=1&to=aachinancy@gmail.com"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-gray-500 text-sm font-medium hover:text-orange-600 transition-colors duration-200"
+                        className="flex items-center gap-2 text-gray-500 dark:text-slate-400 text-sm font-medium hover:text-orange-600 dark:hover:text-orange-400 transition-colors duration-200"
                       >
                         <Mail className="w-4 h-4 text-orange-500 flex-shrink-0" />
                         <span>aachinancy@gmail.com</span>
@@ -142,7 +140,7 @@ export const FooterParallax: React.FC = () => {
                     <li>
                       <a
                         href="tel:+18005550199"
-                        className="flex items-center gap-2 text-gray-500 text-sm font-medium hover:text-orange-600 transition-colors duration-200"
+                        className="flex items-center gap-2 text-gray-500 dark:text-slate-400 text-sm font-medium hover:text-orange-600 dark:hover:text-orange-400 transition-colors duration-200"
                       >
                         <Phone className="w-4 h-4 text-orange-500 flex-shrink-0" />
                         <span>+1 (800) 555-0199</span>
@@ -153,7 +151,7 @@ export const FooterParallax: React.FC = () => {
                         href="https://maps.google.com/?q=MMIP,MCC,Tambaram,600059"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-start gap-2 text-gray-500 text-sm font-medium hover:text-orange-600 transition-colors duration-200"
+                        className="flex items-start gap-2 text-gray-500 dark:text-slate-400 text-sm font-medium hover:text-orange-600 dark:hover:text-orange-400 transition-colors duration-200"
                       >
                         <MapPin className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
                         <span>MMIP, MCC, Tambaram 600059</span>
@@ -166,8 +164,8 @@ export const FooterParallax: React.FC = () => {
             </div>
 
             {/* Footer Content (Bottom Bar) */}
-            <div className="border-t border-gray-100 bg-white px-6 md:px-10 lg:px-12 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <p className="text-sm text-gray-500 font-medium">
+            <div className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-slate-900/80 px-6 md:px-10 lg:px-12 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-sm text-gray-500 dark:text-slate-400 font-medium">
                 © 2026 Fluentia. All Rights Reserved.
               </p>
               
@@ -177,7 +175,7 @@ export const FooterParallax: React.FC = () => {
                 <a
                   href="#"
                   aria-label="Facebook"
-                  className="w-10 h-10 rounded-full border border-gray-100 flex items-center justify-center text-gray-500 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-300 shadow-sm"
+                  className="w-10 h-10 rounded-full border border-gray-100 dark:border-white/10 flex items-center justify-center text-gray-500 dark:text-slate-400 dark:bg-slate-800/50 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-300 shadow-sm"
                 >
                   <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -188,7 +186,7 @@ export const FooterParallax: React.FC = () => {
                 <a
                   href="#"
                   aria-label="Twitter"
-                  className="w-10 h-10 rounded-full border border-gray-100 flex items-center justify-center text-gray-500 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-300 shadow-sm"
+                  className="w-10 h-10 rounded-full border border-gray-100 dark:border-white/10 flex items-center justify-center text-gray-500 dark:text-slate-400 dark:bg-slate-800/50 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-300 shadow-sm"
                 >
                   <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -199,7 +197,7 @@ export const FooterParallax: React.FC = () => {
                 <a
                   href="#"
                   aria-label="Instagram"
-                  className="w-10 h-10 rounded-full border border-gray-100 flex items-center justify-center text-gray-500 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-300 shadow-sm"
+                  className="w-10 h-10 rounded-full border border-gray-100 dark:border-white/10 flex items-center justify-center text-gray-500 dark:text-slate-400 dark:bg-slate-800/50 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-300 shadow-sm"
                 >
                   <svg className="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />

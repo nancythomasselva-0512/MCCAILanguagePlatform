@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, Volume2, Languages, FileAudio, ArrowRight, Sparkles,
-  Zap, Globe, Shield, Clock, Star, ChevronRight, Play,
+  Zap, Globe, Shield, Clock, Star, ChevronRight, ChevronUp, Play,
   CheckCircle2, Users, BarChart3, Headphones, Plus, Activity,
   Server, Database, ArrowRightLeft, FileCode, X, Menu,
   Mail, Phone, MapPin, Sun, Moon
@@ -226,10 +226,33 @@ export const LandingPage: React.FC = () => {
   const [dbPlans, setDbPlans] = useState<any[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [londonTime, setLondonTime] = useState('');
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
 
   useEffect(() => {
     fetch('/api/billing/plans')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
           setDbPlans(data);
@@ -284,12 +307,17 @@ export const LandingPage: React.FC = () => {
                   setAuthModalMode('login');
                   setIsAuthModalOpen(true);
                 }}
-                className="flex items-center gap-2 cursor-pointer"
+                className="flex items-center gap-2.5 cursor-pointer text-left select-none"
               >
                 <img src="/logo.png?v=3" alt="Logo" className="h-8 sm:h-9 md:h-10 w-auto object-contain hover:scale-105 dark:invert-0 dark:brightness-100 invert brightness-90 filter transition-all duration-200" />
-                <span className="font-extrabold text-sm sm:text-base tracking-tight text-gray-900 dark:text-white">
-                  {globalConfig?.branding?.platform_name || 'Fluentia'}
-                </span>
+                <div className="flex flex-col min-w-0 justify-center">
+                  <span className="font-extrabold text-sm sm:text-base tracking-tight text-gray-900 dark:text-white leading-tight">
+                    {globalConfig?.branding?.platform_name || 'Fluentia'}
+                  </span>
+                  <span className="text-[8px] sm:text-[8.5px] text-orange-500 dark:text-orange-400 font-extrabold tracking-[0.05em] uppercase whitespace-nowrap">
+                    AI Language Platform
+                  </span>
+                </div>
               </button>
               <div className="hidden md:flex items-center gap-6 text-[14px] font-medium text-gray-900 dark:text-gray-100 pl-4">
                 <a href="#ai-models" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">AI Models</a>
@@ -554,6 +582,29 @@ export const LandingPage: React.FC = () => {
 
       {/* ── PARALLAX HAUL FOOTER ─────────────────────────────────────────── */}
       <FooterParallax />
+
+      {/* ── FLOATING AUTOMATIC SCROLL TO TOP BUTTON ───────────────────────── */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.5, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.5, y: 20 }}
+            whileHover={{ scale: 1.12, y: -2 }}
+            whileTap={{ scale: 0.92 }}
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-orange-500 via-amber-500 to-orange-600 text-white shadow-xl shadow-orange-500/35 border border-white/20 cursor-pointer transition-all duration-300 group"
+            title="Scroll to top"
+            aria-label="Scroll to top"
+          >
+            <ChevronUp size={24} className="group-hover:-translate-y-1 transition-transform duration-300 text-white stroke-[2.5]" />
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-400" />
+            </span>
+          </motion.button>
+        )}
+      </AnimatePresence>
     </main>
   );
 };

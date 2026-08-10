@@ -556,7 +556,11 @@ export const WorkspacePage: React.FC = () => {
       >
         <div className="flex flex-col flex-1 min-h-0">
           <div className={`flex items-center select-none w-full pr-1 mt-1 mb-6 transition-all duration-300 ${isCollapsed ? 'flex-col gap-4 justify-center' : 'justify-between'}`}>
-            <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2.5 ml-0.5'}`}>
+            <div
+              className={`flex items-center cursor-pointer hover:opacity-80 transition-opacity ${isCollapsed ? 'justify-center' : 'gap-2.5 ml-0.5'}`}
+              onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              title="Go to Home Landing Page"
+            >
               <img
                 src={"/logo.png?v=3"}
                 alt="Logo"
@@ -567,7 +571,7 @@ export const WorkspacePage: React.FC = () => {
                   <span className="text-[22px] leading-tight font-black tracking-tight text-[var(--text-primary)] drop-shadow-sm truncate" style={{ fontFamily: "'Outfit', sans-serif" }}>
                     {globalConfig?.branding?.platform_name || "Fluentia"}
                   </span>
-                  <span className="text-[10px] text-[var(--text-secondary)] font-bold tracking-[0.08em] truncate opacity-80 uppercase">
+                  <span className="text-[8px] sm:text-[8.5px] text-orange-500 dark:text-orange-400 font-extrabold tracking-[0.05em] uppercase whitespace-nowrap">
                     AI Language Platform
                   </span>
                 </div>
@@ -594,12 +598,12 @@ export const WorkspacePage: React.FC = () => {
                       className="flex items-center justify-between px-2 py-2 mt-2 mb-1 cursor-pointer group select-none rounded-lg hover:bg-[var(--sidebar-item-hover)] transition-colors"
                       onClick={() => toggleExpanded(sectionId)}
                     >
-                      <h4 className="text-xs font-bold tracking-[0.05em] text-[var(--sidebar-panel-text)] uppercase opacity-80 group-hover:opacity-100 transition-colors truncate pr-1">
+                      <h4 className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-slate-400 uppercase opacity-90 group-hover:opacity-100 transition-colors truncate pr-1">
                         {section.title}
                       </h4>
                       <ChevronDown
-                        size={16}
-                        className={`flex-shrink-0 text-[var(--sidebar-panel-text)] opacity-50 group-hover:opacity-100 transition-transform duration-200 ${isSectionOpen ? 'rotate-180' : ''}`}
+                        size={14}
+                        className={`flex-shrink-0 text-slate-400 opacity-60 group-hover:opacity-100 transition-transform duration-200 ${isSectionOpen ? 'rotate-180' : ''}`}
                       />
                     </div>
                   )}
@@ -634,10 +638,10 @@ export const WorkspacePage: React.FC = () => {
 
         </div>
 
-        <div className="pt-4 mt-auto">
+        <div className="pt-4 mt-auto border-t border-slate-200/60 dark:border-slate-800/60">
           <button
             onClick={() => logout()}
-            className={`w-full flex items-center justify-center gap-2 rounded-xl py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} text-sm font-bold text-red-500 hover:text-red-600 border border-red-500/20 hover:bg-red-500/10 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]`}
+            className={`w-full flex items-center justify-center gap-2 rounded-xl py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} text-sm font-semibold text-slate-600 hover:text-red-600 dark:text-slate-300 dark:hover:text-red-400 bg-slate-100/80 hover:bg-red-50 dark:bg-slate-800/60 dark:hover:bg-red-950/30 border border-slate-200/80 dark:border-slate-700/50 transition-all cursor-pointer shadow-sm hover:shadow active:scale-[0.98]`}
             title="Logout"
           >
             <LogOut size={16} />

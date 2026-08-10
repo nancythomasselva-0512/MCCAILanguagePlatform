@@ -16,6 +16,7 @@ router = APIRouter(prefix="/platform-builder", tags=["Platform Builder Operation
 
 # GET GLOBAL CONFIG (Unauthenticated for landing/home page)
 @router.get("/global-config")
+@router.get("/global_config")
 def get_global_config(db: Session = Depends(get_db)):
     branding = None
     theme = None

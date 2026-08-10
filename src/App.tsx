@@ -26,19 +26,21 @@ function App() {
       hasInitialized.current = true;
       const isSuperAdmin = user?.role === 'super_admin';
 
-      if (window.location.pathname === '/controller' || window.location.pathname === '/controller/') {
-        setViewMode('controller-landing');
-      } else if (window.location.pathname.startsWith('/controller/')) {
-        if (user && isSuperAdmin) {
+      if (window.location.pathname.startsWith('/controller')) {
+        if (user) {
           setViewMode('workspace');
-          // Update active tab based on URL
-          const sub = window.location.pathname.replace('/controller/', '');
-          if (sub) setActiveTab(`sa-${sub}` as ActiveTabType);
+          if (user.role === 'super_admin') {
+            const sub = window.location.pathname.replace('/controller/', '').replace('/controller', '');
+            if (sub && sub !== '/') setActiveTab(`sa-${sub}` as ActiveTabType);
+            else setActiveTab('sa-overview');
+          } else {
+            setActiveTab('tenant-dashboard');
+          }
         } else {
-          setViewMode('controller-landing');
+          setViewMode('admin-login');
         }
       } else if (window.location.pathname.startsWith('/dashboard')) {
-        if (!user) { // ALLOW super_admin to access /dashboard too
+        if (!user) {
           logout(); // Clear any invalid session
           setAuthModalMode('login');
           setIsAuthModalOpen(true);

@@ -95,10 +95,15 @@ export const AuthModal: React.FC = () => {
         });
 
         if (!response.ok) {
-          const data = await response.json();
-          const msg = Array.isArray(data.detail)
-            ? data.detail.map((e: any) => e.msg || 'Invalid field').join(', ')
-            : data.detail || 'Workspace registration failed.';
+          let msg = 'Workspace registration failed.';
+          try {
+            const data = await response.json();
+            msg = Array.isArray(data.detail)
+              ? data.detail.map((e: any) => (typeof e === 'string' ? e : e.msg || 'Invalid field')).join(', ')
+              : data.detail || msg;
+          } catch {
+            msg = `Server error (${response.status}). Please try again later.`;
+          }
           throw new Error(msg);
         }
 
@@ -117,10 +122,15 @@ export const AuthModal: React.FC = () => {
         });
 
         if (!response.ok) {
-          const errData = await response.json();
-          const msg = Array.isArray(errData.detail)
-            ? errData.detail.map((e: any) => e.msg || 'Invalid field').join(', ')
-            : errData.detail || 'Google Sign-In failed.';
+          let msg = 'Google Sign-In failed.';
+          try {
+            const errData = await response.json();
+            msg = Array.isArray(errData.detail)
+              ? errData.detail.map((e: any) => (typeof e === 'string' ? e : e.msg || 'Invalid field')).join(', ')
+              : errData.detail || msg;
+          } catch {
+            msg = `Server error (${response.status}). Please try again later.`;
+          }
           throw new Error(msg);
         }
 
@@ -245,8 +255,10 @@ export const AuthModal: React.FC = () => {
 
   const isPasswordFocused = characterMood === 'password-focus';
   const isPasswordPeek = characterMood === 'password-peek' || (isPasswordFocused && showPassword);
-  const isShy = isPasswordFocused && !showPassword;
   const isEmailFocused = characterMood === 'email-focus';
+  const isSmiling = isSuccess;
+  const isErrorState = Boolean(error);
+  const isShy = isPasswordFocused && !showPassword && !isSuccess && !isErrorState;
 
   return (
     <AnimatePresence>
@@ -284,9 +296,10 @@ export const AuthModal: React.FC = () => {
                   {/* 1. Orange Dome Character (Bottom Left) */}
                   <motion.g
                     animate={{
-                      rotate: isShy ? -28 : isEmailFocused ? 4 : 0,
-                      x: isShy ? -12 : isEmailFocused ? 6 : 0,
-                      y: isShy ? 8 : 0,
+                      rotate: isShy ? -28 : isSmiling ? 6 : isErrorState ? -10 : isEmailFocused ? 4 : 0,
+                      x: isShy ? -12 : isSmiling ? 4 : isErrorState ? -5 : isEmailFocused ? 6 : 0,
+                      y: isShy ? 8 : isSmiling ? -4 : isErrorState ? 6 : 0,
+                      scale: isSmiling ? 1.04 : 1,
                     }}
                     transition={{ type: 'spring', stiffness: 220, damping: 16 }}
                   >
@@ -302,6 +315,26 @@ export const AuthModal: React.FC = () => {
                         <circle cx="15" cy="0" r="3" fill="#C0392B" opacity="0.6" />
                         <circle cx="45" cy="0" r="3" fill="#C0392B" opacity="0.6" />
                         <path d="M 25 10 Q 30 15 35 10" fill="none" stroke="#7F1D1D" strokeWidth="2.5" strokeLinecap="round" />
+                      </g>
+                    ) : isSmiling ? (
+                      /* Big Happy Smiling Face */
+                      <g transform="translate(65, 150)">
+                        {/* Curved Happy Eyes */}
+                        <path d="M -4 0 Q 3 -8 10 0" fill="none" stroke="#1E293B" strokeWidth="3" strokeLinecap="round" />
+                        <path d="M 24 0 Q 31 -8 38 0" fill="none" stroke="#1E293B" strokeWidth="3" strokeLinecap="round" />
+                        {/* Blush Cheeks */}
+                        <circle cx="-6" cy="6" r="5" fill="#E74C3C" opacity="0.6" />
+                        <circle cx="40" cy="6" r="5" fill="#E74C3C" opacity="0.6" />
+                        {/* Big Open Smile */}
+                        <path d="M 4 8 Q 17 24 30 8 Z" fill="#1E293B" />
+                      </g>
+                    ) : isErrorState ? (
+                      /* Sad / Worried Face on Wrong Password */
+                      <g transform="translate(65, 155)">
+                        <circle cx="0" cy="0" r="4.5" fill="#1E293B" />
+                        <circle cx="30" cy="0" r="4.5" fill="#1E293B" />
+                        {/* Sad Curved Mouth */}
+                        <path d="M 4 18 Q 15 8 26 18" fill="none" stroke="#1E293B" strokeWidth="2.5" strokeLinecap="round" />
                       </g>
                     ) : (
                       /* Expressive Eyes & Mouth */
@@ -320,9 +353,9 @@ export const AuthModal: React.FC = () => {
                   {/* 2. Purple Tall Character (Middle Left/Back) */}
                   <motion.g
                     animate={{
-                      rotate: isShy ? -35 : isEmailFocused ? 6 : 0,
-                      x: isShy ? -16 : isEmailFocused ? 8 : 0,
-                      y: isShy ? 12 : 0,
+                      rotate: isShy ? -35 : isSmiling ? -3 : isErrorState ? -15 : isEmailFocused ? 6 : 0,
+                      x: isShy ? -16 : isSmiling ? 2 : isErrorState ? -8 : isEmailFocused ? 8 : 0,
+                      y: isShy ? 12 : isSmiling ? -8 : isErrorState ? 8 : 0,
                     }}
                     transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                   >
@@ -334,6 +367,21 @@ export const AuthModal: React.FC = () => {
                       <g transform="translate(115, 85)">
                         <path d="M 0 0 Q 5 -5 10 0" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
                         <path d="M 25 0 Q 30 -5 35 0" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+                      </g>
+                    ) : isSmiling ? (
+                      /* Joyful Smiling Eyes & Wide Smile */
+                      <g transform="translate(118, 80)">
+                        <path d="M -4 0 Q 3 -7 10 0" fill="none" stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round" />
+                        <path d="M 22 0 Q 29 -7 36 0" fill="none" stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round" />
+                        {/* Smile */}
+                        <path d="M 0 14 Q 16 28 32 14" fill="none" stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round" />
+                      </g>
+                    ) : isErrorState ? (
+                      /* Worried Face */
+                      <g transform="translate(118, 85)">
+                        <circle cx="0" cy="0" r="5" fill="#FFFFFF" />
+                        <circle cx="28" cy="0" r="5" fill="#FFFFFF" />
+                        <path d="M 0 18 Q 14 8 28 18" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
                       </g>
                     ) : (
                       <g transform={isEmailFocused ? 'translate(125, 85)' : 'translate(118, 85)'}>
@@ -349,8 +397,9 @@ export const AuthModal: React.FC = () => {
                   {/* 3. Black Pillar Character with Big Eyes (Center Right) */}
                   <motion.g
                     animate={{
-                      rotate: isShy ? 45 : isEmailFocused ? 3 : 0,
-                      x: isShy ? 25 : isEmailFocused ? 5 : 0,
+                      rotate: isShy ? 45 : isSmiling ? -4 : isErrorState ? 12 : isEmailFocused ? 3 : 0,
+                      x: isShy ? 25 : isSmiling ? -2 : isErrorState ? 6 : isEmailFocused ? 5 : 0,
+                      y: isSmiling ? -5 : isErrorState ? 4 : 0,
                       scaleY: isShy ? 0.9 : 1,
                     }}
                     transition={{ type: 'spring', stiffness: 240, damping: 18 }}
@@ -362,6 +411,26 @@ export const AuthModal: React.FC = () => {
                       /* Turned completely around / Eyes hiding */
                       <g transform="translate(180, 115)">
                         <circle cx="10" cy="5" r="2" fill="#666666" />
+                      </g>
+                    ) : isSmiling ? (
+                      /* Happy Sparkling Eyes & Smile */
+                      <g transform="translate(172, 108)">
+                        <circle cx="0" cy="0" r="9" fill="#FFFFFF" />
+                        <circle cx="0" cy="0" r="4" fill="#000000" />
+                        <circle cx="2" cy="-2" r="1.5" fill="#FFFFFF" />
+                        <circle cx="22" cy="0" r="9" fill="#FFFFFF" />
+                        <circle cx="22" cy="0" r="4" fill="#000000" />
+                        <circle cx="24" cy="-2" r="1.5" fill="#FFFFFF" />
+                        {/* Smile */}
+                        <path d="M 3 14 Q 11 22 19 14" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+                      </g>
+                    ) : isErrorState ? (
+                      /* Shocked Eyes */
+                      <g transform="translate(172, 110)">
+                        <circle cx="0" cy="0" r="10" fill="#FFFFFF" />
+                        <circle cx="0" cy="0" r="2" fill="#000000" />
+                        <circle cx="22" cy="0" r="10" fill="#FFFFFF" />
+                        <circle cx="22" cy="0" r="2" fill="#000000" />
                       </g>
                     ) : (
                       <g transform={isEmailFocused ? 'translate(178, 110)' : 'translate(172, 110)'}>
@@ -378,8 +447,9 @@ export const AuthModal: React.FC = () => {
                   {/* 4. Yellow Arch Character (Front Right) */}
                   <motion.g
                     animate={{
-                      rotate: isShy ? 30 : isEmailFocused ? 2 : 0,
-                      x: isShy ? 20 : isEmailFocused ? 4 : 0,
+                      rotate: isShy ? 30 : isSmiling ? 4 : isErrorState ? 10 : isEmailFocused ? 2 : 0,
+                      x: isShy ? 20 : isSmiling ? -3 : isErrorState ? 5 : isEmailFocused ? 4 : 0,
+                      y: isSmiling ? -3 : isErrorState ? 5 : 0,
                     }}
                     transition={{ type: 'spring', stiffness: 210, damping: 17 }}
                   >
@@ -392,6 +462,18 @@ export const AuthModal: React.FC = () => {
                     {isShy ? (
                       <g transform="translate(240, 145)">
                         <line x1="0" y1="0" x2="10" y2="0" stroke="#78350F" strokeWidth="3" strokeLinecap="round" />
+                      </g>
+                    ) : isSmiling ? (
+                      /* Big Smile */
+                      <g transform="translate(230, 138)">
+                        <path d="M -6 0 Q 0 -6 6 0" fill="none" stroke="#1E293B" strokeWidth="3" strokeLinecap="round" />
+                        <path d="M -10 14 Q 0 24 10 14 Z" fill="#1E293B" />
+                      </g>
+                    ) : isErrorState ? (
+                      /* Sad Mouth */
+                      <g transform="translate(230, 142)">
+                        <circle cx="0" cy="0" r="4" fill="#1E293B" />
+                        <path d="M -10 16 Q 0 6 10 16" fill="none" stroke="#1E293B" strokeWidth="3" strokeLinecap="round" />
                       </g>
                     ) : (
                       <g transform={isEmailFocused ? 'translate(235, 140)' : 'translate(230, 140)'}>
@@ -406,16 +488,24 @@ export const AuthModal: React.FC = () => {
               {/* Bottom Interactive Hint Caption */}
               <div className="w-full text-center">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  {isShy ? (
+                  {isSuccess ? (
+                    <span className="text-emerald-600 font-bold flex items-center justify-center gap-1 animate-bounce">
+                      😊 Login successful! Welcome back! 🎉
+                    </span>
+                  ) : isErrorState ? (
+                    <span className="text-red-500 font-bold flex items-center justify-center gap-1">
+                      ❌ Incorrect credentials! Please try again.
+                    </span>
+                  ) : isShy ? (
                     <span className="text-purple-600 font-bold animate-pulse">
-                      🙈 Shh! They turned around to protect your password.
+                      🙈 Shh! Hiding eyes while entering password.
                     </span>
                   ) : isPasswordPeek ? (
                     <span className="text-amber-600 font-bold">
                       😳 Whoa! Password revealed!
                     </span>
                   ) : (
-                    <span>Type your password. Watch them look away.</span>
+                    <span>Type your credentials to log in.</span>
                   )}
                 </p>
               </div>

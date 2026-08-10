@@ -1,8 +1,6 @@
-'use client';
-
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 interface UserDashboardProps {
@@ -10,9 +8,26 @@ interface UserDashboardProps {
   setHistoryOpen?: (open: boolean) => void;
 }
 
+const ROTATING_QUOTES = [
+  "like to translate?",
+  "like to speak?",
+  "like to upload?",
+  "like to text?",
+  "like to transcribe?",
+  "like to voiceover?",
+];
+
 export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDashboardProps) {
   const { setViewMode, globalConfig } = useApp();
-  
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % ROTATING_QUOTES.length);
+    }, 2800);
+    return () => clearInterval(timer);
+  }, []);
+
   const cards = [
     {
       id: 'text-to-speech',
@@ -130,17 +145,26 @@ export default function UserDashboard({ setActiveTab, setHistoryOpen }: UserDash
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="mb-8 flex items-center gap-4">
-        <button
-          onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 transition-all cursor-pointer hover:scale-105 active:scale-95 flex-shrink-0 hover:bg-slate-50 dark:hover:bg-slate-700"
-          title="Back to Home"
-        >
-          <ArrowLeft size={20} />
-        </button>
+      <div className="mb-8 text-left">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">Welcome to {globalConfig?.branding?.platform_name || "Fluentia"}</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Select a tool below to get started with your workflow.</p>
+          
+          <div className="flex flex-wrap items-center gap-x-3 text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight mt-1">
+            <span>What would you</span>
+            <div className="inline-flex items-center overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={quoteIndex}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 italic font-serif font-bold text-2xl sm:text-3xl md:text-4xl"
+                >
+                  {ROTATING_QUOTES[quoteIndex]}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
       </div>
 

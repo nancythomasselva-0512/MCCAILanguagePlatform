@@ -106,6 +106,114 @@ export const CoreFeatures: React.FC<CoreFeaturesProps> = ({ onLaunchTool }) => {
           text-align: left;
         }
 
+        /* DARK MODE OVERRIDES FOR PRICING SECTION */
+        :where(.dark, .dark *) .c1-section,
+        [data-theme="dark"] .c1-section {
+          background-color: #030712 !important;
+        }
+
+        :where(.dark, .dark *) .c1-badge-pill,
+        [data-theme="dark"] .c1-badge-pill {
+          background-color: #0f172a !important;
+          color: #f8fafc !important;
+          border-color: #334155 !important;
+        }
+
+        :where(.dark, .dark *) .c1-badge-num,
+        [data-theme="dark"] .c1-badge-num {
+          background-color: #f8fafc !important;
+          color: #030712 !important;
+        }
+
+        :where(.dark, .dark *) .c1-title,
+        [data-theme="dark"] .c1-title {
+          color: #f8fafc !important;
+        }
+
+        :where(.dark, .dark *) .c1-subtitle,
+        [data-theme="dark"] .c1-subtitle {
+          color: #94a3b8 !important;
+        }
+
+        :where(.dark, .dark *) .c1-toggle-container,
+        [data-theme="dark"] .c1-toggle-container {
+          background-color: #0f172a !important;
+          border-color: #334155 !important;
+        }
+
+        :where(.dark, .dark *) .c1-toggle-btn,
+        [data-theme="dark"] .c1-toggle-btn {
+          color: #94a3b8 !important;
+        }
+
+        :where(.dark, .dark *) .c1-toggle-btn.c1-toggle-active,
+        [data-theme="dark"] .c1-toggle-btn.c1-toggle-active {
+          background-color: #f8fafc !important;
+          color: #030712 !important;
+        }
+
+        /* Dark Mode Pricing Cards */
+        :where(.dark, .dark *) .c1-card,
+        [data-theme="dark"] .c1-card {
+          background-color: #0f172a !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          box-shadow: 0 12px 36px -10px rgba(0,0,0,0.5) !important;
+        }
+
+        :where(.dark, .dark *) .c1-card-1,
+        [data-theme="dark"] .c1-card-1 {
+          background: radial-gradient(circle at 50% 0%, rgba(255, 179, 71, 0.25) 0%, rgba(249, 237, 150, 0.12) 35%, #0f172a 75%) !important;
+        }
+
+        :where(.dark, .dark *) .c1-card-2,
+        [data-theme="dark"] .c1-card-2 {
+          background: radial-gradient(circle at 50% 0%, rgba(229, 161, 245, 0.25) 0%, rgba(248, 172, 160, 0.12) 35%, #0f172a 75%) !important;
+        }
+
+        :where(.dark, .dark *) .c1-card-3,
+        [data-theme="dark"] .c1-card-3 {
+          background: radial-gradient(circle at 50% 0%, rgba(249, 237, 150, 0.25) 0%, rgba(229, 161, 245, 0.12) 35%, #0f172a 75%) !important;
+        }
+
+        :where(.dark, .dark *) .c1-card-4,
+        [data-theme="dark"] .c1-card-4 {
+          background: radial-gradient(circle at 50% 0%, rgba(248, 172, 160, 0.25) 0%, rgba(255, 179, 71, 0.12) 35%, #0f172a 75%) !important;
+        }
+
+        :where(.dark, .dark *) .c1-prompt-box,
+        [data-theme="dark"] .c1-prompt-box {
+          background-color: rgba(30, 41, 59, 0.95) !important;
+          color: #f1f5f9 !important;
+          border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        }
+
+        :where(.dark, .dark *) .c1-pill-btn,
+        :where(.dark, .dark *) .c1-search,
+        [data-theme="dark"] .c1-pill-btn,
+        [data-theme="dark"] .c1-search {
+          background-color: #1e293b !important;
+          border-color: rgba(255, 255, 255, 0.2) !important;
+          color: #f8fafc !important;
+        }
+
+        :where(.dark, .dark *) .c1-card-meta,
+        [data-theme="dark"] .c1-card-meta {
+          border-top-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        :where(.dark, .dark *) .c1-stats-left,
+        [data-theme="dark"] .c1-stats-left {
+          color: #94a3b8 !important;
+        }
+
+        :where(.dark, .dark *) .c1-meta-tag,
+        [data-theme="dark"] .c1-meta-tag {
+          background-color: rgba(30, 41, 59, 0.9) !important;
+          border-color: rgba(255, 255, 255, 0.15) !important;
+          color: #f8fafc !important;
+          font-weight: 700 !important;
+        }
+
         /* TOGGLE SWITCH STYLES - OUR THEME (#0f172a + SLATE) */
         .c1-toggle-container {
           display: inline-flex;
@@ -371,8 +479,8 @@ export const CoreFeatures: React.FC<CoreFeaturesProps> = ({ onLaunchTool }) => {
         {/* 4 Gradient Cards Grid combining Prompt Specification Box UI + AI Models Content */}
         <div className="c1-grid">
           
-          {/* CARD 1: FREE PLAN */}
-          <div className="c1-card c1-card-1" onClick={() => handleLaunch('voice-to-text')}>
+          {/* CARD 1: FREE PLAN (Display Only) */}
+          <div className="c1-card c1-card-1 cursor-default">
             <div className="c1-pill-btn">
               <span style={{ color: '#10b981', fontSize: '1rem' }}>✦</span> Free Plan — <span className="c1-price-highlight" style={{ color: '#059669' }}>₹0/mo</span>
             </div>

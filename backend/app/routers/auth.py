@@ -338,12 +338,17 @@ def google_login(data: GoogleLoginRequest, db: Session = Depends(get_db)):
             db.refresh(user)
 
             now = datetime.datetime.utcnow()
+            trial_end = now + datetime.timedelta(days=7)
             sub = Subscription(
                 tenant_id=new_tenant.id,
                 plan_id=free_plan.id,
-                status="trialing",
+                status="active",
+                price=0.0,
+                billing_cycle="monthly",
+                start_date=now,
+                end_date=trial_end,
                 current_period_start=now,
-                current_period_end=now + datetime.timedelta(days=7)
+                current_period_end=trial_end
             )
             db.add(sub)
             db.commit()
@@ -388,7 +393,7 @@ def google_login(data: GoogleLoginRequest, db: Session = Depends(get_db)):
             "user_id": user.id,
             "role": user.role,
             "tenant_slug": tenant_slug,
-            "name": user.name,
+            "name": user.name or "User",
             "email": user.email
         }
     except HTTPException:

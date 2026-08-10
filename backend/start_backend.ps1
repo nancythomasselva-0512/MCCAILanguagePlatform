@@ -23,12 +23,10 @@ Set-Location -Path $PSScriptRoot
 if (!(Test-Path ".venv")) {
     Write-Host "Creating Python virtual environment..."
     & $pythonExe -m venv .venv
+    Write-Host "Upgrading pip and installing requirements..."
+    & ".venv/Scripts/python.exe" -m pip install --upgrade pip
+    & ".venv/Scripts/python.exe" -m pip install -r requirements.txt
 }
-
-# Activate and install requirements
-Write-Host "Upgrading pip and installing requirements..."
-& ".venv/Scripts/python.exe" -m pip install --upgrade pip
-& ".venv/Scripts/python.exe" -m pip install -r requirements.txt
 
 # Run server
 Write-Host "Starting Faster-Whisper server on http://localhost:8000..."

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeftRight, Copy, Volume2, RefreshCw,
   ChevronDown, AlertCircle, CheckCircle2, Loader2, X, Cpu, Languages,
-  Globe, Activity, Award, FileText, Download,
+  Globe, Activity, Award, FileText, Download, Sparkles,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Play, Pause, Square, UploadCloud, File as FileIcon
 } from 'lucide-react';
@@ -306,14 +306,28 @@ export const TextTranslation: React.FC = () => {
 
   return (
     <div className="space-y-6 w-full animate-fadeIn max-w-[1200px] mx-auto">
-      {/* Header */}
-      <div className="mb-6 text-left">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-          <Languages className="text-teal-500" size={24} />
-          Text Translation
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
-          Translate text across languages using advanced AI translation models
+      {/* Studio Header Banner with Quote */}
+      <div className="text-center sm:text-left space-y-2 mb-2">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-bold border border-orange-500/20 shadow-sm">
+          <Sparkles size={14} className="text-orange-500" />
+          <span>AI Text Translation</span>
+          <span className="text-[10px] bg-orange-500/20 dark:bg-orange-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider ml-1">
+            NMT Engine
+          </span>
+        </div>
+        
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <span>Write Anything</span>
+          <span className="text-slate-400 font-light">|</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 italic font-serif">
+            Translate Everything
+          </span>
+          <span className="font-sans not-italic">
+            🌍
+          </span>
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl font-medium">
+          Translate text effortlessly across languages with contextual AI precision and neural accuracy.
         </p>
       </div>
 

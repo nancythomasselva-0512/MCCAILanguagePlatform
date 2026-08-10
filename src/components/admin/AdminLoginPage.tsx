@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle, X } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Sparkles, AlertCircle, X, Shield, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const AdminLoginPage: React.FC = () => {
   const { theme, setViewMode, login: saveLoginSession, setActiveTab } = useApp();
+  const [selectedRole, setSelectedRole] = useState<'super_admin' | 'tenant_admin'>('super_admin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,15 +36,22 @@ export const AdminLoginPage: React.FC = () => {
 
       const data = await response.json();
 
-      if (data.role !== 'super_admin') {
-        throw new Error("This login is reserved for the Platform Super Administrator.");
-      }
-
       setTimeout(() => {
         saveLoginSession(data.name, email, data.role, data.access_token, data.refresh_token, data.tenant_slug);
-        setActiveTab('sa-overview');
-        setViewMode('workspace');
-      }, 500);
+        if (data.role === 'super_admin') {
+          setActiveTab('sa-overview');
+          setViewMode('workspace');
+          window.history.pushState({}, '', '/controller');
+        } else if (data.role === 'tenant_admin') {
+          setActiveTab('tenant-dashboard');
+          setViewMode('workspace');
+          window.history.pushState({}, '', '/dashboard');
+        } else {
+          setActiveTab('dashboard');
+          setViewMode('workspace');
+          window.history.pushState({}, '', '/dashboard');
+        }
+      }, 300);
 
     } catch (err: any) {
       setError(err.message || "Connection failed. Please ensure the backend is running.");
@@ -56,8 +64,8 @@ export const AdminLoginPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center p-4 relative" style={{ background: 'var(--bg-base)' }}>
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[10%] left-[20%] w-96 h-96 bg-teal-500/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[10%] right-[20%] w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px]" />
+        <div className="absolute top-[10%] left-[20%] w-96 h-96 bg-orange-500/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[10%] right-[20%] w-96 h-96 bg-amber-500/10 rounded-full blur-[120px]" />
       </div>
 
       <motion.div
@@ -82,7 +90,7 @@ export const AdminLoginPage: React.FC = () => {
 
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 p-0.5 shadow-lg shadow-teal-500/20">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 p-0.5 shadow-lg shadow-orange-500/20">
               <div className="w-full h-full bg-slate-950/50 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                 <Lock className="text-white" size={28} />
               </div>
@@ -107,7 +115,41 @@ export const AdminLoginPage: React.FC = () => {
           </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Role Quick Selector Tabs */}
+        <div className="flex items-center gap-2 p-1.5 mb-6 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedRole('super_admin');
+              setError('');
+            }}
+            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              selectedRole === 'super_admin'
+                ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white shadow-md shadow-orange-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Shield size={14} />
+            <span>Super Admin</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedRole('tenant_admin');
+              setError('');
+            }}
+            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              selectedRole === 'tenant_admin'
+                ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white shadow-md shadow-orange-500/20'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <User size={14} />
+            <span>Admin</span>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} autoComplete="off" className="space-y-5">
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Admin Email
@@ -117,10 +159,12 @@ export const AdminLoginPage: React.FC = () => {
               <input
                 type="email"
                 required
+                name="admin_login_email_no_autofill"
+                autoComplete="one-time-code"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@platform.com"
-                className="w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm transition-all focus:ring-2 bg-slate-100 dark:bg-white/5 border border-transparent dark:border-white/5 outline-none text-slate-900 dark:text-white focus:border-teal-500 focus:ring-teal-500/20 focus:bg-white dark:focus:bg-slate-900/50 font-medium"
+                placeholder={selectedRole === 'super_admin' ? "aiadmin@gmail.com" : "workspaceadmin@gmail.com"}
+                className="w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm transition-all focus:ring-2 bg-slate-100 dark:bg-white/5 border border-transparent dark:border-white/5 outline-none text-slate-900 dark:text-white focus:border-orange-500 focus:ring-orange-500/20 focus:bg-white dark:focus:bg-slate-900/50 font-medium"
               />
             </div>
           </div>
@@ -134,10 +178,12 @@ export const AdminLoginPage: React.FC = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 required
+                name="admin_login_password_no_autofill"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-12 pr-12 py-3.5 rounded-2xl text-sm transition-all focus:ring-2 bg-slate-100 dark:bg-white/5 border border-transparent dark:border-white/5 outline-none text-slate-900 dark:text-white focus:border-teal-500 focus:ring-teal-500/20 focus:bg-white dark:focus:bg-slate-900/50 font-medium"
+                className="w-full pl-12 pr-12 py-3.5 rounded-2xl text-sm transition-all focus:ring-2 bg-slate-100 dark:bg-white/5 border border-transparent dark:border-white/5 outline-none text-slate-900 dark:text-white focus:border-orange-500 focus:ring-orange-500/20 focus:bg-white dark:focus:bg-slate-900/50 font-medium"
               />
               <button
                 type="button"
@@ -152,9 +198,9 @@ export const AdminLoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full mt-4 flex items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:scale-100 shadow-lg shadow-teal-500/25"
+            className="w-full mt-4 flex items-center justify-center gap-2 rounded-2xl py-4 text-sm font-black text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:scale-100 shadow-lg shadow-orange-500/25 cursor-pointer"
             style={{
-              background: 'linear-gradient(135deg, #0f766e 0%, #10b981 100%)',
+              background: 'linear-gradient(135deg, #f97316 0%, #f59e0b 50%, #ea580c 100%)',
             }}
           >
             {isLoading ? (
@@ -169,7 +215,7 @@ export const AdminLoginPage: React.FC = () => {
         </form>
 
         <div className="mt-8 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
-          Return to <a href="/" onClick={(e) => { e.preventDefault(); setViewMode('landing'); window.history.pushState({}, '', '/'); }} className="text-teal-600 dark:text-teal-400 hover:underline">main website</a>
+          Return to <a href="/" onClick={(e) => { e.preventDefault(); setViewMode('landing'); window.history.pushState({}, '', '/'); }} className="text-orange-600 dark:text-orange-400 hover:underline">main website</a>
         </div>
       </motion.div>
     </div>

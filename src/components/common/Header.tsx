@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sun, Moon, Menu, X, ArrowRight, LogOut, ChevronDown, User, LogIn, Search, Activity } from 'lucide-react';
+import { Sun, Moon, Menu, X, ArrowRight, LogOut, ChevronDown, User, LogIn, Search, Activity, Sparkles, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const PROVIDER_NAMES: Record<string, string> = {
@@ -136,13 +136,25 @@ export const Header: React.FC = () => {
           : '0 4px 20px -1px rgba(0, 0, 0, 0.04)',
       }}
     >
-      <div className={`w-full flex h-12 sm:h-14 md:h-16 items-center justify-between px-3 sm:px-6 min-w-0 gap-2 sm:gap-4 overflow-hidden ${viewMode === 'workspace' ? 'w-full px-3 sm:px-6 md:px-8' : 'max-w-7xl mx-auto'}`}>
+      <div className={`w-full flex h-12 sm:h-14 md:h-16 items-center justify-between px-3 sm:px-6 min-w-0 gap-2 sm:gap-4 ${viewMode === 'workspace' ? 'w-full px-3 sm:px-6 md:px-8' : 'max-w-7xl mx-auto'}`}>
 
         <div className="flex items-center gap-2 md:gap-3 min-w-0 overflow-hidden flex-shrink">
-          {viewMode !== 'workspace' ? (
+          {viewMode === 'workspace' && user ? (
+            <div className="flex items-center gap-2 select-none py-1">
+              <span 
+                className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-slate-900 dark:text-white"
+                style={{ fontFamily: "'Outfit', sans-serif" }}
+              >
+                Welcome, <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 font-extrabold">
+                  {user.role === 'super_admin' ? 'Super Admin' : user.role === 'tenant_admin' ? 'Admin' : (user.name || 'User')}
+                </span> <Sparkles size={18} className="inline-block text-orange-500 animate-pulse ml-0.5" />
+              </span>
+            </div>
+          ) : (
             <div
-              className="flex cursor-pointer items-center gap-2"
+              className="flex cursor-pointer items-center gap-2 hover:opacity-90 transition-opacity"
               onClick={() => { setViewMode('landing'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              title="Go to Home Landing Page"
             >
               <img
                 src={"/logo.png?v=3"}
@@ -150,22 +162,13 @@ export const Header: React.FC = () => {
                 className="h-8 sm:h-9 md:h-10 w-auto object-contain hover:scale-105 transition-transform duration-200 dark:invert-0 dark:hue-rotate-0 invert hue-rotate-180"
               />
               <div className="flex flex-col justify-center select-none min-w-0">
-                <span className="font-display text-sm sm:text-base md:text-lg font-black tracking-tight leading-none text-emerald-900 dark:text-emerald-50 flex items-center gap-1 truncate">
+                <span className="font-display text-sm sm:text-base md:text-lg font-black tracking-tight leading-none text-slate-900 dark:text-white flex items-center gap-1 truncate">
                   {globalConfig?.branding?.platform_name || "Fluentia"}
                 </span>
-                <span className="text-[6px] sm:text-[7px] md:text-[8.5px] font-bold tracking-[0.2em] uppercase mt-0.5 text-teal-600 dark:text-teal-400 truncate">
+                <span className="text-[6px] sm:text-[7px] md:text-[8.5px] font-bold tracking-[0.2em] uppercase mt-0.5 text-orange-500 dark:text-orange-400 truncate">
                   {globalConfig?.branding?.tagline || "AI Language Platform"}
                 </span>
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col justify-center animate-fadeIn min-w-0 overflow-hidden">
-              <span className="font-display text-xs sm:text-sm md:text-base font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
-                Welcome back, {user?.name?.split(' ')[0] || 'User'} 👋
-              </span>
-              <span className="hidden xl:block text-[9px] lg:text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 mt-0.5 uppercase truncate">
-                Ready to conquer the day and create something amazing
-              </span>
             </div>
           )}
         </div>
@@ -222,102 +225,121 @@ export const Header: React.FC = () => {
           </button>
 
           {/* Auth Buttons or User Menu */}
-          {(user && viewMode === 'workspace') ? (
+          {user ? (
             <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
-              {/* Active Workspace / Open Workspace Button */}
-              <button
-                onClick={() => handleLaunchWorkspace()}
-                className={`hidden md:flex items-center gap-2 rounded-full px-3.5 sm:px-4 py-1 sm:py-1.5 text-xs font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex-shrink-0`}
-                style={{
-                  background: viewMode === 'workspace'
-                    ? (theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.08)')
-                    : 'rgba(37, 99, 235, 0.1)',
-                  color: viewMode === 'workspace' ? 'var(--text-primary)' : '#3b82f6',
-                  border: '1px solid var(--border-base)',
-                }}
-              >
-                <span className={`h-2 w-2 rounded-full ${viewMode === 'workspace' ? 'bg-emerald-500 animate-pulse' : 'bg-teal-500'}`} />
-                <span className="whitespace-nowrap">{viewMode === 'workspace' ? 'Workspace Active' : 'Go to Workspace'}</span>
-              </button>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setDropdownOpen((prev) => !prev)}
+                  className="flex items-center gap-1.5 sm:gap-2 rounded-full p-1 pr-2.5 sm:pr-3.5 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/80 hover:bg-orange-50 dark:hover:bg-white/5 hover:border-orange-200 dark:hover:border-orange-500/30 transition-all cursor-pointer flex-shrink-0 shadow-sm"
+                >
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-white flex items-center justify-center text-xs font-black border border-white/20 uppercase select-none flex-shrink-0 shadow-md shadow-orange-500/25">
+                    {user.role === 'super_admin' ? 'S' : user.role === 'tenant_admin' ? 'A' : (user.name ? user.name.charAt(0) : 'U')}
+                  </div>
+                  <span className="hidden sm:inline-block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 max-w-[80px] sm:max-w-[120px] truncate">
+                    {user.role === 'super_admin' ? 'Super Admin' : user.role === 'tenant_admin' ? 'Admin' : (user.name || 'User')}
+                  </span>
+                  <ChevronDown size={14} className={`text-slate-400 transition-transform duration-300 ${dropdownOpen ? 'rotate-180 text-orange-500' : ''}`} />
+                </button>
 
-              {viewMode === 'workspace' && (
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-1.5 sm:gap-2 rounded-full p-1 pr-2 sm:pr-3 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer flex-shrink-0"
-                  >
-                    <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gradient-to-br from-teal-600 to-emerald-500 text-white flex items-center justify-center text-xs font-black border border-white/10 uppercase select-none flex-shrink-0">
-                      {user.name ? user.name.charAt(0) : 'U'}
-                    </div>
-                    <span className="hidden sm:inline-block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 max-w-[70px] sm:max-w-[100px] truncate">
-                      {user.name}
-                    </span>
-                    <ChevronDown size={14} className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  <AnimatePresence>
-                    {dropdownOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl p-2 z-50 overflow-hidden"
-                        style={{
-                          background: theme === 'dark' ? '#0b1120' : '#ffffff',
-                        }}
-                      >
-                        {/* User Info Header */}
-                        <div className="px-3 py-2.5 mb-1.5 select-none rounded-xl bg-slate-50 dark:bg-white/5">
-                          <p className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
-                            {user.name}
-                          </p>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
-                            {user.email}
-                          </p>
+                <AnimatePresence>
+                  {dropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2.5 w-64 rounded-2xl border border-slate-200 dark:border-white/10 shadow-2xl p-2.5 z-50 overflow-hidden"
+                      style={{
+                        background: theme === 'dark' ? '#0f172a' : '#ffffff',
+                      }}
+                    >
+                      {/* Rich User Profile Card */}
+                      <div className="px-3.5 py-3 mb-2 select-none rounded-xl bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-transparent border border-orange-500/20">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-orange-500 via-amber-500 to-orange-600 text-white flex items-center justify-center text-sm font-black border border-white/30 uppercase shrink-0 shadow-md shadow-orange-500/20">
+                            {user.role === 'super_admin' ? 'S' : user.role === 'tenant_admin' ? 'A' : (user.name ? user.name.charAt(0) : 'U')}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-black text-slate-900 dark:text-white truncate">
+                              {user.role === 'super_admin' ? 'Super Admin' : user.role === 'tenant_admin' ? 'Admin' : (user.name || 'User')}
+                            </p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 font-medium">
+                              {user.email}
+                            </p>
+                          </div>
                         </div>
+                        <div className="mt-2.5 flex items-center justify-start pt-2 border-t border-slate-200/50 dark:border-white/10">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 bg-orange-500/15 px-2.5 py-0.5 rounded-full border border-orange-500/20">
+                            {(user.role as string) === 'super_admin' ? 'Super Admin' : (user.role as string) === 'tenant_admin' ? 'Admin' : 'Active User'}
+                          </span>
+                        </div>
+                      </div>
 
-                        {user.role === 'super_admin' ? (
-                          <>
-                            <button
-                              onClick={() => { window.history.pushState({}, '', '/controller'); handleLaunchWorkspace(); setDropdownOpen(false); }}
-                              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all text-left cursor-pointer"
-                            >
-                              <Activity size={14} />
-                              <span>Admin Panel</span>
-                            </button>
-                            <button
-                              onClick={() => { window.history.pushState({}, '', '/dashboard'); handleLaunchWorkspace(); setDropdownOpen(false); }}
-                              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all text-left cursor-pointer mt-0.5"
-                            >
-                              <User size={14} />
-                              <span>User Dashboard</span>
-                            </button>
-                          </>
-                        ) : (
+                      {user.role === 'super_admin' ? (
+                        <>
                           <button
-                            onClick={() => { window.history.pushState({}, '', '/dashboard'); handleLaunchWorkspace(); setDropdownOpen(false); }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all text-left cursor-pointer"
+                            onClick={() => { setActiveTab('sa-overview'); setViewMode('workspace'); window.history.pushState({}, '', '/controller'); setDropdownOpen(false); }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-white/5 hover:text-orange-600 dark:hover:text-orange-400 transition-all text-left cursor-pointer"
                           >
-                            <User size={14} />
-                            <span>Open Workspace</span>
+                            <Activity size={14} className="text-orange-500" />
+                            <span>Super Admin Controller</span>
                           </button>
-                        )}
-
-                        <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-1.5" />
-
+                          <button
+                            onClick={() => { setActiveTab('tenant-dashboard'); setViewMode('workspace'); window.history.pushState({}, '', '/dashboard'); setDropdownOpen(false); }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-white/5 hover:text-orange-600 dark:hover:text-orange-400 transition-all text-left cursor-pointer mt-0.5"
+                          >
+                            <Shield size={14} className="text-orange-500" />
+                            <span>Admin Workspace</span>
+                          </button>
+                          <button
+                            onClick={() => { setActiveTab('dashboard'); setViewMode('workspace'); window.history.pushState({}, '', '/dashboard'); setDropdownOpen(false); }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-white/5 hover:text-orange-600 dark:hover:text-orange-400 transition-all text-left cursor-pointer mt-0.5"
+                          >
+                            <User size={14} className="text-orange-500" />
+                            <span>User Workspace</span>
+                          </button>
+                        </>
+                      ) : user.role === 'tenant_admin' ? (
+                        <>
+                          <button
+                            onClick={() => { setActiveTab('tenant-dashboard'); setViewMode('workspace'); window.history.pushState({}, '', '/dashboard'); setDropdownOpen(false); }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-white/5 hover:text-orange-600 dark:hover:text-orange-400 transition-all text-left cursor-pointer"
+                          >
+                            <Activity size={14} className="text-orange-500" />
+                            <span>Admin Workspace</span>
+                          </button>
+                          <button
+                            onClick={() => { setActiveTab('dashboard'); setViewMode('workspace'); window.history.pushState({}, '', '/dashboard'); setDropdownOpen(false); }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-white/5 hover:text-orange-600 dark:hover:text-orange-400 transition-all text-left cursor-pointer mt-0.5"
+                          >
+                            <User size={14} className="text-orange-500" />
+                            <span>My Workspace</span>
+                          </button>
+                        </>
+                      ) : (
                         <button
-                          onClick={() => { logout(); setDropdownOpen(false); }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-red-500 hover:bg-red-500/10 transition-all text-left cursor-pointer"
+                          onClick={() => { setActiveTab('dashboard'); setViewMode('workspace'); window.history.pushState({}, '', '/dashboard'); setDropdownOpen(false); }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-700 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-white/5 hover:text-orange-600 dark:hover:text-orange-400 transition-all text-left cursor-pointer"
                         >
-                          <LogOut size={14} />
-                          <span>Sign Out</span>
+                          <User size={14} className="text-orange-500" />
+                          <span>My Workspace</span>
                         </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+                      )}
+
+                      <div className="h-[1px] bg-slate-200 dark:bg-white/5 my-1.5" />
+
+                      <button
+                        onClick={() => { logout(); setDropdownOpen(false); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg text-red-500 hover:bg-red-500/10 transition-all text-left cursor-pointer"
+                      >
+                        <LogOut size={14} />
+                        <span>Sign Out</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-3 pl-1">
@@ -326,10 +348,10 @@ export const Header: React.FC = () => {
                 onClick={() => handleOpenAuth('login')}
                 className="group flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-extrabold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 style={{
-                  background: 'linear-gradient(135deg, #0D9488, #10B981)',
+                  background: 'linear-gradient(135deg, #FF8333, #F97316)',
                   color: '#ffffff',
                   border: '1px solid transparent',
-                  boxShadow: '0 0 15px rgba(13, 148, 136, 0.15)',
+                  boxShadow: '0 0 15px rgba(249, 115, 22, 0.25)',
                 }}
               >
                 <span>Sign In / Sign Up</span>

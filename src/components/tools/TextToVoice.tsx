@@ -4,15 +4,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, Pause, Download, RefreshCw, Cpu,
-  Volume2, ChevronDown, AlertCircle, X, Gauge, Music, Pencil,
-  Award, Music4, Speaker, FileText, MoreVertical, Trash2, Activity
+  Volume2, ChevronDown, AlertCircle, X, Gauge, Music, Pencil, PenLine,
+  Award, Music4, Speaker, FileText, MoreVertical, Trash2, Activity,
+  Sparkles, ArrowUpRight, CheckCircle2, Sliders, AudioWaveform
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { providerManager } from '../../providers/providerManager';
 
 type PlayState = 'idle' | 'playing' | 'paused' | 'done' | 'loading' | 'error';
 
-const SAMPLE_TEXT = "Welcome to our AI platform. This tool converts your text into natural-sounding speech using advanced AI voice synthesis technology.";
+const SAMPLE_TEXT = "Welcome to Voicely AI. Turn your ideas into a powerful studio-quality voiceover in seconds using advanced neural voice synthesis.";
 
 export const TextToVoice: React.FC = () => {
   const { history, clearHistory, billingOverview, addHistoryItem, theme, openAiApiKey, fetchBillingOverview } = useApp();
@@ -27,11 +28,18 @@ export const TextToVoice: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [charCount, setCharCount] = useState(0);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
-  
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressIntervalRef = useRef<any>(null);
+  const hasAddedHistoryRef = useRef<boolean>(false);
 
-  
+  const recordHistoryOnce = (type: string, title: string, details: string) => {
+    if (!hasAddedHistoryRef.current) {
+      hasAddedHistoryRef.current = true;
+      addHistoryItem(type, title, details);
+    }
+  };
+
   useEffect(() => {
     providerManager.getActiveProviders().then(res => {
       if (res["Text To Speech"]) {
@@ -39,7 +47,8 @@ export const TextToVoice: React.FC = () => {
       }
     });
   }, []);
-useEffect(() => {
+
+  useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       const updateVoices = () => {
         const voices = window.speechSynthesis.getVoices();
@@ -66,6 +75,12 @@ useEffect(() => {
     };
   }, []);
 
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = speed;
+    }
+  }, [speed]);
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value.slice(0, 5000);
     setText(val);
@@ -75,6 +90,7 @@ useEffect(() => {
 
   const startTTS = async () => {
     setErrorMsg('');
+    hasAddedHistoryRef.current = false;
     const inputText = text.trim() || SAMPLE_TEXT;
     setProgress(0);
 
@@ -91,7 +107,6 @@ useEffect(() => {
 
     setPlayState('loading');
 
-    // Call backend endpoint which uses global provider mapping
     try {
       const audioUrl = await providerManager.synthesizeSpeech(
         inputText,
@@ -101,10 +116,8 @@ useEffect(() => {
       );
       fetchBillingOverview();
 
-      // Check if audioUrl is the mock fallback song
       if (audioUrl === "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3") {
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-          console.log("Mock audio URL received. Falling back to browser SpeechSynthesis.");
           const utterance = new SpeechSynthesisUtterance(inputText);
           const voice = window.speechSynthesis.getVoices().find(v => v.name === selectedLocalVoice);
           if (voice) {
@@ -129,7 +142,7 @@ useEffect(() => {
           utterance.onend = () => {
             setProgress(100);
             setPlayState('done');
-            addHistoryItem('text-to-speech', inputText, `${selectedLocalVoice || 'Browser Voice'} (Web Speech) • ${inputText.split(' ').filter(Boolean).length} words`);
+            recordHistoryOnce('text-to-speech', inputText, `${selectedLocalVoice || 'Browser Voice'} (Web Speech) • ${inputText.split(' ').filter(Boolean).length} words`);
           };
 
           utterance.onerror = (e) => {
@@ -148,8 +161,8 @@ useEffect(() => {
       audio.playbackRate = speed;
 
       audio.onplay = () => {
+        audio.playbackRate = speed;
         setPlayState('playing');
-        
         if (isNaN(audio.duration) || audio.duration < 0.2) {
           let currentProgress = 0;
           progressIntervalRef.current = setInterval(() => {
@@ -158,7 +171,7 @@ useEffect(() => {
               clearInterval(progressIntervalRef.current);
               setPlayState('done');
               setProgress(100);
-              addHistoryItem('text-to-speech', inputText, `${selectedLocalVoice || 'Voice Synthesis'} (${activeProvider}) • ${inputText.split(' ').filter(Boolean).length} words`);
+              recordHistoryOnce('text-to-speech', inputText, `${selectedLocalVoice || 'Voice Synthesis'} (${activeProvider}) • ${inputText.split(' ').filter(Boolean).length} words`);
             } else {
               setProgress(currentProgress);
             }
@@ -175,41 +188,22 @@ useEffect(() => {
       audio.onended = () => {
         setProgress(100);
         setPlayState('done');
-        addHistoryItem('text-to-speech', inputText, `${selectedLocalVoice || 'Voice Synthesis'} (${activeProvider}) • ${inputText.split(' ').filter(Boolean).length} words`);
+        recordHistoryOnce('text-to-speech', inputText, `${selectedLocalVoice || 'Voice Synthesis'} (${activeProvider}) • ${inputText.split(' ').filter(Boolean).length} words`);
       };
 
       audio.onerror = () => {
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
           const utterance = new SpeechSynthesisUtterance(inputText);
           const voice = window.speechSynthesis.getVoices().find(v => v.name === selectedLocalVoice);
-          if (voice) {
-            utterance.voice = voice;
-          }
+          if (voice) utterance.voice = voice;
           utterance.rate = speed;
           utterance.pitch = pitch;
 
-          utterance.onstart = () => {
-            setPlayState('playing');
-          };
-
-          let progressVal = 0;
-          const totalChars = inputText.length;
-          utterance.onboundary = (event) => {
-            if (event.charIndex) {
-              progressVal = (event.charIndex / totalChars) * 100;
-              setProgress(Math.min(99, progressVal));
-            }
-          };
-
+          utterance.onstart = () => setPlayState('playing');
           utterance.onend = () => {
             setProgress(100);
             setPlayState('done');
-            addHistoryItem('text-to-speech', inputText, `${selectedLocalVoice || 'Browser Voice'} (Web Speech) • ${inputText.split(' ').filter(Boolean).length} words`);
-          };
-
-          utterance.onerror = () => {
-            setPlayState('error');
-            setErrorMsg('Failed to synthesize speech using Web Speech API.');
+            recordHistoryOnce('text-to-speech', inputText, `${selectedLocalVoice || 'Browser Voice'} (Web Speech) • ${inputText.split(' ').filter(Boolean).length} words`);
           };
 
           window.speechSynthesis.speak(utterance);
@@ -230,44 +224,24 @@ useEffect(() => {
               clearInterval(progressIntervalRef.current);
               setPlayState('done');
               setProgress(100);
-              addHistoryItem('text-to-speech', inputText, `${selectedLocalVoice || 'Voice Synthesis'} (ELEVENLABS) • ${inputText.split(' ').filter(Boolean).length} words`);
+              recordHistoryOnce('text-to-speech', inputText, `${selectedLocalVoice || 'Voice Synthesis'} (ELEVENLABS) • ${inputText.split(' ').filter(Boolean).length} words`);
             } else {
               setProgress(currentProgress);
             }
           }, 100);
         } else {
-          // Playback blocked fallback
           if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(inputText);
             const voice = window.speechSynthesis.getVoices().find(v => v.name === selectedLocalVoice);
-            if (voice) {
-              utterance.voice = voice;
-            }
+            if (voice) utterance.voice = voice;
             utterance.rate = speed;
             utterance.pitch = pitch;
 
-            utterance.onstart = () => {
-              setPlayState('playing');
-            };
-
-            let progressVal = 0;
-            const totalChars = inputText.length;
-            utterance.onboundary = (event) => {
-              if (event.charIndex) {
-                progressVal = (event.charIndex / totalChars) * 100;
-                setProgress(Math.min(99, progressVal));
-              }
-            };
-
+            utterance.onstart = () => setPlayState('playing');
             utterance.onend = () => {
               setProgress(100);
               setPlayState('done');
-              addHistoryItem('text-to-speech', inputText, `${selectedLocalVoice || 'Browser Voice'} (Web Speech) • ${inputText.split(' ').filter(Boolean).length} words`);
-            };
-
-            utterance.onerror = () => {
-              setPlayState('error');
-              setErrorMsg('Failed to synthesize speech using Web Speech API.');
+              recordHistoryOnce('text-to-speech', inputText, `${selectedLocalVoice || 'Browser Voice'} (Web Speech) • ${inputText.split(' ').filter(Boolean).length} words`);
             };
 
             window.speechSynthesis.speak(utterance);
@@ -283,7 +257,6 @@ useEffect(() => {
   };
 
   const pauseResume = () => {
-    // If Web Speech API is actively speaking/paused, handle it
     if (typeof window !== 'undefined' && window.speechSynthesis && (window.speechSynthesis.speaking || window.speechSynthesis.paused)) {
       if (playState === 'playing') {
         window.speechSynthesis.pause();
@@ -295,9 +268,7 @@ useEffect(() => {
       return;
     }
 
-    if (!audioRef.current) {
-      return;
-    }
+    if (!audioRef.current) return;
 
     if (playState === 'playing') {
       audioRef.current.pause();
@@ -317,230 +288,237 @@ useEffect(() => {
       audioRef.current.pause();
       audioRef.current = null;
     }
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-    }
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     setPlayState('idle');
     setProgress(0);
   };
 
-  const downloadAudio = () => {
-    const inputText = text.trim() || SAMPLE_TEXT;
-    const lang = localVoices.find(v => v.name === selectedLocalVoice)?.lang.split('-')[0] || 'en';
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang}&client=tw-ob&q=${encodeURIComponent(inputText.slice(0, 200))}`;
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.download = 'tts-speech.mp3';
-    a.click();
-  };
-
-  const reset = () => {
-    stopTTS();
-    setText('');
-    setCharCount(0);
-    setErrorMsg('');
-  };
-
   const isActive = playState === 'playing' || playState === 'paused';
-
-  const ttsHistory = (history || []).filter(item => item.type === 'text-to-speech');
-  const getVoiceName = (item: any) => {
-    if (item.details.includes(' • ')) {
-      return item.details.split(' • ')[0];
-    }
-    return item.title;
-  };
-  const uniqueVoicesCount = new Set(ttsHistory.map(getVoiceName)).size;
-  const ttsLimit = billingOverview?.usage?.tts_chars_limit || 10000;
-  const remainingChars = Math.max(0, ttsLimit - (billingOverview?.usage?.tts_chars_used || 0));
-
-  const getVoiceBadge = (title: string, details: string) => {
-    const searchString = details.includes(' • ') ? details : title;
-    if (searchString.includes('OpenAI') || searchString.includes('OPENAI')) {
-      return 'OPENAI';
-    }
-    if (searchString.includes('ElevenLabs') || searchString.includes('ELEVENLABS')) {
-      return '11LABS';
-    }
-    if (searchString.includes('Web Speech') || searchString.includes('Browser') || searchString.includes('Microsoft') || searchString.includes('Google')) {
-      return 'BROWSR';
-    }
-    const parts = searchString.split(' • ')[0].split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return 'VOICE';
-  };
+  const rawTtsHistory = (history || []).filter(item => item.type === 'text-to-speech');
+  const ttsHistory = rawTtsHistory.filter((item, index, arr) => {
+    if (index === 0) return true;
+    const prev = arr[index - 1];
+    return !(prev.title === item.title && prev.details === item.details);
+  });
 
   return (
-    <div className="space-y-6 w-full animate-fadeIn max-w-[1200px] mx-auto">
-      {/* Header */}
-      <div className="mb-6 text-left">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-          <Volume2 className="text-teal-500" size={24} />
-          Text to Voice
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
-          Convert your text into realistic speech using AI voices
+    <div className="w-full max-w-[1240px] mx-auto space-y-8 animate-fadeIn">
+      {/* Studio Header Banner matching reference design */}
+      <div className="text-center sm:text-left space-y-2">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-bold border border-orange-500/20 shadow-sm">
+          <Sparkles size={14} className="text-orange-500" />
+          <span>AI Voice Generation</span>
+          <span className="text-[10px] bg-orange-500/20 dark:bg-orange-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider ml-1">
+            GPT-S2 Engine
+          </span>
+        </div>
+        
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight flex flex-wrap items-center gap-x-2">
+          <span>Create Studio</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 italic font-serif px-1">
+            Quality AI Voices
+          </span>
+          <span>in Seconds</span>
+          <span className="inline-flex items-center gap-0.5 ml-1 text-orange-500">
+            <span className="w-1 h-3.5 bg-orange-500 rounded-full animate-pulse"></span>
+            <span className="w-1 h-5 bg-amber-500 rounded-full animate-pulse delay-75"></span>
+            <span className="w-1 h-2.5 bg-orange-400 rounded-full animate-pulse delay-150"></span>
+            <span className="w-1 h-4 bg-amber-600 rounded-full animate-pulse delay-200"></span>
+          </span>
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl font-medium">
+          Generate realistic voiceovers for videos, ads, podcasts, and apps using advanced neural speech synthesis.
         </p>
       </div>
 
-      {/* Error */}
+      {/* Error Alert */}
       <AnimatePresence>
         {errorMsg && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="alert alert-error">
-            <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center gap-3 p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/40 text-red-700 dark:text-red-300 text-sm font-semibold shadow-sm"
+          >
+            <AlertCircle size={18} className="flex-shrink-0" />
             <span className="flex-1">{errorMsg}</span>
-            <button onClick={() => setErrorMsg('')} className="flex-shrink-0 opacity-60 hover:opacity-100"><X size={14} /></button>
+            <button onClick={() => setErrorMsg('')} className="p-1 hover:opacity-100 opacity-60 transition-opacity">
+              <X size={16} />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* YOUR TEXT card */}
-          <div className="bg-white dark:bg-[#111827] rounded-[16px] p-6 shadow-sm border border-slate-100 dark:border-white/5">
-            <div className="flex items-center gap-2 mb-4">
-              <Pencil size={16} className="text-teal-700 dark:text-teal-400" />
-              <h3 className="text-sm font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wide">Your Text</h3>
-            </div>
-            <textarea
-              value={text}
-              onChange={handleTextChange}
-              placeholder="Type or paste your text here... (or leave blank to use sample)"
-              className="w-full h-56 resize-none rounded-xl border border-slate-200 dark:border-white/10 p-4 text-slate-700 dark:text-slate-200 bg-white dark:bg-[#0a1120] focus:outline-none focus:border-teal-400"
-            />
-            <div className="flex justify-between items-center mt-3 text-xs font-bold text-teal-700 dark:text-teal-500">
-              <span>Max 5,000 characters.</span>
-              <span>{charCount} / 5,000</span>
-            </div>
-          </div>
+        {/* Left Column: Glassmorphic Studio Workspace matching Target UI */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="relative overflow-hidden rounded-[2.2rem] bg-gradient-to-br from-white/90 via-orange-50/20 to-amber-50/30 dark:from-slate-900/90 dark:via-slate-900/80 dark:to-orange-950/20 border border-slate-200/80 dark:border-white/10 shadow-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6">
+            
+            {/* Background Ambient Mesh Glow */}
+            <div className="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-orange-400/20 via-amber-300/15 to-transparent blur-3xl pointer-events-none rounded-full" />
+            <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-gradient-to-tr from-sky-400/15 via-teal-300/10 to-transparent blur-3xl pointer-events-none rounded-full" />
 
-          {/* Settings Cards Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Voice Card */}
-            <div className="bg-white dark:bg-[#111827] rounded-[16px] p-5 shadow-sm border border-slate-100 dark:border-white/5">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="text-teal-700 dark:text-teal-400">
-                  <Volume2 size={16} />
+            {/* Input Workspace Card Header */}
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-orange-500/15 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">
+                  <Pencil size={15} />
                 </div>
-                <h3 className="text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wide">Voice</h3>
+                <span className="text-xs font-extrabold tracking-widest text-slate-700 dark:text-slate-300 uppercase">
+                  Studio Input Workspace
+                </span>
               </div>
-              <div className="relative">
+
+              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-white/70 dark:bg-slate-800/70 border border-slate-200/60 dark:border-white/10 px-3 py-1 rounded-full shadow-sm">
+                <span>Max 5,000 chars</span>
+                <span className="mx-1.5 opacity-40">•</span>
+                <span className="text-orange-600 dark:text-orange-400">{charCount} / 5,000</span>
+              </div>
+            </div>
+
+            {/* Textarea Area */}
+            <div className="relative z-10">
+              <textarea
+                value={text}
+                onChange={handleTextChange}
+                placeholder="Type or paste your text here... (or leave blank to use sample text)"
+                className="w-full h-56 sm:h-64 resize-none rounded-2xl border border-slate-200/90 dark:border-white/10 p-5 text-slate-800 dark:text-slate-100 bg-white/80 dark:bg-slate-950/70 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all font-sans text-base leading-relaxed placeholder:text-slate-400 shadow-inner"
+              />
+            </div>
+
+            {/* Progress Audio Waveform Bar */}
+            {isActive && (
+              <div className="relative z-10 space-y-1.5 animate-fadeIn">
+                <div className="flex justify-between items-center text-xs font-bold text-orange-600 dark:text-orange-400">
+                  <span className="flex items-center gap-1.5">
+                    <AudioWaveform size={14} className="animate-pulse" />
+                    <span>Synthesizing Speech...</span>
+                  </span>
+                  <span>{Math.round(progress)}%</span>
+                </div>
+                <div className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-150"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Bottom Controls Bar embedded matching Image 2 floating pills */}
+            <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-200/60 dark:border-white/10">
+              
+              {/* Voice Selector Pill */}
+              <div className="flex items-center gap-2 bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-white/10 px-3.5 py-2 rounded-full shadow-sm hover:border-orange-300 transition-colors">
+                <Volume2 size={15} className="text-orange-500" />
                 <select
                   value={selectedLocalVoice}
                   onChange={(e) => setSelectedLocalVoice(e.target.value)}
-                  className="w-full appearance-none bg-white dark:bg-[#0a1120] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-semibold rounded-lg px-3 py-2.5 pr-8 focus:outline-none"
+                  className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none appearance-none pr-5 cursor-pointer max-w-[160px] truncate"
                 >
-                  {localVoices.map(v => <option key={v.name} value={v.name}>{v.name} ({v.lang})</option>)}
+                  {localVoices.map(v => <option key={v.name} value={v.name} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">{v.name}</option>)}
                 </select>
-                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <ChevronDown size={14} className="text-slate-400 -ml-4 pointer-events-none" />
               </div>
-            </div>
 
-            {/* Speed Card */}
-            <div className="bg-white dark:bg-[#111827] rounded-[16px] p-5 shadow-sm border border-slate-100 dark:border-white/5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="text-teal-700 dark:text-teal-400">
-                    <Gauge size={16} />
-                  </div>
-                  <h3 className="text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wide">Speed</h3>
-                </div>
-                <span className="text-teal-700 dark:text-teal-400 font-bold text-xs">{speed.toFixed(1)}X</span>
+              {/* Speed Pill */}
+              <div className="flex items-center gap-2 bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-white/10 px-3.5 py-2 rounded-full shadow-sm">
+                <Gauge size={15} className="text-amber-500" />
+                <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Speed:</span>
+                <input
+                  type="range" min="0.5" max="2" step="0.1" value={speed}
+                  onChange={(e) => setSpeed(parseFloat(e.target.value))}
+                  className="w-16 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                />
+                <span className="text-xs font-black text-orange-600 dark:text-orange-400 w-8">{speed.toFixed(1)}x</span>
               </div>
-              <input 
-                type="range" min="0.5" max="2" step="0.1" value={speed} 
-                onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${((speed - 0.5) / 1.5) * 100}%, var(--border-base) ${((speed - 0.5) / 1.5) * 100}%, var(--border-base) 100%)`,
-                }}
-              />
-              <div className="flex justify-between text-[10px] font-bold text-teal-800 dark:text-teal-500 mt-3">
-                <span>Slow</span><span>Normal</span><span>Fast</span>
-              </div>
-            </div>
 
-            {/* Pitch Card */}
-            <div className="bg-white dark:bg-[#111827] rounded-[16px] p-5 shadow-sm border border-slate-100 dark:border-white/5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="text-fuchsia-600 dark:text-fuchsia-400">
-                    <Music size={16} />
-                  </div>
-                  <h3 className="text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wide">Pitch</h3>
-                </div>
-                <span className="text-teal-700 dark:text-teal-400 font-bold text-xs">{pitch.toFixed(1)}X</span>
+              {/* Pitch Pill */}
+              <div className="flex items-center gap-2 bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-white/10 px-3.5 py-2 rounded-full shadow-sm">
+                <Music size={15} className="text-purple-500" />
+                <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300">Pitch:</span>
+                <input
+                  type="range" min="0.5" max="2" step="0.1" value={pitch}
+                  onChange={(e) => setPitch(parseFloat(e.target.value))}
+                  className="w-16 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                />
+                <span className="text-xs font-black text-purple-600 dark:text-purple-400 w-8">{pitch.toFixed(1)}x</span>
               </div>
-              <input 
-                type="range" min="0.5" max="2" step="0.1" value={pitch} 
-                onChange={(e) => setPitch(parseFloat(e.target.value))}
-                className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, #8b5cf6 0%, #8b5cf6 ${((pitch - 0.5) / 1.5) * 100}%, var(--border-base) ${((pitch - 0.5) / 1.5) * 100}%, var(--border-base) 100%)`,
-                }}
-              />
-              <div className="flex justify-between text-[10px] font-bold text-teal-800 dark:text-teal-500 mt-3">
-                <span>Low</span><span>Normal</span><span>High</span>
-              </div>
+
+              {/* Generate Voice Button matching target Image 2 button style */}
+              <button
+                onClick={isActive ? pauseResume : startTTS}
+                className="bg-slate-900 hover:bg-black dark:bg-gradient-to-r dark:from-orange-500 dark:to-amber-500 text-white font-extrabold px-7 py-3 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer text-sm ml-auto"
+              >
+                {playState === 'loading' ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    <span>Processing...</span>
+                  </>
+                ) : playState === 'playing' ? (
+                  <>
+                    <Pause size={16} />
+                    <span>Pause Voice</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{playState === 'paused' ? 'Resume Voice' : 'Generate Voice'}</span>
+                    <ArrowUpRight size={16} />
+                  </>
+                )}
+              </button>
+
             </div>
           </div>
-
-          {/* Convert Button */}
-          <button 
-            onClick={isActive ? pauseResume : startTTS}
-            className="w-full bg-[#10a37f] hover:bg-[#0e906f] text-white font-bold py-4 rounded-[12px] shadow-sm flex items-center justify-center gap-2 transition-all mt-2"
-          >
-            {playState === 'loading' ? (
-              <RefreshCw size={20} className="animate-spin" />
-            ) : playState === 'playing' ? (
-              <>
-                <Pause size={18} /> PAUSE SPEECH
-              </>
-            ) : (
-              <>
-                <Activity size={18} /> {playState === 'paused' ? 'RESUME SPEECH' : 'CONVERT TO SPEECH'}
-              </>
-            )}
-          </button>
         </div>
 
-        {/* Right Column */}
+        {/* Right Column: Recent History Studio Cards matching Image 1 layout */}
         <div className="lg:col-span-1 space-y-4">
-          <div className="flex items-center justify-between px-1 mb-2">
-            <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide">Recent History</h3>
-            <button className="text-[11px] font-bold text-teal-700 dark:text-teal-400 hover:text-teal-800 transition-colors">View all</button>
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+              Recent History
+            </h3>
+            <span className="text-xs font-bold text-orange-600 dark:text-orange-400 hover:underline cursor-pointer">
+              View all
+            </span>
           </div>
 
           <div className="space-y-3">
             {ttsHistory.length === 0 ? (
-              <div className="bg-white dark:bg-[#111827] rounded-[16px] p-6 text-center text-slate-500 text-sm font-medium border border-slate-100 dark:border-white/5">
-                No recent history.
+              <div className="bg-white/80 dark:bg-slate-900/80 rounded-2xl p-6 text-center text-slate-500 dark:text-slate-400 text-sm font-medium border border-slate-200/80 dark:border-white/10 shadow-sm">
+                No generated speech history yet.
               </div>
             ) : (
-              ttsHistory.slice(0, 5).map((item, idx) => {
+              ttsHistory.slice(0, 5).map((item) => {
                 const isNewFormat = item.details.includes(' • ');
                 const displayTitle = isNewFormat ? item.title : item.details;
                 const displayDetails = isNewFormat ? item.details : `${item.title} • ${item.details}`;
                 return (
-                  <div key={item.id} className="bg-white dark:bg-[#111827] rounded-[16px] p-4 flex items-center gap-4 shadow-sm border border-slate-100 dark:border-white/5">
-                    <button className="h-10 w-10 flex-shrink-0 rounded-full bg-[#e6f4f1] dark:bg-teal-900/30 flex items-center justify-center text-[#10a37f] dark:text-teal-400 hover:bg-teal-100 transition-colors">
+                  <div
+                    key={item.id}
+                    className="bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-900 rounded-2xl p-4 flex items-center gap-3.5 shadow-sm border border-slate-200/80 dark:border-white/10 transition-all hover:border-orange-300 dark:hover:border-orange-500/40 group"
+                  >
+                    <button
+                      onClick={() => setSelectedHistoryItem(item)}
+                      className="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 text-white flex items-center justify-center shadow-md hover:scale-105 transition-transform"
+                    >
                       <Play size={16} className="fill-current ml-0.5" />
                     </button>
-                    <div 
-                      className="flex-1 min-w-0 cursor-pointer group"
+                    <div
+                      className="flex-1 min-w-0 cursor-pointer"
                       onClick={() => setSelectedHistoryItem(item)}
                     >
-                      <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200 truncate leading-snug group-hover:text-teal-600 transition-colors">{displayTitle}</p>
-                      <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate mt-1">
-                        {displayDetails.split(' • ')[0]} • {item.timestamp}
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-orange-600 transition-colors">
+                        {displayTitle}
+                      </p>
+                      <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                        {displayDetails.split(' • ')[0]}
                       </p>
                     </div>
-                    <button className="text-slate-400 hover:text-slate-600 px-1">
+                    <button
+                      onClick={() => setSelectedHistoryItem(item)}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
+                    >
                       <MoreVertical size={16} />
                     </button>
                   </div>
@@ -549,12 +527,14 @@ useEffect(() => {
             )}
           </div>
 
-          <button 
-            onClick={() => clearHistory()}
-            className="w-full bg-white dark:bg-[#111827] border border-red-100 dark:border-red-500/20 text-red-500 font-bold py-3.5 rounded-[16px] shadow-sm flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors mt-2 text-xs"
-          >
-            <Trash2 size={16} /> Clear History
-          </button>
+          {ttsHistory.length > 0 && (
+            <button
+              onClick={() => clearHistory()}
+              className="w-full bg-white/80 dark:bg-slate-900/80 border border-red-200/80 dark:border-red-500/30 text-red-600 dark:text-red-400 font-bold py-3 rounded-2xl shadow-sm flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors text-xs cursor-pointer"
+            >
+              <Trash2 size={15} /> Clear History
+            </button>
+          )}
         </div>
       </div>
 
@@ -565,7 +545,7 @@ useEffect(() => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"
             onClick={() => setSelectedHistoryItem(null)}
           >
             <motion.div
@@ -573,28 +553,26 @@ useEffect(() => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden flex flex-col"
+              className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden flex flex-col"
             >
-              <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
-                <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400">
+              <div className="p-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/80 dark:bg-slate-900">
+                <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-bold text-sm">
                   <FileText size={18} />
-                  <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200 uppercase tracking-wide">
-                    Converted Text
-                  </h3>
+                  <span className="uppercase tracking-wider">Converted Text</span>
                 </div>
-                <button 
+                <button
                   onClick={() => setSelectedHistoryItem(null)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 transition-colors"
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
                 >
                   <X size={18} />
                 </button>
               </div>
               <div className="p-6 max-h-[60vh] overflow-y-auto">
-                <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                <p className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed whitespace-pre-wrap font-sans">
                   {selectedHistoryItem.details.includes(' • ') ? selectedHistoryItem.title : selectedHistoryItem.details}
                 </p>
               </div>
-              <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-900 text-xs font-medium text-slate-500">
+              <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/80 dark:bg-slate-900 text-xs font-medium text-slate-500">
                 Created: {selectedHistoryItem.timestamp}
               </div>
             </motion.div>
@@ -604,4 +582,3 @@ useEffect(() => {
     </div>
   );
 };
-

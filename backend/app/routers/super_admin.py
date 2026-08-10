@@ -18,88 +18,98 @@ def get_system_metrics(db: Session = Depends(get_db)):
     db_tenant_count = db.query(Tenant).count()
     db_active_tenants = db.query(Tenant).filter(Tenant.status == "active").count()
     db_suspended_tenants = db.query(Tenant).filter(Tenant.status == "suspended").count()
-    db_active_users = db.query(User).filter(User.status == "active").count()
+    db_active_users = db.query(User).count()
 
-    active_tenants = max(22, db_active_tenants)
-    suspended_tenants = max(3, db_suspended_tenants)
-    total_tenants = active_tenants + suspended_tenants
-    active_users = max(430, db_active_users)
+    # Calculate real resources consumed across history tables
+    transcription_items = db.query(TranscriptionHistory).all()
+    translation_items = db.query(TranslationHistory).all()
+    tts_items = db.query(TtsHistory).all()
 
-    # Revenue Estimate: sum of active tenants' plan prices + baseline
+    total_transcription_seconds = sum(t.duration_seconds for t in transcription_items if t.duration_seconds)
+    total_transcriptions_minutes = round(total_transcription_seconds / 60.0, 2)
+    total_translations_chars = sum(len(t.source_text or "") for t in translation_items)
+    total_tts_chars = sum(len(t.text_prompt or "") for t in tts_items)
+
+    total_api_calls = len(transcription_items) + len(translation_items) + len(tts_items)
+
+    # Revenue Estimate: sum of active tenants' plan prices
     db_revenue = sum(t.plan.price for t in db.query(Tenant).filter(Tenant.status == "active").all() if t.plan)
-    revenue_this_month = 2450.0 + db_revenue
-
-    # Calculate resources consumed across database
-    usage_records = db.query(UsageTracking).all()
-    total_transcriptions_minutes = sum(u.audio_minutes_used for u in usage_records)
-    total_translations_chars = sum(u.translation_chars_used for u in usage_records)
-    total_tts_chars = sum(u.tts_chars_used for u in usage_records)
-    total_api_calls = sum(u.api_calls_used for u in usage_records)
-
-    api_calls_today = 42000 + total_api_calls
 
     # Expiring plans next 7 days
     now = datetime.datetime.utcnow()
     next_seven_days = now + datetime.timedelta(days=7)
-    db_expiring = db.query(Tenant).join(UsageTracking).filter(
+    expiring_plans_count = db.query(Tenant).join(UsageTracking).filter(
         Tenant.status == "active",
         UsageTracking.billing_period_end >= now,
         UsageTracking.billing_period_end <= next_seven_days
     ).count()
-    expiring_plans_count = max(2, db_expiring)
+
+    # Daily breakdown for last 7 days (charts data)
+    daily_stats = []
+    for i in range(6, -1, -1):
+        day_date = (now - datetime.timedelta(days=i)).date()
+        day_str = day_date.strftime("%b %d")
+        
+        t_count = sum(1 for item in transcription_items if item.created_at and item.created_at.date() == day_date)
+        tr_count = sum(1 for item in translation_items if item.created_at and item.created_at.date() == day_date)
+        tts_count = sum(1 for item in tts_items if item.created_at and item.created_at.date() == day_date)
+        
+        daily_stats.append({
+            "day": day_str,
+            "audio": t_count,
+            "translation": tr_count,
+            "tts": tts_count,
+            "total": t_count + tr_count + tts_count
+        })
 
     # Top usage tenants
-    db_usage = db.query(UsageTracking).order_by(UsageTracking.api_calls_used.desc()).limit(5).all()
+    db_tenants = db.query(Tenant).all()
     top_usage_tenants = []
-    for u in db_usage:
-        tenant = u.tenant
-        if tenant:
-            top_usage_tenants.append({
-                "name": tenant.tenant_name,
-                "slug": tenant.slug,
-                "plan": tenant.plan.name if tenant.plan else "Free",
-                "api_calls": u.api_calls_used,
-                "audio_minutes": round(u.audio_minutes_used, 2),
-                "translation_chars": u.translation_chars_used,
-                "tts_chars": u.tts_chars_used
-            })
+    for tenant in db_tenants:
+        t_minutes = sum(item.duration_seconds for item in transcription_items if item.tenant_slug == tenant.slug and item.duration_seconds) / 60.0
+        tr_chars = sum(len(item.source_text or "") for item in translation_items if item.tenant_slug == tenant.slug)
+        tts_c = sum(len(item.text_prompt or "") for item in tts_items if item.tenant_slug == tenant.slug)
+        calls = sum(1 for item in transcription_items if item.tenant_slug == tenant.slug) + \
+                sum(1 for item in translation_items if item.tenant_slug == tenant.slug) + \
+                sum(1 for item in tts_items if item.tenant_slug == tenant.slug)
+        
+        top_usage_tenants.append({
+            "name": tenant.tenant_name,
+            "slug": tenant.slug,
+            "plan": tenant.plan.name if tenant.plan else "Free",
+            "api_calls": calls,
+            "audio_minutes": round(t_minutes, 2),
+            "translation_chars": tr_chars,
+            "tts_chars": tts_c
+        })
 
-    # Default mockup tenants to ensure 5 entries for aesthetics
-    default_tenants = [
-        {"name": "ABC School", "slug": "abc-school", "plan": "Professional", "api_calls": 12500, "audio_minutes": 180.5, "translation_chars": 450000, "tts_chars": 120000},
-        {"name": "Acme Enterprise", "slug": "acme", "plan": "Enterprise", "api_calls": 12500, "audio_minutes": 180.5, "translation_chars": 450000, "tts_chars": 120000},
-        {"name": "Stark Industries", "slug": "stark", "plan": "Professional", "api_calls": 9200, "audio_minutes": 110.2, "translation_chars": 280000, "tts_chars": 85000},
-        {"name": "Wayne Enterprises", "slug": "wayne", "plan": "Professional", "api_calls": 7400, "audio_minutes": 95.0, "translation_chars": 190000, "tts_chars": 60000},
-        {"name": "Oscorp Biotech", "slug": "oscorp", "plan": "Starter", "api_calls": 4100, "audio_minutes": 45.4, "translation_chars": 80000, "tts_chars": 25000}
-    ]
-    for dt in default_tenants:
-        if len(top_usage_tenants) >= 5:
-            break
-        if not any(t["slug"] == dt["slug"] for t in top_usage_tenants):
-            top_usage_tenants.append(dt)
+    top_usage_tenants = sorted(top_usage_tenants, key=lambda x: x["api_calls"], reverse=True)[:5]
 
     provider_health = [
         {"provider": "OpenAI", "status": "Healthy", "status_code": "healthy"},
         {"provider": "Deepgram", "status": "Healthy", "status_code": "healthy"},
-        {"provider": "Whisper", "status": "High CPU", "status_code": "warning"},
+        {"provider": "Whisper", "status": "Healthy", "status_code": "healthy"},
         {"provider": "ElevenLabs", "status": "Healthy", "status_code": "healthy"}
     ]
 
     return {
-        "total_tenants": total_tenants,
-        "active_tenants": active_tenants,
-        "suspended_tenants": suspended_tenants,
-        "active_users": active_users,
-        "revenue_this_month": revenue_this_month,
-        "api_calls_today": api_calls_today,
+        "total_tenants": db_tenant_count,
+        "active_tenants": db_active_tenants,
+        "suspended_tenants": db_suspended_tenants,
+        "active_users": db_active_users,
+        "revenue_this_month": db_revenue,
+        "api_calls_today": total_api_calls,
         "expiring_plans_count": expiring_plans_count,
         "top_usage_tenants": top_usage_tenants,
         "provider_health": provider_health,
+        "daily_stats": daily_stats,
         "metrics": {
-            "transcription_minutes": round(total_transcriptions_minutes, 2),
+            "transcription_minutes": total_transcriptions_minutes,
             "translation_characters": total_translations_chars,
             "tts_characters": total_tts_chars,
-            "api_calls": total_api_calls
+            "transcription_count": len(transcription_items),
+            "translation_count": len(translation_items),
+            "tts_count": len(tts_items)
         }
     }
 

@@ -10,7 +10,7 @@ import uvicorn
 
 # Imports for new SaaS structure
 from app.core.config import settings
-from app.core.database import engine, Base, SessionLocal
+from app.core.database import engine, Base, SessionLocal, get_db
 from app.middleware.tenant_middleware import TenantMiddleware
 from app.routers import auth, super_admin, tenant_admin, tools, platform_builder, billing
 from app.models.models import SubscriptionPlan, User, BillingSettings
@@ -132,33 +132,41 @@ def seed_database():
 
         db.commit()
 
-        # 2. Check for existing Super Admin or seed dynamically if env var is provided
-        super_admin_email = settings.SUPER_ADMIN_EMAIL
-        existing_admin = db.query(User).filter(User.role == "super_admin").first()
-        
+        # 2. Seed Super Admin (aiadmin@gmail.com / aiadmin123)
+        super_admin_email = settings.SUPER_ADMIN_EMAIL or "aiadmin@gmail.com"
+        super_admin_password = settings.SUPER_ADMIN_PASSWORD or "aiadmin123"
+        existing_admin = db.query(User).filter(User.email == super_admin_email).first()
         if existing_admin:
-            # Super Admin exists, check if email changed or password needs update? 
-            # Or just do nothing. We'll do nothing, assuming they don't want it constantly overwritten.
-            # But they said "whatever admin credentials I gave should work correctly", so let's update password if email matches.
-            if super_admin_email and existing_admin.email == super_admin_email and settings.SUPER_ADMIN_PASSWORD:
-                existing_admin.password_hash = get_password_hash(settings.SUPER_ADMIN_PASSWORD)
-                db.commit()
-            pass
-        elif super_admin_email:
-            # Only seed if an explicit environment variable is provided, to avoid hardcoding
-            super_admin_password = settings.SUPER_ADMIN_PASSWORD or "admin123"
-            super_admin = User(
-                name="Platform Owner",
+            existing_admin.password_hash = get_password_hash(super_admin_password)
+            existing_admin.role = "super_admin"
+            existing_admin.status = "active"
+        else:
+            db.add(User(
+                name="Platform Super Admin",
                 email=super_admin_email,
                 password_hash=get_password_hash(super_admin_password),
                 role="super_admin",
                 status="active"
-            )
-            db.add(super_admin)
-            logger.info(f"Seeded default Super Admin from env var.")
+            ))
+
+        # 3. Seed Workspace Admin (workspaceadmin@gmail.com / admin123)
+        existing_w_admin = db.query(User).filter(User.email.in_(["workspaceadmin@gmail.com", "admin@workspace.com"])).first()
+        if existing_w_admin:
+            existing_w_admin.email = "workspaceadmin@gmail.com"
+            existing_w_admin.password_hash = get_password_hash("admin123")
+            existing_w_admin.role = "tenant_admin"
+            existing_w_admin.status = "active"
         else:
-            logger.info("No super_admin found in DB and SUPER_ADMIN_EMAIL env var not set. Skipping seed.")
+            db.add(User(
+                name="Workspace Manager",
+                email="workspaceadmin@gmail.com",
+                password_hash=get_password_hash("admin123"),
+                role="tenant_admin",
+                status="active"
+            ))
+
         db.commit()
+        logger.info("Successfully verified & seeded Super Admin and Workspace Admin accounts.")
     except Exception as e:
         logger.error(f"Error seeding database: {e}")
     finally:
@@ -216,6 +224,11 @@ app.include_router(tenant_admin.router, prefix="/api")
 app.include_router(tools.router, prefix="/api")
 app.include_router(platform_builder.router, prefix="/api")
 app.include_router(billing.router, prefix="/api")
+
+@app.get("/api/platform_builder/global_config", tags=["Platform Builder Operations"], include_in_schema=False)
+@app.get("/api/platform_builder/global-config", tags=["Platform Builder Operations"], include_in_schema=False)
+def get_global_config_alias(db: Session = Depends(get_db)):
+    return platform_builder.get_global_config(db)
 
 from app.routers import document
 app.include_router(document.router, prefix="/api")

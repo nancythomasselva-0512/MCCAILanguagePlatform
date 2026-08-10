@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Download, Edit3, Check, Copy, RefreshCw,
   Clock, AlertCircle, CheckCircle2, FileAudio, X, Cpu, ChevronDown, Trash2,
-  Award, Activity, MoreVertical, FileText
+  Award, Activity, MoreVertical, FileText, Sparkles
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { providerManager } from '../../providers/providerManager';
@@ -296,14 +296,25 @@ export const AudioToText: React.FC = () => {
   };
   return (
     <div className="space-y-6 w-full animate-fadeIn max-w-[1200px] mx-auto">
-      {/* Header */}
-      <div className="mb-6 text-left">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-          <FileAudio className="text-teal-500" size={24} />
-          Audio to Text
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
-          Upload audio files to transcribe into structured text
+      {/* Studio Header Banner with Tagline from reference image */}
+      <div className="text-center sm:text-left space-y-2 mb-2">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-bold border border-orange-500/20 shadow-sm">
+          <Sparkles size={14} className="text-orange-500" />
+          <span>AI Audio Transcription</span>
+          <span className="text-[10px] bg-orange-500/20 dark:bg-orange-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider ml-1">
+            Faster-Whisper Engine
+          </span>
+        </div>
+        
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight flex flex-wrap items-center gap-x-2">
+          <span>Convert Speech to</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 italic font-serif px-1">
+            Perfectly Written Text
+          </span>
+          <span>in Seconds 🎙️</span>
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl font-medium">
+          Upload audio files to transcribe into structured text using high-performance neural speech synthesis.
         </p>
       </div>
 
@@ -319,31 +330,7 @@ export const AudioToText: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Backend Status Banner */}
-      {backendStatus === 'connected' ? (
-        <div className="alert alert-success">
-          <Cpu size={14} className="flex-shrink-0 animate-pulse" />
-          <span className="flex-1 text-xs">
-            <strong>Faster-Whisper Active</strong> — High-performance local Python backend connected. Supports all languages with automatic detection.
-          </span>
-          <span className="badge badge-success text-[9px]">Online</span>
-        </div>
-      ) : backendStatus === 'checking' ? (
-        <div className="alert alert-info">
-          <Cpu size={14} className="flex-shrink-0 animate-spin" style={{ color: 'var(--text-muted)' }} />
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Checking connection to local Faster-Whisper server…</span>
-        </div>
-      ) : (
-        <div className="alert alert-warning">
-          <Cpu size={14} className="flex-shrink-0" />
-          <span className="flex-1 text-xs">
-            <strong>Faster-Whisper Offline</strong> — Start the backend (<code className="font-mono">start_backend.ps1</code>) for best results. Falling back to browser-based transcription.
-          </span>
-          <button onClick={checkBackend} className="flex-shrink-0 text-xs font-bold hover:underline" style={{ color: 'var(--accent)' }}>
-            Retry
-          </button>
-        </div>
-      )}
+
 
       {/* 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -352,34 +339,34 @@ export const AudioToText: React.FC = () => {
           
           {/* Configuration (only when idle) */}
           {processState === 'idle' && (
-            <div className="bg-white dark:bg-[#111827] rounded-[16px] p-5 shadow-sm border border-slate-100 dark:border-white/5 grid gap-4 sm:grid-cols-2">
+            <div className="bg-white dark:bg-[#111827] rounded-[20px] p-5 shadow-sm border border-slate-100 dark:border-white/5 grid gap-4 sm:grid-cols-2">
               <div className="w-full text-left">
-                <label className="mb-2 block text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wide">Language</label>
+                <label className="mb-2 block text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide">Language</label>
                 <div className="relative">
                   <select id="att-lang-select" value={selectedLanguage}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="w-full appearance-none bg-white dark:bg-[#0a1120] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-semibold rounded-lg px-3 py-2.5 pr-8 focus:outline-none">
+                    className="w-full appearance-none bg-white dark:bg-[#0a1120] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-semibold rounded-xl px-3.5 py-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all">
                     {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
                   </select>
-                  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
               </div>
 
               <div className="w-full text-left">
-                <label className="mb-2 block text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wide">
+                <label className="mb-2 block text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide">
                   Model Size
                   {backendStatus !== 'connected' && (
-                    <span className="ml-2 text-teal-500 normal-case font-medium">(Server only)</span>
+                    <span className="ml-2 text-orange-500 normal-case font-medium">(Server only)</span>
                   )}
                 </label>
                 <div className="relative">
                   <select id="att-model-select" value={modelSize}
                     onChange={(e) => setModelSize(e.target.value)}
                     disabled={backendStatus !== 'connected'}
-                    className="w-full appearance-none bg-white dark:bg-[#0a1120] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-semibold rounded-lg px-3 py-2.5 pr-8 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="w-full appearance-none bg-white dark:bg-[#0a1120] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-[11px] font-semibold rounded-xl px-3.5 py-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                     {MODELS.map(m => <option key={m.code} value={m.code}>{m.label}</option>)}
                   </select>
-                  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
               </div>
             </div>
@@ -389,7 +376,7 @@ export const AudioToText: React.FC = () => {
           {processState === 'idle' && (
             <div
               id="att-upload-area"
-              className={`bg-white dark:bg-[#111827] rounded-[16px] p-6 sm:p-14 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm border border-slate-100 dark:border-white/5 transition-all ${isDragOver ? 'border-teal-400 bg-teal-50 dark:bg-teal-900/10' : ''}`}
+              className={`bg-white/80 dark:bg-[#111827]/90 backdrop-blur-xl rounded-[24px] p-6 sm:p-14 flex flex-col items-center justify-center text-center cursor-pointer shadow-sm border border-slate-200/80 dark:border-white/10 transition-all hover:border-orange-500/40 ${isDragOver ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20' : ''}`}
               onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
               onDragLeave={() => setIsDragOver(false)}
               onDrop={handleDrop}
@@ -401,7 +388,7 @@ export const AudioToText: React.FC = () => {
             >
               <input ref={fileInputRef} type="file" accept="audio/*" className="hidden"
                 onChange={(e) => e.target.files?.[0] && processFile(e.target.files[0])} />
-              <div className={`mb-5 flex h-20 w-20 items-center justify-center rounded-2xl transition-colors bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400`}>
+              <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-2xl transition-all bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/20 shadow-inner">
                 <FileAudio size={34} />
               </div>
               <p className="text-base font-bold text-slate-800 dark:text-slate-200">
@@ -410,7 +397,7 @@ export const AudioToText: React.FC = () => {
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">or click to browse from your device</p>
               <div className="mt-6 flex flex-wrap justify-center gap-2">
                 {['MP3', 'WAV', 'M4A', 'OGG', 'FLAC'].map(fmt => (
-                  <span key={fmt} className="rounded-full px-3 py-1 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                  <span key={fmt} className="rounded-full px-3 py-1 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                     {fmt}
                   </span>
                 ))}
@@ -422,9 +409,9 @@ export const AudioToText: React.FC = () => {
           <AnimatePresence>
             {(['decoding', 'downloading', 'processing', 'error'] as ProcessState[]).includes(processState) && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className="bg-white dark:bg-[#111827] rounded-[16px] shadow-sm border border-slate-100 dark:border-white/5 p-6">
+                className="bg-white dark:bg-[#111827] rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 p-6">
                 <div className="flex items-center gap-4 mb-5">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400">
                     {processState === 'error' ? <AlertCircle size={20} className="text-red-500" /> : <FileAudio size={20} />}
                   </div>
                   <div className="flex-1 min-w-0 text-left">
@@ -460,7 +447,7 @@ export const AudioToText: React.FC = () => {
                       <span>{backendStatus === 'connected' ? uploadProgress : modelProgress}%</span>
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                      <div className="h-full rounded-full bg-teal-500 transition-all duration-300"
+                      <div className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-300"
                         style={{ width: `${backendStatus === 'connected' ? uploadProgress : modelProgress}%` }} />
                     </div>
                   </div>
@@ -474,7 +461,7 @@ export const AudioToText: React.FC = () => {
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                       <div
-                        className={`h-full rounded-full bg-teal-500 ${backendStatus === 'connected' ? 'w-full animate-pulse' : 'transition-all'}`}
+                        className={`h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 ${backendStatus === 'connected' ? 'w-full animate-pulse' : 'transition-all'}`}
                         style={backendStatus === 'connected' ? {} : { width: `${transcribeProgress}%` }}
                       />
                     </div>
@@ -499,11 +486,11 @@ export const AudioToText: React.FC = () => {
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className="space-y-4">
                 {/* Toolbar */}
-                <div className="bg-white dark:bg-[#111827] rounded-[16px] shadow-sm border border-slate-100 dark:border-white/5 p-4 sm:px-5 sm:py-3.5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="bg-white dark:bg-[#111827] rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 p-4 sm:px-5 sm:py-3.5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm">
-                    <CheckCircle2 size={14} className="text-teal-500 animate-pulse" />
+                    <CheckCircle2 size={14} className="text-orange-500 animate-pulse" />
                     <span className="font-semibold text-left text-slate-800 dark:text-slate-200">{fileName}</span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-50 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400">
                       {backendStatus === 'connected' ? 'Faster-Whisper' : 'Local Whisper'}
                     </span>
                     <span className="text-xs text-left text-slate-500 dark:text-slate-400">
@@ -569,16 +556,16 @@ export const AudioToText: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:justify-end">
-                    <button onClick={reset} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors">
+                    <button onClick={reset} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors">
                       <RefreshCw size={11} /> New File
                     </button>
                     <button id="att-copy-btn" onClick={handleCopy}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors">
-                      {copied ? <Check size={12} className="text-teal-500" /> : <Copy size={12} />}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors">
+                      {copied ? <Check size={12} className="text-orange-500" /> : <Copy size={12} />}
                       {copied ? 'Copied!' : 'Copy All'}
                     </button>
                     <button id="att-download-btn" onClick={handleDownload}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition-colors">
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/20 transition-all">
                       <Download size={12} /> Download .txt
                     </button>
                   </div>
@@ -586,7 +573,7 @@ export const AudioToText: React.FC = () => {
 
                 {viewMode === 'paragraph' ? (
                   <div 
-                    className="bg-white dark:bg-[#111827] rounded-[16px] shadow-sm border border-slate-100 dark:border-white/5 p-6 text-sm font-semibold leading-relaxed text-left whitespace-pre-wrap select-text" 
+                    className="bg-white dark:bg-[#111827] rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 p-6 text-sm font-semibold leading-relaxed text-left whitespace-pre-wrap select-text" 
                     style={{ 
                       color: 'var(--text-primary)',
                       fontSize: fontSize,
@@ -600,7 +587,7 @@ export const AudioToText: React.FC = () => {
                             autoFocus
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
-                            className="rounded-lg px-2.5 py-1 text-sm focus:outline-none w-64 md:w-80 h-10 border border-teal-500 resize-none bg-slate-50 dark:bg-[#0a1120] text-slate-800 dark:text-slate-200"
+                            className="rounded-lg px-2.5 py-1 text-sm focus:outline-none w-64 md:w-80 h-10 border border-orange-500 resize-none bg-slate-50 dark:bg-[#0a1120] text-slate-800 dark:text-slate-200"
                             onKeyDown={(e) => { 
                               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit(); }
                               if (e.key === 'Escape') setEditingIndex(null);
@@ -608,14 +595,14 @@ export const AudioToText: React.FC = () => {
                             onBlur={saveEdit}
                           />
                           <button onClick={saveEdit}
-                            className="rounded-lg p-1.5 text-xs font-bold text-white bg-teal-500 hover:bg-teal-600 transition-colors">
+                            className="rounded-lg p-1.5 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 transition-colors">
                             <Check size={13} />
                           </button>
                         </span>
                       ) : (
                         <span 
                           key={idx}
-                          className="inline transition-all duration-200 cursor-pointer hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 px-1 py-0.5 rounded"
+                          className="inline transition-all duration-200 cursor-pointer hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30 px-1 py-0.5 rounded"
                           onClick={() => startEdit(idx)}
                           title="Click to edit segment"
                         >
@@ -626,7 +613,7 @@ export const AudioToText: React.FC = () => {
                   </div>
                 ) : (
                   /* Segment list */
-                  <div className="bg-white dark:bg-[#111827] rounded-[16px] shadow-sm border border-slate-100 dark:border-white/5 overflow-hidden">
+                  <div className="bg-white dark:bg-[#111827] rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 overflow-hidden">
                     {segments.map((seg, i) => (
                       <motion.div
                         key={i}
@@ -656,14 +643,14 @@ export const AudioToText: React.FC = () => {
                                 value={editValue}
                                 onChange={(e) => setEditValue(e.target.value)}
                                 rows={3}
-                                className="flex-1 resize-none rounded-xl px-3 py-2 text-sm focus:outline-none bg-slate-50 dark:bg-slate-900 border border-teal-500 text-slate-800 dark:text-slate-200"
+                                className="flex-1 resize-none rounded-xl px-3 py-2 text-sm focus:outline-none bg-slate-50 dark:bg-slate-900 border border-orange-500 text-slate-800 dark:text-slate-200"
                                 onKeyDown={(e) => { 
                                   if (e.key === 'Enter' && e.ctrlKey) saveEdit(); 
                                   if (e.key === 'Escape') setEditingIndex(null);
                                 }}
                               />
                               <button onClick={saveEdit}
-                                className="flex-shrink-0 rounded-xl px-3 py-2 text-xs font-bold text-white bg-teal-500">
+                                className="flex-shrink-0 rounded-xl px-3 py-2 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600">
                                 <Check size={14} />
                               </button>
                             </div>
@@ -704,26 +691,26 @@ export const AudioToText: React.FC = () => {
         <div className="lg:col-span-1 space-y-4">
           <div className="flex items-center justify-between px-1 mb-2">
             <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide">Recent History</h3>
-            <button className="text-[11px] font-bold text-teal-700 dark:text-teal-400 hover:text-teal-800 transition-colors">View all</button>
+            <button className="text-[11px] font-bold text-orange-600 dark:text-orange-400 hover:text-orange-700 transition-colors">View all</button>
           </div>
 
           <div className="space-y-3">
             {attHistory.length === 0 ? (
-              <div className="bg-white dark:bg-[#111827] rounded-[16px] p-6 text-center text-slate-500 text-sm font-medium border border-slate-100 dark:border-white/5">
+              <div className="bg-white dark:bg-[#111827] rounded-[20px] p-6 text-center text-slate-500 text-sm font-medium border border-slate-100 dark:border-white/5">
                 No recent history.
               </div>
             ) : (
               attHistory.slice(0, 5).map((item, idx) => {
                 return (
-                  <div key={item.id} className="bg-white dark:bg-[#111827] rounded-[16px] p-4 flex items-center gap-4 shadow-sm border border-slate-100 dark:border-white/5">
-                    <button className="h-10 w-10 flex-shrink-0 rounded-full bg-[#e6f4f1] dark:bg-teal-900/30 flex items-center justify-center text-[#10a37f] dark:text-teal-400 hover:bg-teal-100 transition-colors">
-                      <FileAudio size={16} className="fill-current ml-0.5" />
+                  <div key={item.id} className="bg-white dark:bg-[#111827] rounded-[20px] p-4 flex items-center gap-4 shadow-sm border border-slate-100 dark:border-white/5 transition-all hover:border-orange-500/20">
+                    <button className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
+                      <FileAudio size={16} className="ml-0.5" />
                     </button>
                     <div 
                       className="flex-1 min-w-0 cursor-pointer group text-left"
                       onClick={() => setSelectedHistoryItem(item)}
                     >
-                      <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200 truncate leading-snug group-hover:text-teal-600 transition-colors">{item.title}</p>
+                      <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200 truncate leading-snug group-hover:text-orange-600 transition-colors">{item.title}</p>
                       <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate mt-1">
                         {item.details.split(' · ')[0]} • {item.timestamp}
                       </p>
@@ -739,7 +726,7 @@ export const AudioToText: React.FC = () => {
 
           <button 
             onClick={() => clearHistory()}
-            className="w-full bg-white dark:bg-[#111827] border border-red-100 dark:border-red-500/20 text-red-500 font-bold py-3.5 rounded-[16px] shadow-sm flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors mt-2 text-xs"
+            className="w-full bg-white dark:bg-[#111827] border border-red-100 dark:border-red-500/20 text-red-500 font-bold py-3.5 rounded-[20px] shadow-sm flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors mt-2 text-xs"
           >
             <Trash2 size={16} /> Clear History
           </button>
@@ -764,7 +751,7 @@ export const AudioToText: React.FC = () => {
               className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden flex flex-col"
             >
               <div className="p-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
-                <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400">
+                <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
                   <FileText size={18} />
                   <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200 uppercase tracking-wide truncate max-w-[250px]">
                     {selectedHistoryItem.title}

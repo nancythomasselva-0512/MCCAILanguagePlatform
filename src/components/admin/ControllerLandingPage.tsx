@@ -33,7 +33,7 @@ const DynamicIcon = ({ name, size = 24 }: { name: string, size?: number }) => {
 };
 
 export const ControllerLandingPage: React.FC = () => {
-  const { setViewMode, globalConfig, theme, toggleTheme, user, logout } = useApp();
+  const { setViewMode, globalConfig, theme, toggleTheme, user, logout, setActiveTab } = useApp();
 
   const adminLandingConfig = globalConfig?.admin_landing || {
     title: "Platform Controller",
@@ -135,21 +135,35 @@ export const ControllerLandingPage: React.FC = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
+            {user?.role === 'super_admin' ? (
               <button
                 onClick={() => {
-                  logout(); // Wipe any existing session for security
+                  setActiveTab('sa-overview');
+                  setViewMode('workspace');
+                  window.history.pushState({}, '', '/controller');
+                }}
+                className="group flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-8 py-4 rounded-2xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-orange-500/20 cursor-pointer"
+              >
+                <Shield size={18} className="text-white" />
+                <span>Open Super Admin Console</span>
+                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform opacity-90" />
+              </button>
+            ) : (
+              <button
+                onClick={() => {
                   setViewMode('admin-login');
                 }}
-                className="group flex items-center justify-center gap-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-4 rounded-2xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-slate-900/20 dark:shadow-white/10"
+                className="group flex items-center justify-center gap-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-4 rounded-2xl font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-xl shadow-slate-900/20 dark:shadow-white/10 cursor-pointer"
               >
                 <Lock size={18} className="text-teal-400 dark:text-teal-600" />
                 <span>Super Admin Sign In</span>
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform opacity-70" />
               </button>
+            )}
             <a
               href="/"
               onClick={(e) => { e.preventDefault(); setViewMode('landing'); window.history.pushState({}, '', '/'); }}
-              className="flex items-center justify-center px-8 py-4 rounded-2xl font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+              className="flex items-center justify-center px-8 py-4 rounded-2xl font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-all cursor-pointer"
             >
               Back to Website
             </a>

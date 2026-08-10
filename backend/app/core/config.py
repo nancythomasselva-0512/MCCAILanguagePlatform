@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "MCC AI Multi-Tenant SaaS Platform"
     API_V1_STR: str = "/api"
     BACKEND_URL: str = "http://localhost:8000"
-    ALLOWED_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
     
     # Security
     SECRET_KEY: str = "super-secret-mcc-saas-platform-jwt-key"

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic, MicOff, Copy, Download, Edit3, Check, Play, Trash2,
   AlertCircle, CheckCircle2, RefreshCw, X, Calendar, Globe, Clock, ChevronDown, Cpu,
-  Award, Activity, History, MoreVertical
+  Award, Activity, History, MoreVertical, Sparkles
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { providerManager } from '../../providers/providerManager';
@@ -367,14 +367,27 @@ useEffect(() => {
 
   return (
     <div className="space-y-6 w-full animate-fadeIn max-w-[1200px] mx-auto">
-      {/* Header */}
-      <div className="mb-6 text-left">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-          <Mic className="text-teal-500" size={24} />
-          Voice Transcription
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
-          Record voice from your microphone and transcribe using AI models
+      {/* Studio Header Banner with Tagline */}
+      <div className="text-center sm:text-left space-y-2 mb-2">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-bold border border-orange-500/20 shadow-sm">
+          <Sparkles size={14} className="text-orange-500" />
+          <span>Real-time Voice Transcription</span>
+          <span className="text-[10px] bg-orange-500/20 dark:bg-orange-500/30 px-2 py-0.5 rounded-full uppercase tracking-wider ml-1">
+            Live Mic Engine
+          </span>
+        </div>
+        
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span>Speak Naturally</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 italic font-serif pl-1">
+            Write Perfectly.
+          </span>
+          <span className="font-sans not-italic">
+            ✍️
+          </span>
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl font-medium">
+          Record voice directly from your microphone and instantly convert live speech into accurate text.
         </p>
       </div>
 
@@ -455,39 +468,59 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Microphone Card */}
-          <div className="app-card rounded-3xl p-8 sm:p-16 flex flex-col items-center justify-center relative text-center" style={{ minHeight: '260px' }}>
-            <div className="relative inline-flex items-center justify-center">
-              {recordingState === 'recording' && (
-                <span className="absolute inline-flex h-24 w-24 rounded-full bg-red-500/15 animate-ping" />
-              )}
-              <button
-                id="vtt-record-btn"
-                onClick={recordingState === 'recording' ? () => stopRecording(false) : startRecording}
-                disabled={recordingState === 'processing'}
-                className={`relative z-10 flex h-20 w-20 items-center justify-center rounded-full transition-all duration-300 ${
-                  recordingState === 'recording'
-                    ? 'bg-red-500 hover:bg-red-600 scale-105 shadow-lg shadow-red-500/25'
-                    : recordingState === 'processing'
-                    ? 'cursor-not-allowed'
-                    : 'bg-teal-600 hover:bg-teal-700 hover:scale-105 shadow-lg shadow-teal-500/20'
-                }`}
-                style={recordingState === 'processing' ? {
-                  background: 'var(--bg-subtle)',
-                  color: 'var(--text-muted)',
-                } : {}}
-              >
-                {recordingState === 'processing' ? (
-                  <RefreshCw size={22} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
-                ) : recordingState === 'recording' ? (
-                  <MicOff size={22} className="text-white" />
-                ) : (
-                  <Mic size={22} className="text-white" />
+          {/* Microphone Card with Voice Message Waves */}
+          <div className="app-card rounded-3xl p-8 sm:p-14 flex flex-col items-center justify-center relative text-center" style={{ minHeight: '260px' }}>
+            <div className="relative inline-flex items-center justify-center gap-4 sm:gap-6">
+              {/* Left Voice Wave Bars */}
+              <div className="flex items-center gap-1 sm:gap-1.5 opacity-90">
+                <span className={`w-1 sm:w-1.5 rounded-full bg-orange-500 transition-all duration-300 ${recordingState === 'recording' ? 'h-5 sm:h-7 animate-pulse' : 'h-3'}`} />
+                <span className={`w-1 sm:w-1.5 rounded-full bg-amber-500 transition-all duration-300 ${recordingState === 'recording' ? 'h-9 sm:h-12 animate-pulse delay-75' : 'h-5'}`} />
+                <span className={`w-1 sm:w-1.5 rounded-full bg-orange-500 transition-all duration-300 ${recordingState === 'recording' ? 'h-12 sm:h-16 animate-pulse delay-150' : 'h-8'}`} />
+                <span className={`w-1 sm:w-1.5 rounded-full bg-amber-600 transition-all duration-300 ${recordingState === 'recording' ? 'h-7 sm:h-10 animate-pulse delay-100' : 'h-4'}`} />
+                <span className={`w-1 sm:w-1.5 rounded-full bg-orange-400 transition-all duration-300 ${recordingState === 'recording' ? 'h-10 sm:h-14 animate-pulse delay-200' : 'h-6'}`} />
+              </div>
+
+              {/* Central Mic Button */}
+              <div className="relative inline-flex items-center justify-center">
+                {recordingState === 'recording' && (
+                  <span className="absolute inline-flex h-24 w-24 rounded-full bg-red-500/20 animate-ping" />
                 )}
-              </button>
+                {recordingState === 'idle' && (
+                  <span className="absolute inline-flex h-24 w-24 rounded-full bg-orange-500/10 animate-pulse" />
+                )}
+                <button
+                  id="vtt-record-btn"
+                  onClick={recordingState === 'recording' ? () => stopRecording(false) : startRecording}
+                  disabled={recordingState === 'processing'}
+                  className={`relative z-10 flex h-20 w-20 items-center justify-center rounded-full transition-all duration-300 cursor-pointer ${
+                    recordingState === 'recording'
+                      ? 'bg-red-500 hover:bg-red-600 scale-105 shadow-xl shadow-red-500/30'
+                      : recordingState === 'processing'
+                      ? 'cursor-not-allowed bg-slate-200 dark:bg-slate-800'
+                      : 'bg-gradient-to-tr from-orange-500 via-amber-500 to-orange-600 hover:scale-105 shadow-xl shadow-orange-500/30'
+                  }`}
+                >
+                  {recordingState === 'processing' ? (
+                    <RefreshCw size={24} className="animate-spin text-white" />
+                  ) : recordingState === 'recording' ? (
+                    <MicOff size={24} className="text-white" />
+                  ) : (
+                    <Mic size={24} className="text-white" />
+                  )}
+                </button>
+              </div>
+
+              {/* Right Voice Wave Bars */}
+              <div className="flex items-center gap-1 sm:gap-1.5 opacity-90">
+                <span className={`w-1 sm:w-1.5 rounded-full bg-orange-400 transition-all duration-300 ${recordingState === 'recording' ? 'h-10 sm:h-14 animate-pulse delay-200' : 'h-6'}`} />
+                <span className={`w-1 sm:w-1.5 rounded-full bg-amber-600 transition-all duration-300 ${recordingState === 'recording' ? 'h-7 sm:h-10 animate-pulse delay-100' : 'h-4'}`} />
+                <span className={`w-1 sm:w-1.5 rounded-full bg-orange-500 transition-all duration-300 ${recordingState === 'recording' ? 'h-12 sm:h-16 animate-pulse delay-150' : 'h-8'}`} />
+                <span className={`w-1 sm:w-1.5 rounded-full bg-amber-500 transition-all duration-300 ${recordingState === 'recording' ? 'h-9 sm:h-12 animate-pulse delay-75' : 'h-5'}`} />
+                <span className={`w-1 sm:w-1.5 rounded-full bg-orange-500 transition-all duration-300 ${recordingState === 'recording' ? 'h-5 sm:h-7 animate-pulse' : 'h-3'}`} />
+              </div>
             </div>
 
-            <p className="mt-5 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+            <p className="mt-6 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
               {recordingState === 'idle' && 'Tap the microphone to start recording'}
               {recordingState === 'recording' && (
                 <span className="flex items-center gap-2 text-red-500 font-semibold">
@@ -499,7 +532,7 @@ useEffect(() => {
                 <span style={{ color: 'var(--text-secondary)' }}>Processing your audio…</span>
               )}
               {recordingState === 'done' && (
-                <span className="flex items-center gap-1.5 text-emerald-500 font-semibold">
+                <span className="flex items-center gap-1.5 text-orange-500 font-semibold">
                   <CheckCircle2 size={15} /> Transcription complete
                 </span>
               )}
