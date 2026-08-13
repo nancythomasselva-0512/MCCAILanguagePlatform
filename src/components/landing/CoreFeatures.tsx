@@ -121,49 +121,149 @@ export const CoreFeatures: React.FC<CoreFeaturesProps> = ({ onLaunchTool, dbPlan
 
             const planFeatures: string[] = plan.features || ['v2t_live', 't2v_neural', 'trans_instant', 'cloud_storage'];
 
-            const accentColors = [
-              'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
-              'text-amber-500 bg-amber-500/10 border-amber-500/20',
-              'text-purple-500 bg-purple-500/10 border-purple-500/20',
-              'text-pink-500 bg-pink-500/10 border-pink-500/20'
+            const cardStyles = [
+              {
+                bg: 'bg-gradient-to-b from-yellow-200/90 via-yellow-100/40 to-yellow-50/20 dark:from-yellow-950/40 dark:via-slate-800/80 dark:to-slate-900 border-yellow-300/80 dark:border-yellow-700/50 shadow-yellow-500/10',
+                badge: 'bg-white/90 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-300/60 dark:border-emerald-500/30',
+                summaryBox: 'bg-white/90 dark:bg-slate-900/90 border border-yellow-200/80 dark:border-yellow-900/40',
+                chip: 'bg-white/90 dark:bg-slate-900/90 border border-yellow-200/80 dark:border-yellow-900/40 text-slate-800 dark:text-slate-200'
+              },
+              {
+                bg: 'bg-gradient-to-b from-rose-200/90 via-orange-100/40 to-rose-50/20 dark:from-rose-950/40 dark:via-slate-800/80 dark:to-slate-900 border-rose-300/80 dark:border-rose-700/50 shadow-rose-500/10',
+                badge: 'bg-white/90 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-300/60 dark:border-amber-500/30',
+                summaryBox: 'bg-white/90 dark:bg-slate-900/90 border border-rose-200/80 dark:border-rose-900/40',
+                chip: 'bg-white/90 dark:bg-slate-900/90 border border-rose-200/80 dark:border-rose-900/40 text-slate-800 dark:text-slate-200'
+              },
+              {
+                bg: 'bg-gradient-to-b from-purple-200/90 via-indigo-100/40 to-purple-50/20 dark:from-purple-950/40 dark:via-slate-800/80 dark:to-slate-900 border-purple-300/80 dark:border-purple-700/50 shadow-purple-500/10 relative overflow-hidden',
+                isGrid: true,
+                badge: 'bg-white/90 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400 border border-purple-300/60 dark:border-purple-500/30',
+                summaryBox: 'bg-white/90 dark:bg-slate-900/90 border border-purple-200/80 dark:border-purple-900/40 relative z-10',
+                chip: 'bg-white/90 dark:bg-slate-900/90 border border-purple-200/80 dark:border-purple-900/40 text-slate-800 dark:text-slate-200'
+              },
+              {
+                bg: 'bg-gradient-to-b from-amber-300/80 via-orange-100/40 to-amber-50/20 dark:from-amber-950/40 dark:via-slate-800/80 dark:to-slate-900 border-amber-300/80 dark:border-amber-700/50 shadow-amber-500/10',
+                badge: 'bg-white/90 text-pink-700 dark:bg-pink-500/20 dark:text-pink-400 border border-pink-300/60 dark:border-pink-500/30',
+                summaryBox: 'bg-white/90 dark:bg-slate-900/90 border border-amber-200/80 dark:border-amber-900/40',
+                chip: 'bg-white/90 dark:bg-slate-900/90 border border-amber-200/80 dark:border-amber-900/40 text-slate-800 dark:text-slate-200'
+              }
             ];
 
             return (
               <div
                 key={plan.id || idx}
                 onClick={() => !isFree && handleLaunch('text-to-speech')}
-                className={`rounded-3xl p-6 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-xl relative overflow-hidden min-h-[380px] ${
+                className={`rounded-3xl p-4 sm:p-5 ${cardStyles[idx % 4].bg} flex flex-col justify-start transition-all hover:-translate-y-1 hover:shadow-xl relative overflow-hidden h-full ${
                   isFree ? 'cursor-default' : 'cursor-pointer'
                 }`}
               >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className={`text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border ${accentColors[idx % 4]}`}>
-                      {plan.name} Tier
-                    </span>
-                    <span className="text-xl font-black text-slate-900 dark:text-white">{displayPrice}</span>
-                  </div>
+                {cardStyles[idx % 4].isGrid && (
+                  <div className="absolute inset-0 opacity-30 pointer-events-none bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:16px_16px]" />
+                )}
 
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-                    <span className="font-bold text-slate-900 dark:text-white">{plan.name} Plan</span>: includes{' '}
-                    <span className="font-bold text-emerald-500">{plan.transcription_limit || 15} mins audio</span>,{' '}
-                    {((plan.translation_limit || 0) / 1000).toFixed(0)}k translation & {plan.storage_limit || 50} MB storage.
-                  </div>
-                </div>
-
-                <div className="mt-auto border-t border-slate-200 dark:border-slate-700/60 pt-3">
-                  <div className="text-[10px] font-extrabold uppercase tracking-wider mb-2 text-slate-400">
-                    INCLUDED FEATURES ({planFeatures.length})
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {planFeatures.map((fId: string, fIdx: number) => (
-                      <span
-                        key={fIdx}
-                        className="text-[11px] font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-lg inline-flex items-center gap-1"
-                      >
-                        ✓ {FEATURE_LABEL_MAP[fId] || fId}
+                <div className="relative z-10 flex flex-col h-full">
+                  {/* Top Tier Badge & Price Header */}
+                  <div className="mb-4 min-h-[64px] flex flex-col justify-between">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border shadow-xs ${cardStyles[idx % 4].badge}`}>
+                        {plan.name} Tier
                       </span>
-                    ))}
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                        {isFree ? '₹0' : `₹${billingCycle === 'yearly' ? Math.round(plan.price * 0.7) : plan.price}`}
+                      </span>
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">/month</span>
+                    </div>
+                  </div>
+
+                  {/* Summary box - uniform height so INCLUDED FEATURES aligns on same row across all cards */}
+                  <div className={`rounded-2xl p-3.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-4 min-h-[72px] flex items-center ${cardStyles[idx % 4].summaryBox}`}>
+                    <div>
+                      <span className="font-bold text-slate-900 dark:text-white">{plan.name} Plan</span>: includes{' '}
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{plan.transcription_limit || 15} mins audio</span>,{' '}
+                      {((plan.translation_limit || 0) / 1000).toFixed(0)}k translation & {plan.storage_limit || 50} MB storage.
+                    </div>
+                  </div>
+
+                  {/* Included Features Section - locked at identical vertical position across all 4 cards */}
+                  <div className="border-t border-slate-900/10 dark:border-white/10 pt-3">
+                    <div className="text-[10px] font-extrabold uppercase tracking-wider mb-2 text-slate-500 dark:text-slate-400">
+                      INCLUDED FEATURES ({planFeatures.length})
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(() => {
+                        const formatLimitNumber = (num?: number) => {
+                          if (num === undefined || num === null) return '';
+                          if (num === 0) return 'Unlimited';
+                          if (num >= 1000000) return `${(num / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+                          if (num >= 1000) return `${(num / 1000).toFixed(0)}k`;
+                          return `${num}`;
+                        };
+
+                        const ttsChars = plan.tts_char_limit ?? plan.tts_limit ?? 10000;
+                        const ttsFiles = plan.tts_file_limit;
+                        const ttsCharStr = ttsChars === 0 ? 'Unlimited chars' : `${formatLimitNumber(ttsChars)} chars`;
+                        const ttsFileStr = ttsFiles === 0 ? 'Unlimited files' : (ttsFiles ? `${ttsFiles} files/mo` : '');
+                        const ttsLabel = `TTS (${[ttsCharStr, ttsFileStr].filter(Boolean).join(', ')})`;
+
+                        const v2tMins = plan.voice_minutes_limit ?? plan.transcription_limit ?? 30;
+                        const v2tSess = plan.voice_session_limit;
+                        const v2tMinStr = v2tMins === 0 ? 'Unlimited mins' : `${v2tMins} mins`;
+                        const v2tSessStr = v2tSess === 0 ? 'Unlimited sessions' : (v2tSess ? `${v2tSess} sessions/mo` : '');
+                        const v2tLabel = `Voice-to-Text (${[v2tMinStr, v2tSessStr].filter(Boolean).join(', ')})`;
+
+                        const transChars = plan.translation_char_limit ?? plan.translation_limit ?? 50000;
+                        const transTexts = plan.translation_text_limit;
+                        const transCharStr = transChars === 0 ? 'Unlimited chars' : `${formatLimitNumber(transChars)} chars`;
+                        const transTextStr = transTexts === 0 ? 'Unlimited texts' : (transTexts ? `${transTexts} texts/mo` : '');
+                        const transLabel = `Translation (${[transCharStr, transTextStr].filter(Boolean).join(', ')})`;
+
+                        const map: Record<string, string> = {
+                          v2t_live: v2tLabel,
+                          v2t_vocab: 'Custom Vocabulary',
+                          v2t_export: 'Transcript Export',
+                          t2v_neural: ttsLabel,
+                          t2v_controls: 'Voice Controls',
+                          t2v_download: 'HD Audio Download',
+                          trans_instant: transLabel,
+                          doc_5pages: 'Doc Upload (5 Pages)',
+                          doc_25pages: 'Doc Upload (25 Pages)',
+                          doc_parallel: 'Parallel Chunking',
+                          audio_whatsapp: 'WhatsApp Audio Transcribe',
+                          audio_long: 'Long Audio (60+ mins)',
+                          audio_timestamps: 'Timestamps',
+                          cloud_storage: `${plan.storage_limit || 50} MB Storage`,
+                          custom_api: 'Custom API & Webhooks',
+
+                          audio_processing: v2tLabel,
+                          translation_services: transLabel,
+                          text_to_speech: ttsLabel,
+                          read_aloud: 'Read Aloud',
+                          doc_ocr: 'Document OCR',
+                          custom_vocab: 'Custom Vocabulary',
+                          parallel_chunks: 'Parallel Chunking',
+                          whatsapp_audio: 'WhatsApp Transcribe',
+                          audio_export: 'HD Audio Export',
+                          srt_vtt_export: 'SRT/VTT Subtitles',
+                          enterprise_support: '24/7 Enterprise Support',
+                          tenant_branding: 'Custom Branding',
+                          audit_logs: 'Audit Logging',
+                          high_priority_queue: 'Priority Queue'
+                        };
+
+                        const uniqueList = Array.from(new Set(planFeatures.map((fId: string) => map[fId] || fId)));
+
+                        return uniqueList.map((label: string, fIdx: number) => (
+                          <span
+                            key={fIdx}
+                            className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg inline-flex items-center gap-1 shadow-2xs ${cardStyles[idx % 4].chip}`}
+                          >
+                            ✓ {label}
+                          </span>
+                        ));
+                      })()}
+                    </div>
                   </div>
                 </div>
               </div>

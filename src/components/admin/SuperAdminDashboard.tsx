@@ -30,6 +30,68 @@ import { ProviderManager } from './settings/ProviderManager';
 
 type TabType = 'overview' | 'tenants' | 'providers' | 'plans' | 'users' | 'usage_analytics' | 'billing' | 'ai_logs' | 'audit_logs' | 'system_health' | 'settings' | 'builder' | 'settings-general' | 'settings-tenant' | 'settings-smtp' | 'settings-auth' | 'settings-security' | 'settings-payments' | 'settings-domains' | 'settings-apikeys' | 'settings-backup' | 'settings-notifications' | 'settings-activity';
 
+export const ALL_PLATFORM_FEATURES = [
+  // 🎤 Voice-to-Text (Live Microphone)
+  { id: 'v2t_live', label: 'Live Speech Capture & Auto-Translate to English', category: '🎤 Voice-to-Text' },
+  { id: 'v2t_vocab', label: 'Custom Speech Vocabulary & Noise Filtering', category: '🎤 Voice-to-Text' },
+  { id: 'v2t_export', label: 'Real-time Transcript Export (SRT/VTT)', category: '🎤 Voice-to-Text' },
+
+  // 🗣️ Text-to-Voice (TTS)
+  { id: 't2v_neural', label: 'Neural Multi-Speaker Voices', category: '🗣️ Text-to-Voice' },
+  { id: 't2v_controls', label: 'Pitch, Speed & Accent Controls', category: '🗣️ Text-to-Voice' },
+  { id: 't2v_download', label: 'HD Audio Download (WAV / MP3)', category: '🗣️ Text-to-Voice' },
+
+  // 📄 Text & Document Translation
+  { id: 'trans_instant', label: 'Instant Multi-Language Text Translation', category: '📄 Document Translation' },
+  { id: 'doc_5pages', label: 'Document Upload (Up to 5 Pages)', category: '📄 Document Translation' },
+  { id: 'doc_25pages', label: 'Document Upload (Up to 25 Pages / Large Files)', category: '📄 Document Translation' },
+  { id: 'doc_parallel', label: 'High-Speed Parallel Document Chunking', category: '📄 Document Translation' },
+
+  // 🎵 Audio Transcribe & WhatsApp Voice Notes
+  { id: 'audio_whatsapp', label: 'WhatsApp Audio Transcribe (.ogg/.m4a)', category: '🎵 Audio Transcription' },
+  { id: 'audio_long', label: 'Long Audio Files (Up to 60+ mins)', category: '🎵 Audio Transcription' },
+  { id: 'audio_timestamps', label: 'Automated Timestamps & Word Counts', category: '🎵 Audio Transcription' },
+
+  // 💾 Storage & Advanced
+  { id: 'cloud_storage', label: 'Cloud Storage & Activity History', category: '💾 Storage & API' },
+  { id: 'custom_api', label: 'Custom API & Webhooks Access', category: '💾 Storage & API' },
+];
+
+export const LEGACY_TO_MODERN_FEATURE_MAP: Record<string, string[]> = {
+  audio_processing: ['v2t_live', 'v2t_export'],
+  translation_services: ['trans_instant'],
+  text_to_speech: ['t2v_neural', 't2v_controls'],
+  document_intelligence: ['doc_5pages', 'doc_parallel'],
+  cloud_storage: ['cloud_storage'],
+  custom_api: ['custom_api'],
+  whatsapp_audio: ['audio_whatsapp'],
+  custom_vocab: ['v2t_vocab'],
+  srt_vtt_export: ['v2t_export'],
+  audio_export: ['t2v_download'],
+  parallel_chunks: ['doc_parallel'],
+  doc_ocr: ['doc_5pages'],
+  read_aloud: ['t2v_neural'],
+};
+
+export const normalizePlanFeatures = (rawFeatures?: string[]): string[] => {
+  const defaultFeatures = ['v2t_live', 'v2t_vocab', 't2v_neural', 't2v_controls', 'trans_instant', 'doc_5pages', 'audio_whatsapp', 'cloud_storage'];
+  if (!rawFeatures || rawFeatures.length === 0) {
+    return defaultFeatures;
+  }
+  const validIds = new Set(ALL_PLATFORM_FEATURES.map(f => f.id));
+  const result = new Set<string>();
+
+  for (const feat of rawFeatures) {
+    if (validIds.has(feat)) {
+      result.add(feat);
+    } else if (LEGACY_TO_MODERN_FEATURE_MAP[feat]) {
+      LEGACY_TO_MODERN_FEATURE_MAP[feat].forEach(mId => result.add(mId));
+    }
+  }
+
+  return result.size > 0 ? Array.from(result) : defaultFeatures;
+};
+
 const Sparkline: React.FC<{ points: number[]; color: string }> = ({ points, color }) => {
   const width = 68;
   const height = 26;
@@ -603,8 +665,30 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   const [editPlanTTS, setEditPlanTTS] = useState(0);
   const [editPlanStorage, setEditPlanStorage] = useState(0);
   const [editPlanFeatures, setEditPlanFeatures] = useState<string[]>([]);
-  const [draftPlans, setDraftPlans] = useState<Record<string, { features: string[]; price: number }>>({});
+  // Per-tool granular limit states
+  const [editTtsFileLimit, setEditTtsFileLimit] = useState(10);
+  const [editTtsCharLimit, setEditTtsCharLimit] = useState(10000);
+  const [editAudioFileLimit, setEditAudioFileLimit] = useState(5);
+  const [editAudioMinutesLimit, setEditAudioMinutesLimit] = useState(30);
+  const [editVoiceSessionLimit, setEditVoiceSessionLimit] = useState(10);
+  const [editVoiceMinutesLimit, setEditVoiceMinutesLimit] = useState(30);
+  const [editTranslationTextLimit, setEditTranslationTextLimit] = useState(20);
+  const [editTranslationCharLimit, setEditTranslationCharLimit] = useState(50000);
+
+  const [draftPlans, setDraftPlans] = useState<Record<string, {
+    features: string[];
+    price: number;
+    tts_file_limit?: number;
+    tts_char_limit?: number;
+    audio_file_limit?: number;
+    audio_minutes_limit?: number;
+    voice_session_limit?: number;
+    voice_minutes_limit?: number;
+    translation_text_limit?: number;
+    translation_char_limit?: number;
+  }>>({});
   const [savingPlanId, setSavingPlanId] = useState<string | null>(null);
+
 
   // Active Dropdowns state
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -832,6 +916,38 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       loadData();
     } catch (err: any) {
       showToast(err.message || "Failed to provision workspace.", 'error');
+    }
+  };
+
+  // Save All Plans action for Top Banner
+  const handleSaveAllPlans = async () => {
+    const planIdsToSave = Object.keys(draftPlans);
+    if (planIdsToSave.length === 0) {
+      showToast("No pending plan changes to save.", "info");
+      return;
+    }
+
+    setSavingPlanId('all');
+    try {
+      for (const planId of planIdsToSave) {
+        const draft = draftPlans[planId];
+        if (draft) {
+          await apiRequest(`/super-admin/plans/${planId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              features: draft.features,
+              price: draft.price
+            })
+          });
+        }
+      }
+      showToast("Successfully saved changes for all subscription plans!", "success");
+      setDraftPlans({});
+      loadData();
+    } catch (err) {
+      showToast("Failed to save changes for some plans", "error");
+    } finally {
+      setSavingPlanId(null);
     }
   };
 
@@ -1670,11 +1786,16 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
               <div className="flex flex-wrap items-center gap-3">
                 <button
-                  onClick={() => loadData()}
-                  className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 cursor-pointer border border-white/10 backdrop-blur-md active:scale-95"
+                  onClick={handleSaveAllPlans}
+                  disabled={savingPlanId !== null}
+                  className={`px-6 py-3 rounded-xl text-white text-xs font-black uppercase tracking-wider transition-all duration-200 shadow-xl flex items-center gap-2 cursor-pointer active:scale-95 ${
+                    Object.keys(draftPlans).length > 0
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 shadow-emerald-500/30 ring-2 ring-emerald-400/40 animate-pulse'
+                      : 'bg-teal-600 hover:bg-teal-500 shadow-teal-500/20'
+                  }`}
                 >
-                  <RefreshCw size={14} className="text-teal-400" />
-                  RECALL PLANS
+                  {savingPlanId === 'all' ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                  <span>SAVE ALL CHANGES {Object.keys(draftPlans).length > 0 ? `(${Object.keys(draftPlans).length})` : ''}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -1685,7 +1806,16 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     setEditPlanTranslation(0);
                     setEditPlanTTS(0);
                     setEditPlanStorage(0);
-                    setEditPlanFeatures(["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "doc_ocr"]);
+                    setEditPlanFeatures(["v2t_live", "t2v_neural", "trans_instant", "doc_5pages", "audio_whatsapp", "cloud_storage"]);
+                    // Reset per-tool limits to defaults
+                    setEditTtsFileLimit(10);
+                    setEditTtsCharLimit(10000);
+                    setEditAudioFileLimit(5);
+                    setEditAudioMinutesLimit(30);
+                    setEditVoiceSessionLimit(10);
+                    setEditVoiceMinutesLimit(30);
+                    setEditTranslationTextLimit(20);
+                    setEditTranslationCharLimit(50000);
                   }}
                   className="px-6 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white text-xs font-black uppercase tracking-wider transition-all duration-200 shadow-lg shadow-teal-500/25 flex items-center gap-2 cursor-pointer active:scale-95"
                 >
@@ -1705,46 +1835,39 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
               })
               .sort((a, b) => a.price - b.price)
               .map((p) => {
-                const ALL_PLATFORM_FEATURES = [
-                  // 🎤 Voice-to-Text (Live Microphone)
-                  { id: 'v2t_live', label: 'Live Speech Capture & Auto-Translate to English', category: '🎤 Voice-to-Text' },
-                  { id: 'v2t_vocab', label: 'Custom Speech Vocabulary & Noise Filtering', category: '🎤 Voice-to-Text' },
-                  { id: 'v2t_export', label: 'Real-time Transcript Export (SRT/VTT)', category: '🎤 Voice-to-Text' },
-
-                  // 🗣️ Text-to-Voice (TTS)
-                  { id: 't2v_neural', label: 'Neural Multi-Speaker Voices', category: '🗣️ Text-to-Voice' },
-                  { id: 't2v_controls', label: 'Pitch, Speed & Accent Controls', category: '🗣️ Text-to-Voice' },
-                  { id: 't2v_download', label: 'HD Audio Download (WAV / MP3)', category: '🗣️ Text-to-Voice' },
-
-                  // 📄 Text & Document Translation
-                  { id: 'trans_instant', label: 'Instant Multi-Language Text Translation', category: '📄 Document Translation' },
-                  { id: 'doc_5pages', label: 'Document Upload (Up to 5 Pages)', category: '📄 Document Translation' },
-                  { id: 'doc_25pages', label: 'Document Upload (Up to 25 Pages / Large Files)', category: '📄 Document Translation' },
-                  { id: 'doc_parallel', label: 'High-Speed Parallel Document Chunking', category: '📄 Document Translation' },
-
-                  // 🎵 Audio Transcribe & WhatsApp Voice Notes
-                  { id: 'audio_whatsapp', label: 'WhatsApp Audio Transcribe (.ogg/.m4a)', category: '🎵 Audio Transcription' },
-                  { id: 'audio_long', label: 'Long Audio Files (Up to 60+ mins)', category: '🎵 Audio Transcription' },
-                  { id: 'audio_timestamps', label: 'Automated Timestamps & Word Counts', category: '🎵 Audio Transcription' },
-
-                  // 💾 Storage & Advanced
-                  { id: 'cloud_storage', label: 'Cloud Storage & Activity History', category: '💾 Storage & API' },
-                  { id: 'custom_api', label: 'Custom API & Webhooks Access', category: '💾 Storage & API' },
-                ];
-
-                const defaultFeatures: string[] = (p.features && p.features.length > 0)
-                  ? p.features
-                  : ['v2t_live', 't2v_neural', 'trans_instant', 'doc_5pages', 'audio_whatsapp', 'cloud_storage'];
-
+                const normalizedFeatures = normalizePlanFeatures(p.features);
                 const draft = draftPlans[p.id];
-                const currentFeatures: string[] = draft?.features ?? defaultFeatures;
+                const currentFeatures: string[] = draft?.features ?? normalizedFeatures;
                 const monthlyPrice = draft?.price ?? p.price;
                 const yearlyPrice = +(monthlyPrice * 10).toFixed(0);
+
+                // Per-tool limits from draft or plan data
+                const curTtsFileLimit    = draft?.tts_file_limit         ?? p.tts_file_limit         ?? 10;
+                const curTtsCharLimit    = draft?.tts_char_limit          ?? p.tts_char_limit          ?? 10000;
+                const curAudioFileLimit  = draft?.audio_file_limit        ?? p.audio_file_limit        ?? 5;
+                const curAudioMinsLimit  = draft?.audio_minutes_limit     ?? p.audio_minutes_limit     ?? 30;
+                const curVoiceSessionLim = draft?.voice_session_limit     ?? p.voice_session_limit     ?? 10;
+                const curVoiceMinutesLim = draft?.voice_minutes_limit     ?? p.voice_minutes_limit     ?? 30;
+                const curTransTextLimit  = draft?.translation_text_limit  ?? p.translation_text_limit  ?? 20;
+                const curTransCharLimit  = draft?.translation_char_limit  ?? p.translation_char_limit  ?? 50000;
 
                 const hasUnsavedChanges = draft !== undefined;
                 const isSaving = savingPlanId === p.id;
 
                 const isPopular = p.name === 'Professional' || p.displayName === 'PROFESSIONAL';
+
+                const getFullDraft = () => ({
+                  features: currentFeatures,
+                  price: monthlyPrice,
+                  tts_file_limit: curTtsFileLimit,
+                  tts_char_limit: curTtsCharLimit,
+                  audio_file_limit: curAudioFileLimit,
+                  audio_minutes_limit: curAudioMinsLimit,
+                  voice_session_limit: curVoiceSessionLim,
+                  voice_minutes_limit: curVoiceMinutesLim,
+                  translation_text_limit: curTransTextLimit,
+                  translation_char_limit: curTransCharLimit,
+                });
 
                 const handleToggleFeature = (featId: string) => {
                   const updated = currentFeatures.includes(featId)
@@ -1753,10 +1876,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
                   setDraftPlans(prev => ({
                     ...prev,
-                    [p.id]: {
-                      features: updated,
-                      price: monthlyPrice
-                    }
+                    [p.id]: { ...getFullDraft(), features: updated }
                   }));
                 };
 
@@ -1766,20 +1886,21 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
                   setDraftPlans(prev => ({
                     ...prev,
-                    [p.id]: {
-                      features: updated,
-                      price: monthlyPrice
-                    }
+                    [p.id]: { ...getFullDraft(), features: updated }
                   }));
                 };
 
                 const handleUpdatePrices = (mPrice: number) => {
                   setDraftPlans(prev => ({
                     ...prev,
-                    [p.id]: {
-                      features: currentFeatures,
-                      price: mPrice
-                    }
+                    [p.id]: { ...getFullDraft(), price: mPrice }
+                  }));
+                };
+
+                const handleUpdateLimit = (field: string, value: number) => {
+                  setDraftPlans(prev => ({
+                    ...prev,
+                    [p.id]: { ...getFullDraft(), [field]: value }
                   }));
                 };
 
@@ -1789,7 +1910,15 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     method: 'PATCH',
                     body: JSON.stringify({
                       features: currentFeatures,
-                      price: monthlyPrice
+                      price: monthlyPrice,
+                      tts_file_limit: curTtsFileLimit,
+                      tts_char_limit: curTtsCharLimit,
+                      audio_file_limit: curAudioFileLimit,
+                      audio_minutes_limit: curAudioMinsLimit,
+                      voice_session_limit: curVoiceSessionLim,
+                      voice_minutes_limit: curVoiceMinutesLim,
+                      translation_text_limit: curTransTextLimit,
+                      translation_char_limit: curTransCharLimit,
                     })
                   }).then(() => {
                     showToast(`Successfully saved changes for ${p.name} plan!`, 'success');
@@ -1878,17 +2007,6 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         </div>
 
                         <div className="flex items-center gap-2">
-                          {hasUnsavedChanges && (
-                            <button
-                              onClick={handleSaveChanges}
-                              disabled={isSaving}
-                              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-teal-500/25 flex items-center gap-2 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
-                            >
-                              {isSaving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                              <span>Save Changes</span>
-                            </button>
-                          )}
-
                           <button
                             onClick={() => {
                               setEditingPlan(p);
@@ -1899,6 +2017,14 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                               setEditPlanTTS(p.tts_limit || 0);
                               setEditPlanStorage(p.storage_limit);
                               setEditPlanFeatures(currentFeatures);
+                              setEditTtsFileLimit(curTtsFileLimit);
+                              setEditTtsCharLimit(curTtsCharLimit);
+                              setEditAudioFileLimit(curAudioFileLimit);
+                              setEditAudioMinutesLimit(curAudioMinsLimit);
+                              setEditVoiceSessionLimit(curVoiceSessionLim);
+                              setEditVoiceMinutesLimit(curVoiceMinutesLim);
+                              setEditTranslationTextLimit(curTransTextLimit);
+                              setEditTranslationCharLimit(curTransCharLimit);
                             }}
                             className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all border border-slate-200 dark:border-slate-800 cursor-pointer"
                             title="Edit Limits"
@@ -1925,6 +2051,149 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                       </div>
                     </div>
 
+                    {/* ── Usage Limits per Tool Section ── */}
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800/80 overflow-hidden">
+                      {/* Section Header */}
+                      <div className="flex items-center gap-2.5 px-5 py-3 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800/80">
+                        <Activity size={14} className="text-teal-500 flex-shrink-0" />
+                        <span className="text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                          Usage Limits Per Tool
+                        </span>
+                        <span className="ml-auto text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                          0 = Unlimited
+                        </span>
+                      </div>
+
+                      {/* Tool Rows */}
+                      <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+
+                        {/* 🗣️ Text to Voice */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                          <div className="flex items-center gap-2.5 w-full sm:w-44 flex-shrink-0">
+                            <span className="text-base">🗣️</span>
+                            <div>
+                              <p className="text-xs font-black text-slate-800 dark:text-white leading-tight">Text to Voice</p>
+                              <p className="text-[10px] text-slate-400 font-medium">TTS Generation</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-3 flex-1">
+                            <label className="flex flex-col gap-1 min-w-[110px]">
+                              <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Audio Files / Mo</span>
+                              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 focus-within:border-teal-500 transition-colors">
+                                <span className="text-[10px] text-slate-400">🎧</span>
+                                <input type="number" min="0" value={curTtsFileLimit}
+                                  onChange={e => handleUpdateLimit('tts_file_limit', parseInt(e.target.value) || 0)}
+                                  className="w-full bg-transparent text-sm font-black text-slate-800 dark:text-white outline-none text-center" />
+                              </div>
+                            </label>
+                            <label className="flex flex-col gap-1 min-w-[110px]">
+                              <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Characters / Mo</span>
+                              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 focus-within:border-teal-500 transition-colors">
+                                <span className="text-[10px] text-slate-400">✍️</span>
+                                <input type="number" min="0" value={curTtsCharLimit}
+                                  onChange={e => handleUpdateLimit('tts_char_limit', parseInt(e.target.value) || 0)}
+                                  className="w-full bg-transparent text-sm font-black text-slate-800 dark:text-white outline-none text-center" />
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* 🎵 Audio to Text */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                          <div className="flex items-center gap-2.5 w-full sm:w-44 flex-shrink-0">
+                            <span className="text-base">🎵</span>
+                            <div>
+                              <p className="text-xs font-black text-slate-800 dark:text-white leading-tight">Audio to Text</p>
+                              <p className="text-[10px] text-slate-400 font-medium">File Transcription</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-3 flex-1">
+                            <label className="flex flex-col gap-1 min-w-[110px]">
+                              <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Audio Files / Mo</span>
+                              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 focus-within:border-teal-500 transition-colors">
+                                <span className="text-[10px] text-slate-400">📁</span>
+                                <input type="number" min="0" value={curAudioFileLimit}
+                                  onChange={e => handleUpdateLimit('audio_file_limit', parseInt(e.target.value) || 0)}
+                                  className="w-full bg-transparent text-sm font-black text-slate-800 dark:text-white outline-none text-center" />
+                              </div>
+                            </label>
+                            <label className="flex flex-col gap-1 min-w-[110px]">
+                              <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Minutes / Mo</span>
+                              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 focus-within:border-teal-500 transition-colors">
+                                <span className="text-[10px] text-slate-400">⏱️</span>
+                                <input type="number" min="0" value={curAudioMinsLimit}
+                                  onChange={e => handleUpdateLimit('audio_minutes_limit', parseInt(e.target.value) || 0)}
+                                  className="w-full bg-transparent text-sm font-black text-slate-800 dark:text-white outline-none text-center" />
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* 🎤 Voice to Text */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                          <div className="flex items-center gap-2.5 w-full sm:w-44 flex-shrink-0">
+                            <span className="text-base">🎤</span>
+                            <div>
+                              <p className="text-xs font-black text-slate-800 dark:text-white leading-tight">Voice to Text</p>
+                              <p className="text-[10px] text-slate-400 font-medium">Live Recording</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-3 flex-1">
+                            <label className="flex flex-col gap-1 min-w-[110px]">
+                              <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Sessions / Mo</span>
+                              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 focus-within:border-teal-500 transition-colors">
+                                <span className="text-[10px] text-slate-400">🎙️</span>
+                                <input type="number" min="0" value={curVoiceSessionLim}
+                                  onChange={e => handleUpdateLimit('voice_session_limit', parseInt(e.target.value) || 0)}
+                                  className="w-full bg-transparent text-sm font-black text-slate-800 dark:text-white outline-none text-center" />
+                              </div>
+                            </label>
+                            <label className="flex flex-col gap-1 min-w-[110px]">
+                              <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Minutes / Mo</span>
+                              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 focus-within:border-teal-500 transition-colors">
+                                <span className="text-[10px] text-slate-400">⏱️</span>
+                                <input type="number" min="0" value={curVoiceMinutesLim}
+                                  onChange={e => handleUpdateLimit('voice_minutes_limit', parseInt(e.target.value) || 0)}
+                                  className="w-full bg-transparent text-sm font-black text-slate-800 dark:text-white outline-none text-center" />
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* 📄 Translation */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                          <div className="flex items-center gap-2.5 w-full sm:w-44 flex-shrink-0">
+                            <span className="text-base">📄</span>
+                            <div>
+                              <p className="text-xs font-black text-slate-800 dark:text-white leading-tight">Translation</p>
+                              <p className="text-[10px] text-slate-400 font-medium">Text & Documents</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-3 flex-1">
+                            <label className="flex flex-col gap-1 min-w-[110px]">
+                              <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Texts / Mo</span>
+                              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 focus-within:border-teal-500 transition-colors">
+                                <span className="text-[10px] text-slate-400">🌐</span>
+                                <input type="number" min="0" value={curTransTextLimit}
+                                  onChange={e => handleUpdateLimit('translation_text_limit', parseInt(e.target.value) || 0)}
+                                  className="w-full bg-transparent text-sm font-black text-slate-800 dark:text-white outline-none text-center" />
+                              </div>
+                            </label>
+                            <label className="flex flex-col gap-1 min-w-[110px]">
+                              <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400">Characters / Mo</span>
+                              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1.5 focus-within:border-teal-500 transition-colors">
+                                <span className="text-[10px] text-slate-400">✍️</span>
+                                <input type="number" min="0" value={curTransCharLimit}
+                                  onChange={e => handleUpdateLimit('translation_char_limit', parseInt(e.target.value) || 0)}
+                                  className="w-full bg-transparent text-sm font-black text-slate-800 dark:text-white outline-none text-center" />
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+
                     {/* Included Tools & Features Matrix Section */}
                     <div className="space-y-4">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -1942,19 +2211,9 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                           >
                             {currentFeatures.length === ALL_PLATFORM_FEATURES.length ? 'DESELECT ALL' : 'SELECT ALL'}
                           </button>
-
-                          {hasUnsavedChanges && (
-                            <button
-                              onClick={handleSaveChanges}
-                              disabled={isSaving}
-                              className="px-5 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-black text-xs uppercase tracking-wider shadow-md shadow-teal-500/25 flex items-center gap-2 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
-                            >
-                              {isSaving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-                              <span>Save Changes</span>
-                            </button>
-                          )}
                         </div>
                       </div>
+
 
                       {/* Checkbox Pills Grid Grouped by Tool Category */}
                       <div className="space-y-5 pt-2">
@@ -1997,19 +2256,21 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                         })}
                       </div>
 
-                      {/* Bottom Save Bar inside Card */}
-                      {hasUnsavedChanges && (
-                        <div className="pt-3 flex justify-end">
-                          <button
-                            onClick={handleSaveChanges}
-                            disabled={isSaving}
-                            className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-teal-500/30 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-                          >
-                            {isSaving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                            <span>Save Changes for {p.displayName}</span>
-                          </button>
-                        </div>
-                      )}
+                      {/* Save Button Always Visible at the Bottom Right of each Plan Card */}
+                      <div className="pt-4 flex justify-end border-t border-slate-100 dark:border-slate-800/80">
+                        <button
+                          onClick={handleSaveChanges}
+                          disabled={isSaving}
+                          className={`w-full sm:w-auto px-8 py-3 rounded-2xl text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 disabled:opacity-50 ${
+                            hasUnsavedChanges
+                              ? 'bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 shadow-lg shadow-teal-500/30 ring-2 ring-teal-500/30'
+                              : 'bg-teal-600 hover:bg-teal-500 shadow-md'
+                          }`}
+                        >
+                          {isSaving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                          <span>Save Changes for {p.displayName}</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -3426,7 +3687,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
       {/* Edit Subscription Plan Modal */}
       {editingPlan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="relative w-full max-w-md overflow-hidden rounded-2xl p-6 bg-white dark:bg-slate-900 border border-white/10 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-2xl p-6 bg-white dark:bg-slate-900 border border-white/10 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/5 pb-2">
               <h3 className="text-base font-bold text-slate-800 dark:text-white">
                 {editingPlan.isNew ? "Create Subscription Plan" : "Edit Subscription Plan"}
@@ -3457,7 +3718,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Audio Mins</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Audio Mins (Legacy)</label>
                   <input
                     type="number"
                     value={editPlanAudio}
@@ -3475,7 +3736,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Translation Chars</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Translation Chars (Legacy)</label>
                   <input
                     type="number"
                     value={editPlanTranslation}
@@ -3484,7 +3745,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">TTS Chars</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">TTS Chars (Legacy)</label>
                   <input
                     type="number"
                     value={editPlanTTS}
@@ -3494,33 +3755,116 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 </div>
               </div>
 
+              {/* ── Per-Tool Usage Limits ── */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                  <Activity size={13} className="text-teal-500" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">Per-Tool Usage Limits</span>
+                  <span className="ml-auto text-[9px] text-slate-400 font-semibold">0 = Unlimited</span>
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+
+                  {/* TTS row */}
+                  <div className="px-4 py-3 space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">🗣️ Text to Voice</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Files / Mo</span>
+                        <input type="number" min="0" value={editTtsFileLimit}
+                          onChange={e => setEditTtsFileLimit(parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none text-center" />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Chars / Mo</span>
+                        <input type="number" min="0" value={editTtsCharLimit}
+                          onChange={e => setEditTtsCharLimit(parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none text-center" />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Audio to Text row */}
+                  <div className="px-4 py-3 space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">🎵 Audio to Text</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Files / Mo</span>
+                        <input type="number" min="0" value={editAudioFileLimit}
+                          onChange={e => setEditAudioFileLimit(parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none text-center" />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Minutes / Mo</span>
+                        <input type="number" min="0" value={editAudioMinutesLimit}
+                          onChange={e => setEditAudioMinutesLimit(parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none text-center" />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Voice to Text row */}
+                  <div className="px-4 py-3 space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">🎤 Voice to Text</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Sessions / Mo</span>
+                        <input type="number" min="0" value={editVoiceSessionLimit}
+                          onChange={e => setEditVoiceSessionLimit(parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none text-center" />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Minutes / Mo</span>
+                        <input type="number" min="0" value={editVoiceMinutesLimit}
+                          onChange={e => setEditVoiceMinutesLimit(parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none text-center" />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Translation row */}
+                  <div className="px-4 py-3 space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">📄 Translation</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Texts / Mo</span>
+                        <input type="number" min="0" value={editTranslationTextLimit}
+                          onChange={e => setEditTranslationTextLimit(parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none text-center" />
+                      </label>
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Chars / Mo</span>
+                        <input type="number" min="0" value={editTranslationCharLimit}
+                          onChange={e => setEditTranslationCharLimit(parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-1.5 rounded-lg text-sm font-bold bg-white dark:bg-slate-950/40 border border-slate-200 dark:border-white/5 text-slate-800 dark:text-slate-100 outline-none text-center" />
+                      </label>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Included Plan Features (Checkboxes)</label>
-                <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
-                  {[
-                    { id: 'audio_processing', label: 'Audio Processing' },
-                    { id: 'translation_services', label: 'Translation Services' },
-                    { id: 'text_to_speech', label: 'Text-to-Speech (TTS)' },
-                    { id: 'document_intelligence', label: 'Document Intelligence' },
-                    { id: 'cloud_storage', label: 'Cloud Storage & History' },
-                    { id: 'custom_api', label: 'Custom API Access' },
-                  ].map(item => {
-                    const isChecked = editPlanFeatures.includes(item.id);
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                  Included Plan Features ({editPlanFeatures.length} / {ALL_PLATFORM_FEATURES.length})
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
+                  {ALL_PLATFORM_FEATURES.map(feat => {
+                    const isChecked = editPlanFeatures.includes(feat.id);
                     return (
-                      <label key={item.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 cursor-pointer hover:border-teal-500/50">
+                      <label key={feat.id} className="flex items-center gap-2 p-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/5 cursor-pointer hover:border-teal-500/50 transition-colors">
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setEditPlanFeatures(prev => [...prev, item.id]);
+                              setEditPlanFeatures(prev => [...prev, feat.id]);
                             } else {
-                              setEditPlanFeatures(prev => prev.filter(f => f !== item.id));
+                              setEditPlanFeatures(prev => prev.filter(f => f !== feat.id));
                             }
                           }}
-                          className="accent-teal-500 rounded"
+                          className="accent-teal-500 rounded cursor-pointer"
                         />
-                        <span className="text-slate-800 dark:text-slate-200 text-xs font-bold">{item.label}</span>
+                        <span className="text-slate-800 dark:text-slate-200 text-xs font-bold leading-tight">{feat.label}</span>
                       </label>
                     );
                   })}
@@ -3544,7 +3888,16 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                       translation_limit: editPlanTranslation,
                       tts_limit: editPlanTTS,
                       storage_limit: editPlanStorage,
-                      features: editPlanFeatures
+                      features: editPlanFeatures,
+                      // Per-tool granular limits
+                      tts_file_limit: editTtsFileLimit,
+                      tts_char_limit: editTtsCharLimit,
+                      audio_file_limit: editAudioFileLimit,
+                      audio_minutes_limit: editAudioMinutesLimit,
+                      voice_session_limit: editVoiceSessionLimit,
+                      voice_minutes_limit: editVoiceMinutesLimit,
+                      translation_text_limit: editTranslationTextLimit,
+                      translation_char_limit: editTranslationCharLimit,
                     })
                   }).then(() => {
                     showToast(isNew ? "Plan created successfully" : "Plan updated successfully", "success");
@@ -3568,6 +3921,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
           </div>
         </div>
       )}
+
 
       {subTab === 'settings-general' && <GeneralSettings />}
       {subTab === 'settings-tenant' && <TenantSettings />}

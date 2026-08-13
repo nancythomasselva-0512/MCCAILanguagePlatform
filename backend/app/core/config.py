@@ -13,11 +13,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 Hours
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     
-    # PostgreSQL Configuration
+    # Database Configuration (MySQL / PostgreSQL / SQLite)
+    DB_TYPE: str = "sqlite"  # sqlite, mysql, postgresql
     DB_HOST: str = "localhost"
-    DB_PORT: int = 5432
-    DB_USER: str = "postgres"
-    DB_PASSWORD: str = "postgres123"
+    DB_PORT: int = 3306
+    DB_USER: str = "root"
+    DB_PASSWORD: str = ""
     DB_NAME: str = "mcc_saas"
     
     # If DATABASE_URL is provided in .env, it will be used instead of building it
@@ -27,7 +28,11 @@ class Settings(BaseSettings):
     def get_database_url(self) -> str:
         url = self.DATABASE_URL or os.environ.get("DATABASE_URL")
         if url:
-            if url.startswith("sqlite"):
+            if url.startswith("mysql://"):
+                url = url.replace("mysql://", "mysql+pymysql://", 1)
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+            if url.startswith("sqlite") or url.startswith("mysql") or url.startswith("postgresql"):
                 return url
             if url.startswith("file:"):
                 clean_path = url.replace("file:", "").lstrip("./")
@@ -42,11 +47,31 @@ class Settings(BaseSettings):
                     if os.path.exists(cand):
                         return f"sqlite:///{os.path.abspath(cand)}"
                 return f"sqlite:///{clean_path}"
-        # Default fallback to SQLite dev.db if no PostgreSQL is running
+
+        db_type = (os.environ.get("DB_TYPE") or self.DB_TYPE).lower()
+        if db_type == "mysql":
+            user = os.environ.get("DB_USER") or self.DB_USER
+            password = os.environ.get("DB_PASSWORD") or self.DB_PASSWORD
+            host = os.environ.get("DB_HOST") or self.DB_HOST
+            port = os.environ.get("DB_PORT") or self.DB_PORT
+            dbname = os.environ.get("DB_NAME") or self.DB_NAME
+            pwd_part = f":{password}" if password else ""
+            return f"mysql+pymysql://{user}{pwd_part}@{host}:{port}/{dbname}?charset=utf8mb4"
+
+        if db_type in ("postgresql", "postgres"):
+            user = os.environ.get("DB_USER") or self.DB_USER
+            password = os.environ.get("DB_PASSWORD") or self.DB_PASSWORD
+            host = os.environ.get("DB_HOST") or self.DB_HOST
+            port = os.environ.get("DB_PORT") or self.DB_PORT
+            dbname = os.environ.get("DB_NAME") or self.DB_NAME
+            pwd_part = f":{password}" if password else ""
+            return f"postgresql+psycopg2://{user}{pwd_part}@{host}:{port}/{dbname}"
+
+        # Default fallback to SQLite dev.db
         db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../prisma/dev.db"))
         if os.path.exists(db_path):
             return f"sqlite:///{db_path}"
-        return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        return f"sqlite:///./mcc_saas.db"
 
     # Redis for rate limiting / session storage
     REDIS_HOST: str = "localhost"

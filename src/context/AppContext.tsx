@@ -98,8 +98,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const data = await apiRequest("/billing/tenant/overview");
       setBillingOverview(data);
-    } catch (e) {
-      console.error("Failed to fetch billing overview", e);
+    } catch (e: any) {
+      setBillingOverview(null);
+      if (e?.message !== "Could not validate credentials" && !e?.message?.includes("401")) {
+        console.warn("Failed to fetch billing overview", e?.message || e);
+      }
     }
   };
 
@@ -363,6 +366,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       root.setAttribute('data-theme', 'light');
     }
   }, [theme]);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      setTokenState(null);
+      setTenantSlugState(null);
+      setBillingOverview(null);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('mcc-ai-unauthorized', handleUnauthorized);
+      return () => {
+        window.removeEventListener('mcc-ai-unauthorized', handleUnauthorized);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     if (token) {

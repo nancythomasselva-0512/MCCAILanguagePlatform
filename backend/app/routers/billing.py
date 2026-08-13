@@ -80,25 +80,25 @@ def get_next_invoice_number(db: Session, prefix: str = "INV") -> str:
 
 # --- HELPER: GET/CREATE BILLING SETTINGS ---
 def get_or_create_settings(db: Session) -> BillingSettings:
-    settings = db.query(BillingSettings).filter(BillingSettings.tenant_id == None).first()
+    settings = db.query(BillingSettings).first()
     if not settings:
         settings = BillingSettings(
             currency="INR",
             gst_percentage=18.0,
-            invoice_prefix="INV",
-            invoice_footer="For any subscription questions, contact billing@mcc-ai.com.",
-            company_name="Fluentia",
-            company_address="123 Tech Campus, Bangalore, India",
-            company_email="billing@mcc-ai.com",
+            invoice_prefix="INV-",
+            invoice_footer="Thank you for subscribing to MCC AI Language Platform.",
+            company_name="MCC AI Language Platform",
+            company_address="Chennai, Tamil Nadu, India",
+            company_email="billing@mccai.com",
             stripe_enabled=True,
-            stripe_public_key="pk_test_51MccAiStripePubKeyFake",
-            stripe_secret_key="sk_test_51MccAiStripeSecKeyFake",
-            razorpay_enabled=True,
-            razorpay_key_id="rzp_test_mccaiFakeKeyId",
-            razorpay_key_secret="rzp_secret_mccaiFakeSecret",
+            stripe_public_key=os.environ.get("STRIPE_PUBLIC_KEY", "pk_test_51MccAiStripePubKeyFake"),
+            stripe_secret_key=os.environ.get("STRIPE_SECRET_KEY", "sk_test_51MccAiStripeSecKeyFake"),
+            razorpay_enabled=os.environ.get("RAZORPAY_ENABLED", "true").lower() == "true",
+            razorpay_key_id=os.environ.get("RAZORPAY_KEY_ID", "rzp_test_mccaiFakeKeyId"),
+            razorpay_key_secret=os.environ.get("RAZORPAY_KEY_SECRET", "rzp_secret_mccaiFakeSecret"),
             upi_enabled=True,
             upi_id="mccai@upi",
-            default_gateway="stripe"
+            default_gateway="razorpay"
         )
         db.add(settings)
         db.commit()
@@ -111,7 +111,7 @@ def get_or_create_settings(db: Session) -> BillingSettings:
 def get_billing_plans(db: Session = Depends(get_db)):
     """Public list of active plans for subscription selection."""
     plans = db.query(SubscriptionPlan).filter(SubscriptionPlan.active == True).order_by(SubscriptionPlan.price.asc()).all()
-    default_features = ["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "document_intelligence"]
+    default_features = ["v2t_live", "v2t_vocab", "t2v_neural", "t2v_controls", "trans_instant", "doc_5pages", "audio_whatsapp", "cloud_storage"]
     res = []
     for p in plans:
         feats = default_features
@@ -130,9 +130,19 @@ def get_billing_plans(db: Session = Depends(get_db)):
             "storage_limit": p.storage_limit,
             "active": p.active,
             "created_at": p.created_at,
-            "features": feats
+            "features": feats,
+            # Per-tool granular limits
+            "tts_file_limit": getattr(p, "tts_file_limit", 10) or 10,
+            "tts_char_limit": getattr(p, "tts_char_limit", 10000) or 10000,
+            "audio_file_limit": getattr(p, "audio_file_limit", 5) or 5,
+            "audio_minutes_limit": getattr(p, "audio_minutes_limit", 30) or 30,
+            "voice_session_limit": getattr(p, "voice_session_limit", 10) or 10,
+            "voice_minutes_limit": getattr(p, "voice_minutes_limit", 30) or 30,
+            "translation_text_limit": getattr(p, "translation_text_limit", 20) or 20,
+            "translation_char_limit": getattr(p, "translation_char_limit", 50000) or 50000,
         })
     return res
+
 
 @router.get("/settings")
 def get_billing_settings(db: Session = Depends(get_db)):
@@ -313,8 +323,23 @@ def get_tenant_billing_overview(
             "tts_chars_used": usage.tts_chars_used,
             "tts_chars_limit": plan.tts_limit if plan else 10000,
             "billing_period_start": usage.billing_period_start.isoformat() if usage and usage.billing_period_start else None,
-            "billing_period_end": usage.billing_period_end.isoformat() if usage and usage.billing_period_end else None
+            "billing_period_end": usage.billing_period_end.isoformat() if usage and usage.billing_period_end else None,
+            # ── Per-Tool Granular Limits ─────────────────────────────────────────
+            # 🗣️ Text to Voice
+            "tts_file_limit": getattr(plan, "tts_file_limit", 10) if plan else 10,
+            "tts_char_limit": getattr(plan, "tts_char_limit", 10000) if plan else 10000,
+            # 🎵 Audio to Text
+            "audio_file_limit": getattr(plan, "audio_file_limit", 5) if plan else 5,
+            "audio_minutes_limit_per_tool": getattr(plan, "audio_minutes_limit", 30) if plan else 30,
+            # 🎤 Voice to Text
+            "voice_session_limit": getattr(plan, "voice_session_limit", 10) if plan else 10,
+            "voice_minutes_limit": getattr(plan, "voice_minutes_limit", 30) if plan else 30,
+            # 📄 Translation
+            "translation_text_limit": getattr(plan, "translation_text_limit", 20) if plan else 20,
+            "translation_char_limit": getattr(plan, "translation_char_limit", 50000) if plan else 50000,
+            # ────────────────────────────────────────────────────────────────────
         },
+
         "invoices": invoices_list,
         "payments": payments_list,
         "subscription_history": sub_hist_list,

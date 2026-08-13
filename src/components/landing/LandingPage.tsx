@@ -466,26 +466,32 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ── SECTION 1: PINNED WORKFLOW (4 CORE AI MODULES) ───────────── */}
-      <PinnedWorkflow onLaunchTool={(tab) => setActiveTab(tab)} />
+      <section id="ai-models" className="scroll-mt-24">
+        <PinnedWorkflow onLaunchTool={(tab) => setActiveTab(tab)} />
+      </section>
 
       {/* ── LANGUAGE MARQUEE SECTION (100+ SUPPORTED LANGUAGES) ─────────────── */}
       <LanguageMarquee />
 
       {/* ── SECTION 2: PROCESS STEPS WORKFLOW ─────────────────────────────────── */}
-      <ProcessSteps onLaunchTool={(tab) => setActiveTab(tab)} />
+      <section id="process" className="scroll-mt-24">
+        <ProcessSteps onLaunchTool={(tab) => setActiveTab(tab)} />
+      </section>
 
       {/* ── CORE FEATURES MARKETING SECTION (SECTION 3: PRICING) ─────────────────── */}
-      <CoreFeatures dbPlans={dbPlans} />
+      <section id="pricing" className="scroll-mt-24">
+        <CoreFeatures dbPlans={dbPlans} />
+      </section>
 
       {/* ── SECTION 4: FREQUENTLY ASKED QUESTIONS ACCORDION ───────────────────── */}
-      <FaqAccordion />
+      <section id="faq" className="scroll-mt-24">
+        <FaqAccordion />
+      </section>
 
       {/* ── SECTION 5: ENTERPRISE CONTACT & INQUIRY FORM ─────────────────────── */}
-      <ContactSection />
-
-      {/* ── ABOUT SECTION (Process, Features, Languages) ─────────────────────────── */}
-      <div id="about">
-      </div>
+      <section id="contact" className="scroll-mt-24">
+        <ContactSection />
+      </section>
 
 
 
@@ -507,41 +513,12 @@ export const LandingPage: React.FC = () => {
             
             <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
               {(() => {
-                const FEATURE_LABEL_MAP: Record<string, string> = {
-                  v2t_live: `Live Voice-to-Text Speech Capture`,
-                  v2t_vocab: 'Custom Speech Vocabulary & Noise Filtering',
-                  v2t_export: 'Real-time Transcript Export (SRT/VTT)',
-                  t2v_neural: `Neural Multi-Speaker Voices`,
-                  t2v_controls: 'Pitch, Speed & Accent Controls',
-                  t2v_download: 'HD Audio Download (WAV / MP3)',
-                  trans_instant: `Instant Multi-Language Translation`,
-                  doc_5pages: 'Document Upload (Up to 5 Pages)',
-                  doc_25pages: 'Document Upload (Up to 25 Pages)',
-                  doc_parallel: 'High-Speed Parallel Document Chunking',
-                  audio_whatsapp: 'WhatsApp Audio Transcribe (.ogg/.m4a)',
-                  audio_long: 'Long Audio Processing (60+ mins)',
-                  audio_timestamps: 'Automated Timestamps & Word Counts',
-                  cloud_storage: `Cloud Storage & History`,
-                  custom_api: 'Custom API & Webhooks Access',
-
-                  audio_processing: `Live Voice-to-Text Speech Capture`,
-                  translation_services: `Fast Multi-Language Translation`,
-                  text_to_speech: `Voice Synthesis TTS`,
-                  read_aloud: 'Read Aloud & Audio Narration',
-                  whatsapp_audio: 'WhatsApp Audio Transcribe (.ogg/.m4a)',
-                  doc_ocr: 'Document OCR & PDF Intelligence',
-                  auto_detect: 'Multi-Language Auto Detection',
-                  custom_vocab: 'Custom AI Vocabulary & Glossary',
-                  parallel_chunks: 'High-Speed Parallel Processing',
-                  font_selector: 'Dynamic Font Family Selector',
-                  theme_toggle: 'Dark / Light Glassmorphism Theme',
-                  audio_export: 'Export HD Audio (WAV / MP3)',
-                  srt_vtt_export: 'Export Subtitles (SRT / VTT)',
-                  enterprise_support: '24/7 Dedicated Enterprise Support',
-                  tenant_branding: 'Custom Tenant Domain & Branding',
-                  audit_logs: 'Security & Audit Logging',
-                  high_priority_queue: 'High Priority Processing Queue',
-                  unlimited_history: 'Unlimited Activity History'
+                const formatLimitNumber = (num?: number) => {
+                  if (num === undefined || num === null) return '';
+                  if (num === 0) return 'Unlimited';
+                  if (num >= 1000000) return `${(num / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+                  if (num >= 1000) return `${(num / 1000).toFixed(0)}k`;
+                  return `${num}`;
                 };
 
                 const plansToDisplay = dbPlans.length > 0 ? dbPlans : [
@@ -553,26 +530,121 @@ export const LandingPage: React.FC = () => {
                 return plansToDisplay.map((plan: any) => {
                   const mPrice = plan.price;
                   const displayPrice = billingCycle === "yearly" ? `₹${(mPrice * 10).toFixed(0)}/yr` : `₹${mPrice}/mo`;
-                  const featureLabels = (plan.features && plan.features.length > 0)
-                    ? plan.features.map((fId: string) => FEATURE_LABEL_MAP[fId] || fId)
-                    : [`${plan.transcription_limit} mins Voice-to-Text`, `Instant Translation`, `Text-to-Voice TTS`, `${plan.storage_limit} MB Storage`];
+
+                  const isEnt = (plan.name || '').toLowerCase().includes('enterprise') || plan.price >= 149;
+                  const isPro = (plan.name || '').toLowerCase().includes('professional') || (plan.name || '').toLowerCase().includes('pro') || plan.price >= 49;
+                  const isStart = (plan.name || '').toLowerCase().includes('starter') || plan.price >= 19;
+
+                  // TTS (Text to Voice) limits
+                  const ttsChars = plan.tts_char_limit ?? plan.tts_limit ?? (isEnt ? 1000000 : isPro ? 250000 : isStart ? 50000 : 5000);
+                  const ttsFiles = plan.tts_file_limit ?? (isEnt ? 0 : isPro ? 100 : isStart ? 20 : 3);
+                  const ttsCharStr = ttsChars === 0 ? 'Unlimited chars' : `${formatLimitNumber(ttsChars)} chars`;
+                  const ttsFileStr = ttsFiles === 0 ? 'Unlimited files' : `${ttsFiles} audio files/mo`;
+                  const ttsLabel = `Text-to-Voice TTS (${ttsCharStr}, ${ttsFileStr})`;
+
+                  // Voice to Text (Live mic) limits
+                  const v2tMins = plan.voice_minutes_limit ?? plan.transcription_limit ?? (isEnt ? 1200 : isPro ? 300 : isStart ? 60 : 15);
+                  const v2tSess = plan.voice_session_limit ?? (isEnt ? 0 : isPro ? 200 : isStart ? 30 : 5);
+                  const v2tMinStr = v2tMins === 0 ? 'Unlimited mins' : `${v2tMins} mins`;
+                  const v2tSessStr = v2tSess === 0 ? 'Unlimited sessions' : `${v2tSess} sessions/mo`;
+                  const v2tLabel = `Live Voice-to-Text (${v2tMinStr}, ${v2tSessStr})`;
+
+                  // Audio to Text (File upload) limits
+                  const audioMins = plan.audio_minutes_limit ?? plan.transcription_limit ?? (isEnt ? 1200 : isPro ? 300 : isStart ? 60 : 15);
+                  const audioFiles = plan.audio_file_limit ?? (isEnt ? 0 : isPro ? 100 : isStart ? 20 : 3);
+                  const audioMinStr = audioMins === 0 ? 'Unlimited mins' : `${audioMins} mins`;
+                  const audioFileStr = audioFiles === 0 ? 'Unlimited files' : `${audioFiles} audio files/mo`;
+
+                  // Translation limits
+                  const transChars = plan.translation_char_limit ?? plan.translation_limit ?? (isEnt ? 2000000 : isPro ? 500000 : isStart ? 100000 : 10000);
+                  const transTexts = plan.translation_text_limit ?? (isEnt ? 0 : isPro ? 1000 : isStart ? 100 : 10);
+                  const transCharStr = transChars === 0 ? 'Unlimited chars' : `${formatLimitNumber(transChars)} chars`;
+                  const transTextStr = transTexts === 0 ? 'Unlimited texts' : `${transTexts} texts/mo`;
+                  const transLabel = `Instant Translation (${transCharStr}, ${transTextStr})`;
+
+                  const FEATURE_LABEL_MAP: Record<string, string> = {
+                    v2t_live: v2tLabel,
+                    v2t_vocab: 'Custom Speech Vocabulary & Noise Filtering',
+                    v2t_export: 'Real-time Transcript Export (SRT/VTT)',
+                    t2v_neural: ttsLabel,
+                    t2v_controls: 'Pitch, Speed & Accent Controls',
+                    t2v_download: 'HD Audio Download (WAV / MP3)',
+                    trans_instant: transLabel,
+                    doc_5pages: 'Document Upload (Up to 5 Pages)',
+                    doc_25pages: 'Document Upload (Up to 25 Pages)',
+                    doc_parallel: 'High-Speed Parallel Document Chunking',
+                    audio_whatsapp: `WhatsApp Audio Transcribe (${audioMinStr}, ${audioFileStr})`,
+                    audio_long: 'Long Audio Processing (60+ mins)',
+                    audio_timestamps: 'Automated Timestamps & Word Counts',
+                    cloud_storage: `${plan.storage_limit || 100} MB Cloud Storage`,
+                    custom_api: 'Custom API & Webhooks Access',
+
+                    audio_processing: v2tLabel,
+                    translation_services: transLabel,
+                    text_to_speech: ttsLabel,
+                  };
+
+
+                  const getFeatureCategory = (fId: string): string => {
+                    if (['v2t_live', 'v2t_vocab', 'v2t_export', 'audio_processing', 'custom_vocab', 'srt_vtt_export'].includes(fId)) {
+                      return 'Voice Recognition & Live Speech';
+                    }
+                    if (['t2v_neural', 't2v_controls', 't2v_download', 'text_to_speech', 'read_aloud', 'audio_export'].includes(fId)) {
+                      return 'Text-to-Voice Synthesis (TTS)';
+                    }
+                    if (['trans_instant', 'doc_5pages', 'doc_25pages', 'doc_parallel', 'translation_services', 'doc_ocr', 'auto_detect', 'parallel_chunks'].includes(fId)) {
+                      return 'Translation & Document AI';
+                    }
+                    if (['audio_whatsapp', 'audio_long', 'audio_timestamps', 'whatsapp_audio'].includes(fId)) {
+                      return 'Audio & WhatsApp Notes';
+                    }
+                    return 'Storage & Platform Support';
+                  };
+
+                  const groups: Record<string, string[]> = {};
+                  const seenLabels = new Set<string>();
+
+                  const activeIds = (plan.features && plan.features.length > 0)
+                    ? plan.features
+                    : ['v2t_live', 't2v_neural', 'trans_instant', 'audio_whatsapp', 'cloud_storage'];
+
+                  activeIds.forEach((fId: string) => {
+                    const label = FEATURE_LABEL_MAP[fId] || fId;
+                    if (!seenLabels.has(label)) {
+                      seenLabels.add(label);
+                      const cat = getFeatureCategory(fId);
+                      if (!groups[cat]) groups[cat] = [];
+                      groups[cat].push(label);
+                    }
+                  });
 
                   return (
-                    <div key={plan.id} className="p-5 border border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-800/50 space-y-3">
+                    <div key={plan.id} className="p-5 border border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50 dark:bg-slate-800/50 space-y-4">
                       <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
                         <h4 className="font-extrabold text-lg text-slate-900 dark:text-white">{plan.name} Plan</h4>
                         <span className="text-base font-black text-teal-600 dark:text-teal-400">{displayPrice}</span>
                       </div>
-                      <ul className="text-xs text-slate-700 dark:text-slate-300 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {featureLabels.map((featText: string, fIdx: number) => (
-                          <li key={fIdx} className="flex items-center gap-2">
-                            <CheckCircle2 size={14} className="text-teal-500 flex-shrink-0" />
-                            <span>{featText}</span>
-                          </li>
+                      
+                      <div className="space-y-4">
+                        {Object.entries(groups).map(([categoryName, items], gIdx) => (
+                          <div key={gIdx} className="space-y-1.5">
+                            <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 border-b border-slate-200/60 dark:border-slate-700/60 pb-1">
+                              {categoryName}
+                            </h5>
+                            <ul className="text-xs text-slate-700 dark:text-slate-300 grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                              {items.map((featText: string, fIdx: number) => (
+                                <li key={fIdx} className="flex items-center gap-2">
+                                  <CheckCircle2 size={14} className="text-teal-500 flex-shrink-0" />
+                                  <span className="font-medium leading-snug">{featText}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   );
+
                 });
               })()}
             </div>

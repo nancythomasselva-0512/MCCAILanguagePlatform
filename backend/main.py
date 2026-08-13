@@ -16,15 +16,18 @@ from app.routers import auth, super_admin, tenant_admin, tools, platform_builder
 from app.models.models import SubscriptionPlan, User, BillingSettings
 from app.core.security import get_password_hash
 
+from app.core.migration import auto_migrate_db
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("mcc-ai-saas-backend")
 
-# Initialize database schemas
+# Initialize database schemas and synchronize columns
 try:
     logger.info("Initializing database schemas...")
     Base.metadata.create_all(bind=engine)
-    logger.info("Database schemas initialized.")
+    auto_migrate_db(engine, Base)
+    logger.info("Database schemas initialized and synchronized.")
 except Exception as e:
     logger.error(f"Failed to initialize database: {e}")
 
@@ -34,10 +37,42 @@ def seed_database():
     try:
         # 1. Seed plans
         plans_data = [
-            {"name": "Free", "price": 0.0, "transcription_limit": 15, "translation_limit": 10000, "tts_limit": 5000, "storage_limit": 50},
-            {"name": "Starter", "price": 19.0, "transcription_limit": 60, "translation_limit": 100000, "tts_limit": 50000, "storage_limit": 500},
-            {"name": "Professional", "price": 49.0, "transcription_limit": 300, "translation_limit": 500000, "tts_limit": 250000, "storage_limit": 2000},
-            {"name": "Enterprise", "price": 149.0, "transcription_limit": 1200, "translation_limit": 2000000, "tts_limit": 1000000, "storage_limit": 10000},
+            {
+                "name": "Free",       "price": 0.0,
+                "transcription_limit": 15,  "translation_limit": 10000,  "tts_limit": 5000,  "storage_limit": 50,
+                # Per-tool limits
+                "tts_file_limit": 3,        "tts_char_limit": 5000,
+                "audio_file_limit": 3,      "audio_minutes_limit": 15,
+                "voice_session_limit": 5,   "voice_minutes_limit": 15,
+                "translation_text_limit": 10, "translation_char_limit": 10000,
+            },
+            {
+                "name": "Starter",    "price": 19.0,
+                "transcription_limit": 60,  "translation_limit": 100000, "tts_limit": 50000, "storage_limit": 500,
+                # Per-tool limits
+                "tts_file_limit": 20,       "tts_char_limit": 50000,
+                "audio_file_limit": 20,     "audio_minutes_limit": 60,
+                "voice_session_limit": 30,  "voice_minutes_limit": 60,
+                "translation_text_limit": 100, "translation_char_limit": 100000,
+            },
+            {
+                "name": "Professional", "price": 49.0,
+                "transcription_limit": 300, "translation_limit": 500000, "tts_limit": 250000,"storage_limit": 2000,
+                # Per-tool limits
+                "tts_file_limit": 100,      "tts_char_limit": 250000,
+                "audio_file_limit": 100,    "audio_minutes_limit": 300,
+                "voice_session_limit": 200, "voice_minutes_limit": 300,
+                "translation_text_limit": 1000, "translation_char_limit": 500000,
+            },
+            {
+                "name": "Enterprise",  "price": 149.0,
+                "transcription_limit": 1200,"translation_limit": 2000000,"tts_limit": 1000000,"storage_limit": 10000,
+                # Per-tool limits
+                "tts_file_limit": 0,        "tts_char_limit": 1000000,   # 0 = unlimited files
+                "audio_file_limit": 0,      "audio_minutes_limit": 1200,  # 0 = unlimited files
+                "voice_session_limit": 0,   "voice_minutes_limit": 1200,  # 0 = unlimited sessions
+                "translation_text_limit": 0, "translation_char_limit": 2000000, # 0 = unlimited texts
+            },
         ]
         
         for p in plans_data:
@@ -46,7 +81,16 @@ def seed_database():
                 db_plan = SubscriptionPlan(**p)
                 db.add(db_plan)
                 logger.info(f"Seeded plan: {p['name']}")
+            else:
+                # Update existing plans with new per-tool limit fields if they're missing defaults
+                for key in ["tts_file_limit","tts_char_limit","audio_file_limit","audio_minutes_limit","voice_session_limit","voice_minutes_limit","translation_text_limit","translation_char_limit"]:
+                    if getattr(existing, key, None) is None or getattr(existing, key) == 0 and key.endswith("_limit") and p.get(key, 0) > 0:
+                        try:
+                            setattr(existing, key, p[key])
+                        except Exception:
+                            pass
         db.commit()
+
 
         # Seed global branding settings
         from app.models.models import BrandingSettings, ThemeSettings, PlatformSettings, NavigationItem, FeatureFlag
@@ -132,11 +176,12 @@ def seed_database():
 
         db.commit()
 
-        # 2. Seed Super Admin (aiadmin@gmail.com / aiadmin123)
-        super_admin_email = settings.SUPER_ADMIN_EMAIL or "aiadmin@gmail.com"
-        super_admin_password = settings.SUPER_ADMIN_PASSWORD or "aiadmin123"
-        existing_admin = db.query(User).filter(User.email == super_admin_email).first()
+        # 2. Seed Super Admin (superadmin@gmail.com / aisuperadmin123)
+        super_admin_email = settings.SUPER_ADMIN_EMAIL or "superadmin@gmail.com"
+        super_admin_password = settings.SUPER_ADMIN_PASSWORD or "aisuperadmin123"
+        existing_admin = db.query(User).filter(User.email.in_([super_admin_email, "aiadmin@gmail.com"])).first()
         if existing_admin:
+            existing_admin.email = super_admin_email
             existing_admin.password_hash = get_password_hash(super_admin_password)
             existing_admin.role = "super_admin"
             existing_admin.status = "active"
@@ -149,18 +194,20 @@ def seed_database():
                 status="active"
             ))
 
-        # 3. Seed Workspace Admin (workspaceadmin@gmail.com / admin123)
-        existing_w_admin = db.query(User).filter(User.email.in_(["workspaceadmin@gmail.com", "admin@workspace.com"])).first()
+        # 3. Seed Workspace Admin (admin@gmail.com / aiadmin123)
+        tenant_admin_email = "admin@gmail.com"
+        tenant_admin_password = "aiadmin123"
+        existing_w_admin = db.query(User).filter(User.email.in_([tenant_admin_email, "workspaceadmin@gmail.com", "admin@workspace.com"])).first()
         if existing_w_admin:
-            existing_w_admin.email = "workspaceadmin@gmail.com"
-            existing_w_admin.password_hash = get_password_hash("admin123")
+            existing_w_admin.email = tenant_admin_email
+            existing_w_admin.password_hash = get_password_hash(tenant_admin_password)
             existing_w_admin.role = "tenant_admin"
             existing_w_admin.status = "active"
         else:
             db.add(User(
                 name="Workspace Manager",
-                email="workspaceadmin@gmail.com",
-                password_hash=get_password_hash("admin123"),
+                email=tenant_admin_email,
+                password_hash=get_password_hash(tenant_admin_password),
                 role="tenant_admin",
                 status="active"
             ))

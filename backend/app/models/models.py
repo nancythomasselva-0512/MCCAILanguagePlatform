@@ -14,10 +14,34 @@ class SubscriptionPlan(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(50), unique=True, nullable=False)  # Free, Starter, Professional, Enterprise
     price = Column(Float, nullable=False, default=0.0)
+
+    # Legacy/generic limits (kept for backward compat)
     transcription_limit = Column(Integer, nullable=False, default=30)  # minutes per month
     translation_limit = Column(Integer, nullable=False, default=50000)  # characters per month
     tts_limit = Column(Integer, nullable=False, default=10000)  # characters per month
     storage_limit = Column(Integer, nullable=False, default=100)  # MBs
+    document_limit = Column(Integer, nullable=False, default=5)  # number of documents
+
+    # ── Per-Tool Granular Limits ──────────────────────────────────────────────
+    # 🗣️ Text to Voice (TTS)
+    tts_file_limit = Column(Integer, nullable=False, default=10)        # max audio files downloadable/mo
+    tts_char_limit = Column(Integer, nullable=False, default=10000)     # max TTS characters/mo
+
+    # 🎵 Audio to Text (file upload transcription)
+    audio_file_limit = Column(Integer, nullable=False, default=5)       # max audio files uploadable/mo
+    audio_minutes_limit = Column(Integer, nullable=False, default=30)   # max audio minutes/mo
+
+    # 🎤 Voice to Text (live mic transcription)
+    voice_session_limit = Column(Integer, nullable=False, default=10)   # max live sessions/mo
+    voice_minutes_limit = Column(Integer, nullable=False, default=30)   # max live recording minutes/mo
+
+    # 📄 Text Translation
+    translation_text_limit = Column(Integer, nullable=False, default=20)    # max translation requests/mo
+    translation_char_limit = Column(Integer, nullable=False, default=50000) # max chars translated/mo
+    # ─────────────────────────────────────────────────────────────────────────
+
+    trial_days = Column(Integer, nullable=False, default=7)  # trial duration in days (e.g. 7, 14, 30)
+
     features_json = Column(Text, nullable=True)  # JSON string of enabled feature keys
     active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

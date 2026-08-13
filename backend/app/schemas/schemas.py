@@ -22,12 +22,27 @@ class TokenRefreshRequest(BaseModel):
 class SubscriptionPlanBase(BaseModel):
     name: str
     price: float
+    # Legacy limits
     transcription_limit: int
     translation_limit: int
     tts_limit: int
     storage_limit: int
     features: Optional[List[str]] = None
     active: Optional[bool] = True
+    # ── Per-Tool Granular Limits ──────────────────
+    # 🗣️ Text to Voice
+    tts_file_limit: Optional[int] = 10
+    tts_char_limit: Optional[int] = 10000
+    # 🎵 Audio to Text
+    audio_file_limit: Optional[int] = 5
+    audio_minutes_limit: Optional[int] = 30
+    # 🎤 Voice to Text
+    voice_session_limit: Optional[int] = 10
+    voice_minutes_limit: Optional[int] = 30
+    # 📄 Translation
+    translation_text_limit: Optional[int] = 20
+    translation_char_limit: Optional[int] = 50000
+    # ─────────────────────────────────────────────
 
 class SubscriptionPlanCreate(SubscriptionPlanBase):
     pass
@@ -35,12 +50,27 @@ class SubscriptionPlanCreate(SubscriptionPlanBase):
 class SubscriptionPlanUpdate(BaseModel):
     name: Optional[str] = None
     price: Optional[float] = None
+    # Legacy limits
     transcription_limit: Optional[int] = None
     translation_limit: Optional[int] = None
     tts_limit: Optional[int] = None
     storage_limit: Optional[int] = None
     features: Optional[List[str]] = None
     active: Optional[bool] = None
+    # ── Per-Tool Granular Limits ──────────────────
+    # 🗣️ Text to Voice
+    tts_file_limit: Optional[int] = None
+    tts_char_limit: Optional[int] = None
+    # 🎵 Audio to Text
+    audio_file_limit: Optional[int] = None
+    audio_minutes_limit: Optional[int] = None
+    # 🎤 Voice to Text
+    voice_session_limit: Optional[int] = None
+    voice_minutes_limit: Optional[int] = None
+    # 📄 Translation
+    translation_text_limit: Optional[int] = None
+    translation_char_limit: Optional[int] = None
+    # ─────────────────────────────────────────────
 
 class SubscriptionPlanResponse(SubscriptionPlanBase):
     id: Any
@@ -49,6 +79,7 @@ class SubscriptionPlanResponse(SubscriptionPlanBase):
 
     class Config:
         from_attributes = True
+
 
 # Tenant Schemas
 class TenantBase(BaseModel):

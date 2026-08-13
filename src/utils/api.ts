@@ -46,6 +46,9 @@ export async function apiRequest(
         storage.removeItem("mcc-ai-token");
         storage.removeItem("mcc-ai-user");
         storage.removeItem("mcc-ai-refresh-token");
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent("mcc-ai-unauthorized"));
+        }
       }
       let errorMsg = `API Error (${response.status}): ${response.statusText}`;
       try {
@@ -68,7 +71,9 @@ export async function apiRequest(
     }
     return await response.text();
   } catch (error: any) {
-    console.warn(`[API] Request failed for ${endpoint}:`, error?.message || error);
+    if (error?.message !== "Could not validate credentials" && !error?.message?.includes("401")) {
+      console.warn(`[API] Request failed for ${endpoint}:`, error?.message || error);
+    }
     throw error;
   }
 }

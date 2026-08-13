@@ -115,7 +115,7 @@ def get_system_metrics(db: Session = Depends(get_db)):
 
 # --- SUBSCRIPTION PLANS CRUD ---
 def _format_plan_dict(p: SubscriptionPlan) -> dict:
-    default_features = ["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "document_intelligence"]
+    default_features = ["v2t_live", "v2t_vocab", "t2v_neural", "t2v_controls", "trans_instant", "doc_5pages", "audio_whatsapp", "cloud_storage"]
     feats = default_features
     if p.features_json:
         try:
@@ -126,13 +126,28 @@ def _format_plan_dict(p: SubscriptionPlan) -> dict:
         "id": p.id,
         "name": p.name,
         "price": p.price,
+        # Legacy generic limits
         "transcription_limit": p.transcription_limit,
         "translation_limit": p.translation_limit,
         "tts_limit": p.tts_limit,
         "storage_limit": p.storage_limit,
         "active": p.active,
         "created_at": p.created_at,
-        "features": feats
+        "features": feats,
+        # ── Per-Tool Granular Limits ──────────────────────────────────────────
+        # 🗣️ Text to Voice
+        "tts_file_limit": getattr(p, "tts_file_limit", 10) or 10,
+        "tts_char_limit": getattr(p, "tts_char_limit", 10000) or 10000,
+        # 🎵 Audio to Text
+        "audio_file_limit": getattr(p, "audio_file_limit", 5) or 5,
+        "audio_minutes_limit": getattr(p, "audio_minutes_limit", 30) or 30,
+        # 🎤 Voice to Text
+        "voice_session_limit": getattr(p, "voice_session_limit", 10) or 10,
+        "voice_minutes_limit": getattr(p, "voice_minutes_limit", 30) or 30,
+        # 📄 Translation
+        "translation_text_limit": getattr(p, "translation_text_limit", 20) or 20,
+        "translation_char_limit": getattr(p, "translation_char_limit", 50000) or 50000,
+        # ─────────────────────────────────────────────────────────────────────
     }
 
 @router.post("/plans", response_model=SubscriptionPlanResponse)
@@ -186,12 +201,22 @@ def clone_subscription_plan(plan_id: str, db: Session = Depends(get_db)):
         translation_limit=original.translation_limit,
         tts_limit=original.tts_limit,
         storage_limit=original.storage_limit,
-        active=original.active
+        active=original.active,
+        # Per-tool granular limits
+        tts_file_limit=getattr(original, "tts_file_limit", 10) or 10,
+        tts_char_limit=getattr(original, "tts_char_limit", 10000) or 10000,
+        audio_file_limit=getattr(original, "audio_file_limit", 5) or 5,
+        audio_minutes_limit=getattr(original, "audio_minutes_limit", 30) or 30,
+        voice_session_limit=getattr(original, "voice_session_limit", 10) or 10,
+        voice_minutes_limit=getattr(original, "voice_minutes_limit", 30) or 30,
+        translation_text_limit=getattr(original, "translation_text_limit", 20) or 20,
+        translation_char_limit=getattr(original, "translation_char_limit", 50000) or 50000,
     )
     db.add(cloned)
     db.commit()
     db.refresh(cloned)
-    return cloned
+    return _format_plan_dict(cloned)
+
 
 @router.delete("/plans/{plan_id}")
 def delete_plan(plan_id: str, db: Session = Depends(get_db)):
