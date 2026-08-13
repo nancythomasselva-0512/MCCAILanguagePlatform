@@ -563,25 +563,25 @@ export const LandingPage: React.FC = () => {
                   const transLabel = `Instant Translation (${transCharStr}, ${transTextStr})`;
 
                   const FEATURE_LABEL_MAP: Record<string, string> = {
-                    v2t_live: v2tLabel,
+                    v2t_live: 'Live Speech Capture & Auto-Translate to English',
                     v2t_vocab: 'Custom Speech Vocabulary & Noise Filtering',
                     v2t_export: 'Real-time Transcript Export (SRT/VTT)',
-                    t2v_neural: ttsLabel,
+                    t2v_neural: 'Neural Multi-Speaker Voices',
                     t2v_controls: 'Pitch, Speed & Accent Controls',
                     t2v_download: 'HD Audio Download (WAV / MP3)',
-                    trans_instant: transLabel,
+                    trans_instant: 'Instant Multi-Language Text Translation',
                     doc_5pages: 'Document Upload (Up to 5 Pages)',
-                    doc_25pages: 'Document Upload (Up to 25 Pages)',
+                    doc_25pages: 'Document Upload (Up to 25 Pages / Large Files)',
                     doc_parallel: 'High-Speed Parallel Document Chunking',
-                    audio_whatsapp: `WhatsApp Audio Transcribe (${audioMinStr}, ${audioFileStr})`,
-                    audio_long: 'Long Audio Processing (60+ mins)',
+                    audio_whatsapp: 'WhatsApp Audio Transcribe (.ogg/.m4a)',
+                    audio_long: 'Long Audio Files (Up to 60+ mins)',
                     audio_timestamps: 'Automated Timestamps & Word Counts',
-                    cloud_storage: `${plan.storage_limit || 100} MB Cloud Storage`,
+                    cloud_storage: `${plan.storage_limit || 50} MB Storage & Activity History`,
                     custom_api: 'Custom API & Webhooks Access',
 
-                    audio_processing: v2tLabel,
-                    translation_services: transLabel,
-                    text_to_speech: ttsLabel,
+                    audio_processing: 'Live Speech Capture & Auto-Translate to English',
+                    translation_services: 'Instant Multi-Language Text Translation',
+                    text_to_speech: 'Neural Multi-Speaker Voices',
                   };
 
 

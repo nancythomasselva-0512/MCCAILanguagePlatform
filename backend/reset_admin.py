@@ -12,10 +12,11 @@ def force_reset_admin():
     db = SessionLocal()
     try:
         # 1. Super Admin
-        sa_email = "aiadmin@gmail.com"
-        sa_pass = "aiadmin123"
-        user_sa = db.query(User).filter(User.email == sa_email).first()
+        sa_email = "superadmin@gmail.com"
+        sa_pass = "aisuperadmin123"
+        user_sa = db.query(User).filter(User.email.in_(["superadmin@gmail.com", "aiadmin@gmail.com"])).first()
         if user_sa:
+            user_sa.email = sa_email
             user_sa.password_hash = get_password_hash(sa_pass)
             user_sa.role = "super_admin"
             user_sa.status = "active"
@@ -29,9 +30,9 @@ def force_reset_admin():
             ))
 
         # 2. Workspace Admin
-        wa_email = "workspaceadmin@gmail.com"
-        wa_pass = "admin123"
-        user_wa = db.query(User).filter(User.email.in_(["workspaceadmin@gmail.com", "admin@workspace.com"])).first()
+        wa_email = "admin@gmail.com"
+        wa_pass = "aiadmin123"
+        user_wa = db.query(User).filter(User.email.in_(["admin@gmail.com", "workspaceadmin@gmail.com", "admin@workspace.com"])).first()
         if user_wa:
             user_wa.email = wa_email
             user_wa.password_hash = get_password_hash(wa_pass)

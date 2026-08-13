@@ -132,6 +132,7 @@ def _format_plan_dict(p: SubscriptionPlan) -> dict:
         "tts_limit": p.tts_limit,
         "storage_limit": p.storage_limit,
         "active": p.active,
+        "trial_days": getattr(p, "trial_days", 7) if getattr(p, "trial_days", None) is not None else 7,
         "created_at": p.created_at,
         "features": feats,
         # ── Per-Tool Granular Limits ──────────────────────────────────────────

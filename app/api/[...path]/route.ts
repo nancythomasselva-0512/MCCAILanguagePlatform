@@ -46,7 +46,15 @@ const DEFAULT_PLANS = [
     tts_limit: 5000,
     storage_limit: 50,
     active: true,
-    features: ["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "document_intelligence"]
+    tts_file_limit: 3,
+    tts_char_limit: 5000,
+    audio_file_limit: 3,
+    audio_minutes_limit: 15,
+    voice_session_limit: 5,
+    voice_minutes_limit: 15,
+    translation_text_limit: 10,
+    translation_char_limit: 10000,
+    features: ["v2t_live", "v2t_vocab", "t2v_neural", "t2v_controls", "trans_instant", "doc_5pages", "audio_whatsapp", "cloud_storage"]
   },
   {
     id: "starter-plan-default",
@@ -57,7 +65,15 @@ const DEFAULT_PLANS = [
     tts_limit: 50000,
     storage_limit: 500,
     active: true,
-    features: ["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "document_intelligence"]
+    tts_file_limit: 20,
+    tts_char_limit: 50000,
+    audio_file_limit: 20,
+    audio_minutes_limit: 60,
+    voice_session_limit: 30,
+    voice_minutes_limit: 60,
+    translation_text_limit: 100,
+    translation_char_limit: 100000,
+    features: ["v2t_live", "v2t_vocab", "t2v_neural", "t2v_controls", "trans_instant", "doc_5pages", "audio_whatsapp", "cloud_storage"]
   },
   {
     id: "pro-plan-default",
@@ -68,7 +84,34 @@ const DEFAULT_PLANS = [
     tts_limit: 250000,
     storage_limit: 2000,
     active: true,
-    features: ["audio_processing", "translation_services", "text_to_speech", "cloud_storage", "document_intelligence"]
+    tts_file_limit: 100,
+    tts_char_limit: 250000,
+    audio_file_limit: 100,
+    audio_minutes_limit: 300,
+    voice_session_limit: 200,
+    voice_minutes_limit: 300,
+    translation_text_limit: 1000,
+    translation_char_limit: 500000,
+    features: ["v2t_live", "v2t_vocab", "t2v_neural", "t2v_controls", "trans_instant", "doc_5pages", "audio_whatsapp", "cloud_storage"]
+  },
+  {
+    id: "enterprise-plan-default",
+    name: "Enterprise",
+    price: 149.0,
+    transcription_limit: 1200,
+    translation_limit: 2000000,
+    tts_limit: 1000000,
+    storage_limit: 10000,
+    active: true,
+    tts_file_limit: 10,
+    tts_char_limit: 1000000,
+    audio_file_limit: 10,
+    audio_minutes_limit: 1200,
+    voice_session_limit: 10,
+    voice_minutes_limit: 1200,
+    translation_text_limit: 20,
+    translation_char_limit: 2000000,
+    features: ["v2t_live", "v2t_vocab", "t2v_neural", "t2v_controls", "trans_instant", "doc_5pages", "audio_whatsapp", "cloud_storage"]
   }
 ];
 

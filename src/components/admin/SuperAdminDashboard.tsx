@@ -678,6 +678,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
   const [draftPlans, setDraftPlans] = useState<Record<string, {
     features: string[];
     price: number;
+    trial_days?: number;
     tts_file_limit?: number;
     tts_char_limit?: number;
     audio_file_limit?: number;
@@ -936,7 +937,16 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
             method: 'PATCH',
             body: JSON.stringify({
               features: draft.features,
-              price: draft.price
+              price: draft.price,
+              trial_days: draft.trial_days,
+              tts_file_limit: draft.tts_file_limit,
+              tts_char_limit: draft.tts_char_limit,
+              audio_file_limit: draft.audio_file_limit,
+              audio_minutes_limit: draft.audio_minutes_limit,
+              voice_session_limit: draft.voice_session_limit,
+              voice_minutes_limit: draft.voice_minutes_limit,
+              translation_text_limit: draft.translation_text_limit,
+              translation_char_limit: draft.translation_char_limit,
             })
           });
         }
@@ -1841,7 +1851,8 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 const monthlyPrice = draft?.price ?? p.price;
                 const yearlyPrice = +(monthlyPrice * 10).toFixed(0);
 
-                // Per-tool limits from draft or plan data
+                // Per-tool limits & trial days from draft or plan data
+                const curTrialDays       = draft?.trial_days             ?? p.trial_days             ?? 7;
                 const curTtsFileLimit    = draft?.tts_file_limit         ?? p.tts_file_limit         ?? 10;
                 const curTtsCharLimit    = draft?.tts_char_limit          ?? p.tts_char_limit          ?? 10000;
                 const curAudioFileLimit  = draft?.audio_file_limit        ?? p.audio_file_limit        ?? 5;
@@ -1859,6 +1870,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                 const getFullDraft = () => ({
                   features: currentFeatures,
                   price: monthlyPrice,
+                  trial_days: curTrialDays,
                   tts_file_limit: curTtsFileLimit,
                   tts_char_limit: curTtsCharLimit,
                   audio_file_limit: curAudioFileLimit,
@@ -1911,6 +1923,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                     body: JSON.stringify({
                       features: currentFeatures,
                       price: monthlyPrice,
+                      trial_days: curTrialDays,
                       tts_file_limit: curTtsFileLimit,
                       tts_char_limit: curTtsCharLimit,
                       audio_file_limit: curAudioFileLimit,
@@ -2002,6 +2015,26 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ subTab
                                 disabled
                                 className="w-24 px-2 py-1 text-sm font-black bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-500 dark:text-slate-400 text-center outline-none"
                               />
+                            </div>
+                          </div>
+
+                          <div className="text-right border-l border-slate-200 dark:border-slate-800 pl-3">
+                            <span className="text-[10px] font-extrabold text-teal-500 dark:text-teal-400 uppercase tracking-wider block">TRIAL / VALIDITY DAYS</span>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <select
+                                value={curTrialDays}
+                                onChange={(e) => handleUpdateLimit('trial_days', parseInt(e.target.value, 10))}
+                                className="px-2.5 py-1 text-xs font-black bg-white dark:bg-slate-950 border border-teal-500/40 rounded-lg text-teal-700 dark:text-teal-300 outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer shadow-xs"
+                              >
+                                <option value={7}>7 Days (1 Wk)</option>
+                                <option value={14}>14 Days (2 Wks)</option>
+                                <option value={30}>30 Days (1 Mo)</option>
+                                <option value={60}>60 Days (2 Mos)</option>
+                                <option value={90}>90 Days (3 Mos)</option>
+                                <option value={180}>180 Days (6 Mos)</option>
+                                <option value={365}>365 Days (1 Yr)</option>
+                                <option value={0}>Lifetime (Unlimited)</option>
+                              </select>
                             </div>
                           </div>
                         </div>

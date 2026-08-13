@@ -29,6 +29,7 @@ class SubscriptionPlanBase(BaseModel):
     storage_limit: int
     features: Optional[List[str]] = None
     active: Optional[bool] = True
+    trial_days: Optional[int] = 7
     # ── Per-Tool Granular Limits ──────────────────
     # 🗣️ Text to Voice
     tts_file_limit: Optional[int] = 10
@@ -57,6 +58,7 @@ class SubscriptionPlanUpdate(BaseModel):
     storage_limit: Optional[int] = None
     features: Optional[List[str]] = None
     active: Optional[bool] = None
+    trial_days: Optional[int] = None
     # ── Per-Tool Granular Limits ──────────────────
     # 🗣️ Text to Voice
     tts_file_limit: Optional[int] = None

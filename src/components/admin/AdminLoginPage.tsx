@@ -163,7 +163,7 @@ export const AdminLoginPage: React.FC = () => {
                 autoComplete="one-time-code"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={selectedRole === 'super_admin' ? "aiadmin@gmail.com" : "workspaceadmin@gmail.com"}
+                placeholder={selectedRole === 'super_admin' ? "superadmin@gmail.com" : "admin@gmail.com"}
                 className="w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm transition-all focus:ring-2 bg-slate-100 dark:bg-white/5 border border-transparent dark:border-white/5 outline-none text-slate-900 dark:text-white focus:border-orange-500 focus:ring-orange-500/20 focus:bg-white dark:focus:bg-slate-900/50 font-medium"
               />
             </div>

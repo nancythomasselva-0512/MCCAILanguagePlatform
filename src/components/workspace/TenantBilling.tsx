@@ -511,6 +511,12 @@ export const TenantBilling: React.FC = () => {
               const planFeatures: string[] = p.features && p.features.length > 0 ? p.features : ['v2t_live', 't2v_neural', 'trans_instant', 'cloud_storage'];
               const style = cardStyles[idx % 4];
 
+              const audioMins = p.voice_minutes_limit ?? p.audio_minutes_limit ?? p.transcription_limit ?? (isFree ? 15 : 60);
+              const transChars = p.translation_char_limit ?? p.translation_limit ?? 50000;
+              const transMStr = transChars >= 1000000 ? `${(transChars / 1000000).toFixed(0)}M` : `${(transChars / 1000).toFixed(0)}k`;
+              const storageMb = p.storage_limit || 50;
+              const planName = p.name || 'Standard';
+
               return (
                 <div
                   key={p.id || idx}
@@ -527,8 +533,13 @@ export const TenantBilling: React.FC = () => {
                     <div className="mb-4 min-h-[64px] flex flex-col justify-between">
                       <div className="flex items-center justify-between gap-2 mb-1.5">
                         <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full border shadow-xs ${style.badge}`}>
-                          {p.name} Tier
+                          {planName} Tier
                         </span>
+                        {p.trial_days !== undefined && p.trial_days !== null && (
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+                            {p.trial_days === 0 ? 'Lifetime Access' : `${p.trial_days} Days Free`}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-baseline gap-1">
                         <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -541,9 +552,9 @@ export const TenantBilling: React.FC = () => {
                     {/* Summary box - uniform height so INCLUDED FEATURES aligns on same row across all cards */}
                     <div className={`rounded-2xl p-3.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed mb-4 min-h-[72px] flex items-center ${style.summaryBox}`}>
                       <div>
-                        <span className="font-bold text-slate-900 dark:text-white">{p.name} Plan</span>: includes{' '}
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{p.transcription_limit || 15} mins audio</span>,{' '}
-                        {((p.translation_limit || 0) / 1000).toFixed(0)}k translation & {p.storage_limit || 50} MB storage.
+                        <span className="font-bold text-slate-900 dark:text-white">{planName} Plan</span>: includes{' '}
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{audioMins} mins audio</span>,{' '}
+                        {transMStr} translation & {storageMb} MB storage.
                       </div>
                     </div>
 
@@ -566,82 +577,98 @@ export const TenantBilling: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Included Features Section - locked at identical vertical position across all 4 cards */}
+                    {/* Included Features Section - Grouped by Category matching Admin */}
                     <div className="border-t border-slate-900/10 dark:border-white/10 pt-3">
-                      <div className="text-[10px] font-extrabold uppercase tracking-wider mb-2 text-slate-500 dark:text-slate-400">
-                        INCLUDED FEATURES ({planFeatures.length})
+                      <div className="text-[10px] font-extrabold uppercase tracking-wider mb-2.5 text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                        <span>INCLUDED FEATURES ({planFeatures.length})</span>
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div>
                         {(() => {
-                          const formatLimitNumber = (num?: number) => {
-                            if (num === undefined || num === null) return '';
-                            if (num === 0) return 'Unlimited';
-                            if (num >= 1000000) return `${(num / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
-                            if (num >= 1000) return `${(num / 1000).toFixed(0)}k`;
-                            return `${num}`;
+                          const getFeatureCategory = (fId: string): { title: string; icon: string } => {
+                            if (['v2t_live', 'v2t_vocab', 'v2t_export', 'audio_processing', 'custom_vocab', 'srt_vtt_export'].includes(fId)) {
+                              return { title: 'VOICE-TO-TEXT', icon: '🎤' };
+                            }
+                            if (['t2v_neural', 't2v_controls', 't2v_download', 'text_to_speech', 'read_aloud', 'audio_export'].includes(fId)) {
+                              return { title: 'TEXT-TO-VOICE', icon: '🗣️' };
+                            }
+                            if (['trans_instant', 'doc_5pages', 'doc_25pages', 'doc_parallel', 'translation_services', 'doc_ocr', 'parallel_chunks'].includes(fId)) {
+                              return { title: 'DOCUMENT TRANSLATION', icon: '📄' };
+                            }
+                            if (['audio_whatsapp', 'audio_long', 'audio_timestamps', 'whatsapp_audio'].includes(fId)) {
+                              return { title: 'AUDIO TRANSCRIPTION', icon: '🎵' };
+                            }
+                            return { title: 'STORAGE & API', icon: '💾' };
                           };
-
-                          const ttsChars = p.tts_char_limit ?? p.tts_limit ?? 10000;
-                          const ttsFiles = p.tts_file_limit;
-                          const ttsCharStr = ttsChars === 0 ? 'Unlimited chars' : `${formatLimitNumber(ttsChars)} chars`;
-                          const ttsFileStr = ttsFiles === 0 ? 'Unlimited files' : (ttsFiles ? `${ttsFiles} files/mo` : '');
-                          const ttsLabel = `TTS (${[ttsCharStr, ttsFileStr].filter(Boolean).join(', ')})`;
-
-                          const v2tMins = p.voice_minutes_limit ?? p.transcription_limit ?? 30;
-                          const v2tSess = p.voice_session_limit;
-                          const v2tMinStr = v2tMins === 0 ? 'Unlimited mins' : `${v2tMins} mins`;
-                          const v2tSessStr = v2tSess === 0 ? 'Unlimited sessions' : (v2tSess ? `${v2tSess} sessions/mo` : '');
-                          const v2tLabel = `Voice-to-Text (${[v2tMinStr, v2tSessStr].filter(Boolean).join(', ')})`;
-
-                          const transChars = p.translation_char_limit ?? p.translation_limit ?? 50000;
-                          const transTexts = p.translation_text_limit;
-                          const transCharStr = transChars === 0 ? 'Unlimited chars' : `${formatLimitNumber(transChars)} chars`;
-                          const transTextStr = transTexts === 0 ? 'Unlimited texts' : (transTexts ? `${transTexts} texts/mo` : '');
-                          const transLabel = `Translation (${[transCharStr, transTextStr].filter(Boolean).join(', ')})`;
 
                           const map: Record<string, string> = {
-                            v2t_live: v2tLabel,
-                            v2t_vocab: 'Custom Vocabulary',
-                            v2t_export: 'Transcript Export',
-                            t2v_neural: ttsLabel,
-                            t2v_controls: 'Voice Controls',
-                            t2v_download: 'HD Audio Download',
-                            trans_instant: transLabel,
-                            doc_5pages: 'Doc Upload (5 Pages)',
-                            doc_25pages: 'Doc Upload (25 Pages)',
-                            doc_parallel: 'Parallel Chunking',
-                            audio_whatsapp: 'WhatsApp Audio Transcribe',
-                            audio_long: 'Long Audio (60+ mins)',
-                            audio_timestamps: 'Timestamps',
-                            cloud_storage: `${p.storage_limit || 50} MB Storage`,
-                            custom_api: 'Custom API & Webhooks',
+                            v2t_live: 'Live Speech Capture & Auto-Translate to English',
+                            v2t_vocab: 'Custom Speech Vocabulary & Noise Filtering',
+                            v2t_export: 'Real-time Transcript Export (SRT/VTT)',
+                            t2v_neural: 'Neural Multi-Speaker Voices',
+                            t2v_controls: 'Pitch, Speed & Accent Controls',
+                            t2v_download: 'HD Audio Download (WAV / MP3)',
+                            trans_instant: 'Instant Multi-Language Text Translation',
+                            doc_5pages: 'Document Upload (Up to 5 Pages)',
+                            doc_25pages: 'Document Upload (Up to 25 Pages / Large Files)',
+                            doc_parallel: 'High-Speed Parallel Document Chunking',
+                            audio_whatsapp: 'WhatsApp Audio Transcribe (.ogg/.m4a)',
+                            audio_long: 'Long Audio Files (Up to 60+ mins)',
+                            audio_timestamps: 'Automated Timestamps & Word Counts',
+                            cloud_storage: `${p.storage_limit || 50} MB Storage & Activity History`,
+                            custom_api: 'Custom API & Webhooks Access',
 
-                            audio_processing: v2tLabel,
-                            translation_services: transLabel,
-                            text_to_speech: ttsLabel,
-                            read_aloud: 'Read Aloud',
-                            doc_ocr: 'Document OCR',
-                            custom_vocab: 'Custom Vocabulary',
-                            parallel_chunks: 'Parallel Chunking',
-                            whatsapp_audio: 'WhatsApp Transcribe',
-                            audio_export: 'HD Audio Export',
-                            srt_vtt_export: 'SRT/VTT Subtitles',
-                            enterprise_support: '24/7 Enterprise Support',
-                            tenant_branding: 'Custom Branding',
-                            audit_logs: 'Audit Logging',
-                            high_priority_queue: 'Priority Queue'
+                            // Legacy fallback mappings
+                            audio_processing: 'Live Speech Capture & Auto-Translate to English',
+                            translation_services: 'Instant Multi-Language Text Translation',
+                            text_to_speech: 'Neural Multi-Speaker Voices',
+                            read_aloud: 'Read Aloud & Audio Narration',
+                            doc_ocr: 'Document Upload (Up to 5 Pages)',
+                            custom_vocab: 'Custom Speech Vocabulary & Noise Filtering',
+                            parallel_chunks: 'High-Speed Parallel Document Chunking',
+                            whatsapp_audio: 'WhatsApp Audio Transcribe (.ogg/.m4a)',
+                            audio_export: 'HD Audio Download (WAV / MP3)',
+                            srt_vtt_export: 'Real-time Transcript Export (SRT/VTT)',
+                            enterprise_support: '24/7 Dedicated Enterprise Support',
+                            tenant_branding: 'Custom Tenant Domain & Branding',
+                            audit_logs: 'Security & Audit Logging',
+                            high_priority_queue: 'High Priority Processing Queue'
                           };
 
-                          const uniqueList = Array.from(new Set(planFeatures.map((fId: string) => map[fId] || fId)));
+                          const grouped: Record<string, { icon: string; items: string[] }> = {};
 
-                          return uniqueList.map((label: string, fIdx: number) => (
-                            <span
-                              key={fIdx}
-                              className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg inline-flex items-center gap-1 shadow-2xs ${style.chip}`}
-                            >
-                              ✓ {label}
-                            </span>
-                          ));
+                          planFeatures.forEach((fId: string) => {
+                            const cat = getFeatureCategory(fId);
+                            const label = map[fId] || fId;
+                            if (!grouped[cat.title]) {
+                              grouped[cat.title] = { icon: cat.icon, items: [] };
+                            }
+                            if (!grouped[cat.title].items.includes(label)) {
+                              grouped[cat.title].items.push(label);
+                            }
+                          });
+
+                          return (
+                            <div className="space-y-3">
+                              {Object.entries(grouped).map(([catTitle, group]) => (
+                                <div key={catTitle} className="space-y-1.5">
+                                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1 border-b border-slate-900/10 dark:border-white/10 pb-0.5">
+                                    <span>{group.icon}</span>
+                                    <span>{catTitle}</span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                    {group.items.map((label: string, fIdx: number) => (
+                                      <span
+                                        key={fIdx}
+                                        className={`text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-lg inline-flex items-center gap-1 shadow-2xs ${style.chip}`}
+                                      >
+                                        ✓ {label}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
                         })()}
                       </div>
                     </div>

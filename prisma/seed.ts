@@ -36,18 +36,36 @@ async function main() {
   });
 
   // Create Super Admin User
-  const adminPasswordHash = await bcrypt.hash('aiadmin123', 10);
+  const superAdminPasswordHash = await bcrypt.hash('aisuperadmin123', 10);
   const superAdmin = await prisma.user.upsert({
-    where: { email: 'aiadmin@gmail.com' },
+    where: { email: 'superadmin@gmail.com' },
     update: {
       role: 'super_admin',
-      password_hash: adminPasswordHash,
+      password_hash: superAdminPasswordHash,
     },
     create: {
       name: 'Platform Super Administrator',
-      email: 'aiadmin@gmail.com',
-      password_hash: adminPasswordHash,
+      email: 'superadmin@gmail.com',
+      password_hash: superAdminPasswordHash,
       role: 'super_admin',
+      status: 'active',
+      tenant_id: tenant.id,
+    },
+  });
+
+  // Create Workspace Admin User
+  const adminPasswordHash = await bcrypt.hash('aiadmin123', 10);
+  const workspaceAdmin = await prisma.user.upsert({
+    where: { email: 'admin@gmail.com' },
+    update: {
+      role: 'tenant_admin',
+      password_hash: adminPasswordHash,
+    },
+    create: {
+      name: 'Workspace Administrator',
+      email: 'admin@gmail.com',
+      password_hash: adminPasswordHash,
+      role: 'tenant_admin',
       status: 'active',
       tenant_id: tenant.id,
     },
@@ -55,6 +73,7 @@ async function main() {
 
   console.log('Database seeding completed cleanly!');
   console.log(`Created Super Admin: ${superAdmin.email}`);
+  console.log(`Created Admin: ${workspaceAdmin.email}`);
   console.log(`Created Workspace: ${tenant.slug}`);
 }
 
